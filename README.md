@@ -64,4 +64,4 @@ Figma 檔案：`sxaOCLv6tQwQeOzZIG4XsY`，2026-09-17 讀取。
 - `source-figma.json`：來源快照
 - PNG / SVG：下載的 Figma 素材
 
-目前 Repository 為私人。沒有啟用 GitHub Pages，也沒有建立公開網站。網站分享的可見性需另行設定。
+Repository 已改為公開，並啟用 GitHub Pages（main 分支根目錄）。此為公開示範網站及原始碼，不應輸入真實商戶資料或密碼；不索引設定不代表私人或受保護存取。
