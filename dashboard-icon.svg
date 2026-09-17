@@ -1,0 +1,21 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="16" height="16" fill="#1E1E1E"/>
+<g id="Menu">
+<path d="M-116 -211C-116 -212.105 -115.105 -213 -114 -213H1310C1311.1 -213 1312 -212.105 1312 -211V975C1312 976.105 1311.1 977 1310 977H-114C-115.105 977 -116 976.105 -116 975V-211Z" fill="#444444"/>
+<path d="M-114 -213V-212H1310V-213V-214H-114V-213ZM1312 -211H1311V975H1312H1313V-211H1312ZM1310 977V976H-114V977V978H1310V977ZM-116 975H-115V-211H-116H-117V975H-116ZM-114 977V976C-114.552 976 -115 975.552 -115 975H-116H-117C-117 976.657 -115.657 978 -114 978V977ZM1312 975H1311C1311 975.552 1310.55 976 1310 976V977V978C1311.66 978 1313 976.657 1313 975H1312ZM1310 -213V-212C1310.55 -212 1311 -211.552 1311 -211H1312H1313C1313 -212.657 1311.66 -214 1310 -214V-213ZM-114 -213V-214C-115.657 -214 -117 -212.657 -117 -211H-116H-115C-115 -211.552 -114.552 -212 -114 -212V-213Z" fill="white" fill-opacity="0.1"/>
+<g id="AllinPay / Sidebar Navigation">
+<g id="Active=Dashboard">
+<rect width="188" height="990" transform="translate(-16 -113)" fill="#14254F"/>
+<g id="Menu &#194;&#183; &#229;&#132;&#128;&#232;&#161;&#168;&#230;&#157;&#191;">
+<rect width="188" height="42" transform="translate(-16 -13)" fill="#213A6B"/>
+<g id="Icon &#194;&#183; Dashboard">
+<rect id="Rectangle" x="1" y="1" width="6" height="6" rx="1" fill="#42C6DF"/>
+<rect id="Rectangle_2" x="9" y="1" width="6" height="6" rx="1" fill="#42C6DF"/>
+<rect id="Rectangle_3" x="1" y="9" width="6" height="6" rx="1" fill="#42C6DF"/>
+<rect id="Rectangle_4" x="9" y="9" width="6" height="6" rx="1" fill="#42C6DF"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</svg>
