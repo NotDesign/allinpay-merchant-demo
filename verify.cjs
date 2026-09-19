@@ -16,7 +16,7 @@ const context = { document, console, structuredClone, Date, TextEncoder, setTime
 context.window = context;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8'), context);
-const source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, 'core.js'), 'utf8');
 vm.runInContext(source.replace(/render\(\);\s*\}\)\(\);\s*$/, 'window.__test={state,forms,rows,headers,fillSample,validateStep,validateAll,application,merchants,saveDraft,actions,filteredRows,fieldOptions};\n})();'), context);
 const t = context.__test;
 assert(t, 'Test instrumentation is isolated to this VM');
