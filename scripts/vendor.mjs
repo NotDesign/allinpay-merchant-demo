@@ -1,9 +1,10 @@
-import { cp, mkdir, readdir, copyFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, copyFile, writeFile, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const source = p => new URL(`node_modules/${p}`, root);
 const target = p => new URL(`vendor/${p}`, root);
+await rm(target(''),{recursive:true,force:true});
 await mkdir(target(''), { recursive: true });
 await cp(source('tesseract.js/dist'), target('tesseract'), { recursive: true });
 await cp(source('tesseract.js-core'), target('core'), { recursive: true });
