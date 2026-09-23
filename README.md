@@ -1,11 +1,12 @@
 # ALLINPAY · 商戶申請與後台 Demo
 
-依指定 Figma 設計製作的繁體中文互動原型。2026-09-19 更新外部申請、後台登入及管理功能。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。
+依指定 Figma 設計製作的繁體中文互動原型。2026-09-23 更新後台登入與系統，內含 240 間假商戶、28 個示例帳號、18 份可繼續填寫的草稿。既有外部申請保持獨立。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。
 
 ## 直接使用
 
 - [外部申請](https://notdesign.github.io/allinpay-merchant-demo/external.html)
-- [後台登入與系統](https://notdesign.github.io/allinpay-merchant-demo/)
+- [後台登入與系統（單一 HTML）](https://notdesign.github.io/allinpay-merchant-demo/backoffice.html)
+- [下載單一 HTML](https://github.com/NotDesign/allinpay-merchant-demo/raw/refs/heads/main/backoffice.html)
 - [下載完整原始碼 ZIP](https://github.com/NotDesign/allinpay-merchant-demo/archive/refs/heads/main.zip)
 
 下載 ZIP 後可直接開啟 `external.html` 或 `backoffice.html`。兩者皆為獨立單檔，圖片、CSS 和 JavaScript 已內嵌，不需安裝套件。兩檔放在同一資料夾可互相切換。`index.html` 是後台多檔案版入口。
@@ -39,13 +40,17 @@
 ## 後台流程
 
 - 登入、註冊、電郵驗證、忘記／重設密碼的示例介面。
-- 儀表板、商戶搜尋及分頁、29 個表格欄位；隱藏、調序、排序及凍結欄位。
+- 儀表板動態統計、待審核／待補資料／同步失敗清單；審核通過、拒絕及退回補件，後兩者須選擇原因並補充說明。
+- 商戶搜尋及每頁 20／40／80 筆、29 個表格欄位；隱藏、調序、排序及凍結欄位。
+- 表頭三角形開啟 260px 小選單；排序單選 Active、輸入後顯示相符內容、全選／取消全選／複選篩選。
 - 銀行帳號原位顯示／隱藏、公司詳情四分頁、編輯、重新選取文件、商戶轉換新舊資料對照。
-- 新增商戶六步：主體資料、經營與聯繫、結算帳戶、產品與費率、文件材料、確認提交。
+- 新增商戶六步：文件材料、主體資料、經營與聯繫、結算帳戶、產品與費率、確認提交。
+- BR 匯入五階段示例：匯入 → 辨識 → 核對 → 已核對、準備套用 → 匯入結果。此單檔以固定假資料模擬，不包含 OCR 引擎。
 - 原有 105 個來源欄位、27 個文件項目、可點擊步驟列、草稿及成功／失敗視窗。
 - 帳號管理、個別帳號權限 Overlay；儲存前輸入示例密碼。修改只影響選取帳號，不影響同角色其他帳號。
 - 四層角色及「權限不足」演示：只顯示自己的帳號、隱藏其他人的權限且不可編輯。
 - 批量導入示例、操作記錄、設定及登出。
+- 代理商可分享附 agency 代號的外部申請連結；此為追蹤參數示範，不會自動串接外部表單資料。
 
 ## Figma 來源
 
@@ -70,28 +75,36 @@ Logo、圖片及功能圖示使用 Figma 回傳素材。`asset-manifest.json` �
 - 外部申請與後台資料**不會自動串接**；兩者用各自的本機示例資料。
 - 草稿和示例帳號存在目前瀏覽器 localStorage，沒有加密或跨裝置同步。不同網址（包含單檔版與伺服器版）可能使用不同儲存空間。清除瀏覽器資料會移除紀錄。
 - 檔案不會上傳至伺服器；草稿只保存附件名稱／大小等中繼資料，重新載入後真實附件要重新選取。示例附件並非真實文件。
-- 儀表板統計為固定設計示例；商戶列表包含清楚標示的模擬資料。正式商業規則、銀行／MCC／地區清單仍需串接正式資料。
+- 儀表板統計根據目前瀏覽器的假資料計算，會隨提交、審核及同步結果更新。正式商業規則、銀行／MCC／地區清單仍需串接正式資料。
 - 批量導入僅處理簡單 CSV 示範格式（不含引號內逗號）；Excel 為明確標示的模擬結果，不是完整試算表解析器。
 - 此公開靜態網站的 HTML、JavaScript 及示例資料皆可下載；不索引不代表私人或存取控制。
 
 ## 開發與驗證
 
-需 Node.js，沒有外部套件依賴：
+重建需 Node.js，打包無外部套件依賴：
 
 ```sh
 node build.cjs
-node verify.cjs
-node verify-flows.cjs
 node --check app.js
 node --check external.js
 ```
 
-`build.cjs` 重建兩個獨立 HTML 及 `app.js`。修改來源後應重新執行。
+`build.cjs` 重建兩個獨立 HTML 及 `app.js`；`node build-admin.cjs` 只重建後台，不影響外部申請。修改來源後應重新執行。
+
+後台瀏覽器回歸測試（需另裝 Playwright，僅測試使用）：
+
+```sh
+npm install --no-save playwright
+npx playwright install chromium
+# 先以任意靜態伺服器提供目前目錄，再指定 URL
+DEMO_URL=http://127.0.0.1:4319/backoffice.html node verify-admin.cjs
+```
+
+可用 `CHROME_PATH` 指定本機 Chromium 系瀏覽器，或 `PLAYWRIGHT_PATH` 指定既有套件位置。測試使用獨立瀏覽器資料，包含登入錯誤、OTP、審核、個別權限、草稿、新增商戶、行動版及離線單檔。`qa-report.json` 記錄最後一次驗證結果，不代表正式資安驗證。
 
 - 外部來源：`external.template.html`、`external.css`、`external.js`。
-- 後台來源：`core.js`、`backoffice-extension.js`、`styles.css`、`backoffice.css`、`data.js`。
+- 後台來源：`core.js`、`backoffice-extension.js`、`current-backoffice.js`、`styles.css`、`backoffice.css`、`current-backoffice.css`、`data.js`。
 - `app.js`、`external.html`、`backoffice.html` 為生成檔案，不應直接修改。
-- `verify.cjs`：原六步欄位、文件、產品、草稿與搜尋校驗。
-- `verify-flows.cjs`：外部六頁驗證、草稿、登入、帳號權限隔離與單檔資源檢查。
+- `verify.cjs`／`verify-flows.cjs`：舊版靜態檢查留存，部分舊後台假資料及 DOM 假設不適用本版本；後台以 `verify-admin.cjs` 為準。
 
 另以瀏覽器測試外部簽名、失敗重試、後台權限密碼、權限不足、表格顯隱及凍結，並檢查窄螢幕容器溢出。這些測試不代表正式資安或合規驗證。

@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "date": "2026-09-23T08:19:52.311Z",
+  "url": "http://127.0.0.1:4319/backoffice.html",
+  "checks": [
+    "login/error/OTP",
+    "240 merchants/28 accounts/18 drafts",
+    "dashboard queues/review/rejection validation",
+    "compact header search/multiselect/active sort",
+    "40-row pagination/search empty state",
+    "password-gated account-specific permissions",
+    "restricted account scope",
+    "27 document upload controls",
+    "five-stage BR simulated flow/result",
+    "six-step application/failure/retry/submission",
+    "draft persistence/reload",
+    "agency link",
+    "mobile overflow",
+    "offline single HTML",
+    "zero page errors/no runtime network requests"
+  ],
+  "errors": []
+}

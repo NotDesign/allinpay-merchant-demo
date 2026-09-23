@@ -1,0 +1,25 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+(async()=>{
+ const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const ctx=await browser.newContext({viewport:{width:1440,height:1000}}),p=await ctx.newPage(),errors=[];
+ p.on('pageerror',e=>errors.push(e.message));
+ const base=process.env.DEMO_URL||'http://127.0.0.1:4319/backoffice.html';
+ const click=a=>p.locator('[data-action="'+a+'"]').first().click();
+ const go=async h=>{await p.evaluate(h=>location.hash='/'+h,h);await p.waitForTimeout(80);};
+ const close=()=>p.locator('#modal [data-action="close"]').first().click();
+ await p.goto(base);await p.locator('[data-action="pick-role"][data-index="0"]').click();await click('bo-login');await go('merchants');
+ await p.locator('[data-action="sync"][data-mid="M000412"]').click();assert.equal(await p.locator('#modal-title').innerText(),'同步完成');await close();
+ await p.locator('#simulate-failure').check();await p.locator('[data-action="sync"][data-mid="M000715"]').click();assert.equal(await p.locator('#modal-title').innerText(),'同步失敗');await close();await p.locator('#simulate-failure').uncheck();await p.locator('[data-action="sync"][data-mid="M000715"]').click();assert.equal(await p.locator('#modal-title').innerText(),'同步完成');await close();
+ await click('columns');await p.locator('[data-col-visible="客戶英文名稱"]').uncheck();await p.locator('[data-action="move-col"][data-col="BR"][data-dir="-1"]').click();await p.locator('[data-action="pin-col"][data-col="BR"]').click();await click('apply-cols');assert.equal(await p.locator('th .merchant-head').first().innerText(),'BR\n▾');assert.equal(await p.locator('[data-action="column-menu"][data-col="客戶英文名稱"]').count(),0);assert.equal(await p.locator('thead th.pinned').count(),1);
+ await p.locator('[data-action="detail"][data-mid="M000238"]').click();await click('edit-detail');await p.locator('[data-detail-field="客戶中文名稱"]').fill('測試編輯草稿公司');await click('detail-draft');await close();await p.locator('[data-action="detail"][data-mid="M000238"]').click();await click('edit-detail');assert.equal(await p.locator('[data-detail-field="客戶中文名稱"]').inputValue(),'測試編輯草稿公司');await click('detail-save');
+ await go('import');await click('import-sample');await click('import-confirm');assert((await p.locator('.modal-body').innerText()).includes('已新增 3 間商戶'));await close();assert.equal((await p.evaluate(()=>AllinPayDemo.getSummary())).merchants,243);
+ await p.locator('#import-file').setInputFiles({name:'test.csv',mimeType:'text/csv',buffer:Buffer.from('客戶中文名稱,公司 MID,BR\nCSV測試公司,DEMO-QA-CSV,81234567\n重複公司,DEMO-QA-CSV,81234568\n格式錯誤,DEMO-QA-ERR,WRONG')});await p.waitForTimeout(100);assert((await p.locator('.accounts-table').innerText()).includes('MID 重複'));await click('import-confirm');assert((await p.locator('.modal-body').innerText()).includes('已新增 1 間商戶'));await close();
+ await go('application/1');await p.locator('[data-demo-upload]').first().setInputFiles(path.join(__dirname,'4864c.png'));await p.waitForTimeout(100);assert((await p.locator('.upload-list').innerText()).includes('4864c.png'));
+ await p.locator('#simulate-failure').check();await click('save-draft');assert.equal(await p.locator('#modal-title').innerText(),'草稿儲存失敗');await close();await click('br-start');await click('br-recognize');await p.waitForTimeout(900);assert.equal(await p.locator('#modal-title').innerText(),'暫時無法辨識這份 BR');await close();await p.locator('#simulate-failure').uncheck();
+await click('logout');await click('bo-logout');await go('forgot');await p.locator('#login-email').fill('admin@example.com');await click('forgot-code');await p.locator('#login-code').fill('123456');await p.locator('#new-password').fill('DemoPass2026');await p.locator('#confirm-password').fill('DemoPass2026');await click('bo-reset');await p.waitForURL(/#\/auth-success$/);await p.waitForTimeout(80);assert((await p.locator('h1').last().innerText()).includes('設定已完成'));
+ await go('register');await p.locator('#reg-name').fill('測試申請人');await p.locator('#login-email').fill('qa-new@example.com');await p.locator('#reg-password').fill('DemoPass2026');await p.locator('#reg-confirm').fill('DemoPass2026');await p.locator('#reg-terms').check();await click('bo-register');await p.waitForURL(/#\/auth-success$/);await p.waitForTimeout(80);assert((await p.locator('h1').last().innerText()).includes('設定已完成'));
+ assert.deepEqual(errors,[]);fs.writeFileSync(path.join(__dirname,'qa-extra-report.json'),JSON.stringify({passed:true,date:new Date().toISOString(),url:base,checks:['sync success/failure/retry','hide/reorder/freeze columns','company edit draft restore','batch import example and real CSV with duplicates','local image selection','draft save failure','BR recognition failure','forgot/reset password','registration validation'],errors},null,2));
+ console.log('PASS: extra backend interactions.');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
