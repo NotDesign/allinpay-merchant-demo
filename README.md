@@ -46,7 +46,10 @@
 - 銀行帳號原位顯示／隱藏、公司詳情四分頁、編輯、重新選取文件、商戶轉換新舊資料對照。
 - 新增商戶六步：文件材料、主體資料、經營與聯繫、結算帳戶、產品與費率、確認提交。
 - BR 匯入五階段示例：匯入 → 辨識 → 核對 → 已核對、準備套用 → 匯入結果。此單檔以固定假資料模擬，不包含 OCR 引擎。
-- 原有 105 個來源欄位、27 個文件項目、可點擊步驟列、草稿及成功／失敗視窗。
+- 新增商戶已同步 OATS V2：109 個欄位定義（含 61 個原型基本欄位、重複人員欄位及產品配置）、21 類文件、11 類／117 項產品。可點擊步驟列，並儲存／還原草稿。
+- 地區、法律地位、產品及風險級別決定條件必填；董事可被授權簽名人或控股股東沿用。香港／新加坡 AMEX 情境只可登記一位授權簽名人。
+- 各產品獨立費率 Overlay：Regional、Blended、Wallet、按筆及分期；包含優惠費率、DCC、優計劃及 7 種分期期數。
+- 多文件辨識、欄位來源／信心、差異核對、缺件及風控為固定假資料或本機規則示例，**不是正式 OCR 或合規驗證**。
 - 帳號管理、個別帳號權限 Overlay；儲存前輸入示例密碼。修改只影響選取帳號，不影響同角色其他帳號。
 - 四層角色及「權限不足」演示：只顯示自己的帳號、隱藏其他人的權限且不可編輯。
 - 批量導入示例、操作記錄、設定及登出。
@@ -67,6 +70,16 @@
 | 商戶轉換／批量導入／草稿 | `241:2918`／`110:47`／`479:4378` |
 
 Logo、圖片及功能圖示使用 Figma 回傳素材。`asset-manifest.json` 保存外部頁素材的內嵌資料，讓下載版本可以離線重建。`source-figma.json` 是原八頁資料快照，並不代表全部新功能的來源快照。
+
+### OATS V2 更新
+
+先更新 Figma 六個既有畫面及費率 Overlay，再同步後台 HTML。欄位定義、各選項及產品清單保存在 `onboarding-v2-data.js`，互動在 `onboarding-v2.js`，版面在 `onboarding-v2.css`。未將使用者提供的原始 HTML 或其外部編輯腳本加入公開 Repository。
+
+- 原有 DBA no. 及香港分行代碼選填功能保留。SWIFT Code 改為選填；結算週期可自行輸入。
+- MCC 行業名稱由代碼帶出；維護人名稱／電郵替換舊財務聯絡欄位。
+- V2 舊草稿保留原值，開啟時提示重新核對選項與新增必填資料，不會自動把未知舊費率視為有效。
+- 文件辨識示例只在確認後寫入選取欄位；不分析本機檔案內容。文件差異的確認只適用當次內容，再修改會重新要求核對。
+- 現有外部申請 `external.html` 不在本次後台「新增商戶」欄位更新範圍內，保持原版本。
 
 ## 重要界線
 
@@ -98,12 +111,13 @@ npm install --no-save playwright
 npx playwright install chromium
 # 先以任意靜態伺服器提供目前目錄，再指定 URL
 DEMO_URL=http://127.0.0.1:4319/backoffice.html node verify-admin.cjs
+DEMO_URL=http://127.0.0.1:4319/backoffice.html node verify-onboarding-v2.cjs
 ```
 
 可用 `CHROME_PATH` 指定本機 Chromium 系瀏覽器，或 `PLAYWRIGHT_PATH` 指定既有套件位置。測試使用獨立瀏覽器資料，包含登入錯誤、OTP、審核、個別權限、草稿、新增商戶、行動版及離線單檔。`qa-report.json` 記錄最後一次驗證結果，不代表正式資安驗證。
 
 - 外部來源：`external.template.html`、`external.css`、`external.js`。
-- 後台來源：`core.js`、`backoffice-extension.js`、`current-backoffice.js`、`styles.css`、`backoffice.css`、`current-backoffice.css`、`data.js`。
+- 後台來源：`core.js`、`backoffice-extension.js`、`current-backoffice.js`、`onboarding-v2.js`、`onboarding-v2-data.js` 及對應 CSS、`data.js`。
 - `app.js`、`external.html`、`backoffice.html` 為生成檔案，不應直接修改。
 - `verify.cjs`／`verify-flows.cjs`：舊版靜態檢查留存，部分舊後台假資料及 DOM 假設不適用本版本；後台以 `verify-admin.cjs` 為準。
 

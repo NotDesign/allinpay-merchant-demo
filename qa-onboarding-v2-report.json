@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "date": "2026-09-23T09:45:19.575Z",
+  "url": "http://127.0.0.1:4319/backoffice.html",
+  "checks": [
+    "61 source base fields covered; 109 total field definitions; 21 document types; 117 products",
+    "legal status, BR format, UTF8 length, linked directors update and safe unlink on removal",
+    "MCC lookup, removed old fields, Mainland certificates/geography, optional HK branch/SWIFT, personal settlement, editable cycle",
+    "All 117 product toggles and 116 fee editors; independent save/cancel; validation; all pricing modes",
+    "AMEX signer condition; online website/PCI; risk-dependent documents; risk downgrade explanation",
+    "V2 fee data survives draft save, browser reload and restore",
+    "Real file metadata restored with reselect requirement",
+    "Multi-document simulated OCR review/apply and selective import; difference confirmation invalidated on subsequent change",
+    "Risk redline block; submission and draft failure/retry; complete valid submission",
+    "Six pages at 1440/1024/390 widths without horizontal overflow; mobile fee overlay"
+  ],
+  "errors": []
+}

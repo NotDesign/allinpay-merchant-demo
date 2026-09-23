@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = __dirname;
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
-const extension = read('backoffice-extension.js') + '\n' + read('current-backoffice.js');
+const extension = ['backoffice-extension.js','current-backoffice.js','onboarding-v2-data.js','onboarding-v2.js'].map(read).join('\n');
 const core = read('core.js');
 if (!/render\(\);\s*\}\)\(\);\s*$/.test(core)) throw Error('Missing core entry');
 const app = core.replace(/render\(\);\s*\}\)\(\);\s*$/, () => extension + '\nrender();\n})();');
