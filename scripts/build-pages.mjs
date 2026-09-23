@@ -1,0 +1,11 @@
+import {cp,mkdir,readdir,writeFile,readFile} from 'node:fs/promises';
+const root=new URL('../',import.meta.url),out=new URL('_pages/',root);
+await mkdir(out,{recursive:true});
+const files=['index.html','backoffice.html','external.html','app.js','data.js','styles.css','backoffice.css','current-backoffice.css','onboarding-v2.css','br-integration.css','robots.txt','THIRD_PARTY_NOTICES.md'];
+for(const f of await readdir(root))if(/\.(svg|png)$/.test(f))files.push(f);
+for(const f of files)await cp(new URL(f,root),new URL(f,out));
+for(const folder of ['br-engine','vendor','fixtures'])await cp(new URL(folder,root),new URL(folder,out),{recursive:true});
+await writeFile(new URL('.nojekyll',out),'');
+const version={version:'2026.09.23-backoffice-br-integrated',builtAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||'local',brLocalOCR:true};
+await writeFile(new URL('version.json',out),JSON.stringify(version,null,2));
+console.log(`Prepared Pages artifact with ${files.length} root assets and local OCR runtime.`);
