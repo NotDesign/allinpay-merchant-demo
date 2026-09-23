@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-09-23T10:42:58.812Z",
+  "date": "2026-09-23T11:00:21.744Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "login/error/OTP",
@@ -15,7 +15,7 @@
     "six-step application/failure/retry/submission",
     "draft persistence/reload",
     "agency link",
-    "mobile overflow",
+    "tablet sidebar toggle/mobile overflow",
     "offline single HTML",
     "zero page errors/no runtime network requests"
   ],

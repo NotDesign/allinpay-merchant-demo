@@ -736,7 +736,7 @@ document.addEventListener('input',e=>{if(e.target.dataset.brValue){const b=DEMO.
 document.addEventListener('change',e=>{if(e.target.dataset.brValue){const id=e.target.id,pos=$('.br-workbench')?.scrollTop||0;brReview();$('#'+id)?.focus();$('.br-workbench').scrollTop=pos;}});
 document.addEventListener('dragover',e=>{if(e.target.closest('#br-drop'))e.preventDefault();});
 document.addEventListener('drop',e=>{if(!e.target.closest('#br-drop'))return;e.preventDefault();if(e.dataTransfer.files.length!==1)return brUpload('請一次選擇一份 BR 文件。');void brAccept(e.dataTransfer.files[0]);});
-$('#modal').addEventListener('close',()=>{brRelease();$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;});
+$('#modal').addEventListener('close',()=>{brRelease();if($('#modal').classList.contains('br-dialog'))$('#modal').replaceChildren();$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;});
 addEventListener('pagehide',()=>brRelease());
 const brOldPreview=actions['preview-demo-file'];
 actions['preview-demo-file']=el=>{const f=state.files[el.dataset.id],url=DEMO.fileURLs.get(el.dataset.id);if(f&&url&&/\.pdf$/i.test(f.name))modal('文件預覽',`<p>${esc(f.name)}</p><iframe class="br-pdf-preview" src="${url}" title="所選 PDF 原件"></iframe><p class="hint">本機文件預覽，未上傳至伺服器。</p>`);else brOldPreview(el);};
