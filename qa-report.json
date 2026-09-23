@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "date": "2026-09-23T08:19:52.311Z",
-  "url": "http://127.0.0.1:4319/backoffice.html",
+  "date": "2026-09-23T10:42:58.812Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "login/error/OTP",
     "240 merchants/28 accounts/18 drafts",
@@ -10,7 +10,7 @@
     "40-row pagination/search empty state",
     "password-gated account-specific permissions",
     "restricted account scope",
-    "27 document upload controls",
+    "21 V2 document upload controls",
     "five-stage BR simulated flow/result",
     "six-step application/failure/retry/submission",
     "draft persistence/reload",

@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "date": "2026-09-23T10:45:37.047Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
+  "checks": [
+    "Text PDF recognition; selective Step 2/3/6 mapping; existing values preserved; no CR/MCC/years inferred; confirmation gate; invalid BR; escaped input; no automatic persistence",
+    "Conflict replacement is explicit; atomic write failure retains review and supports retry",
+    "Signature and encryption errors; OCR cancellation; multi-page PDF selects and recognizes scanned page 2",
+    "sample-br.jpg real OCR: BR, expiry, English company correct (2s)",
+    "sample-br-rotated.png real OCR: BR, expiry, English company correct (4s)",
+    "sample-br-skew-plus.png real OCR: BR, expiry, English company correct (2s)",
+    "Original files/raw OCR never enter localStorage or IndexedDB; mobile review/result fit; same-origin GET requests only",
+    "Explicit draft saves confirmed fields and requires reselecting the original attachment after reload"
+  ],
+  "errors": [],
+  "violations": []
+}

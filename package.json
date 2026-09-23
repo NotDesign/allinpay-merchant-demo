@@ -1,0 +1,25 @@
+{
+  "name": "allinpay-backoffice-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AllinPay International Application Agency System \u2014 Figma-based backoffice with local BR OCR",
+  "scripts": {
+    "setup": "node scripts/vendor.mjs",
+    "build": "node build-admin.cjs",
+    "test": "node verify-admin.cjs",
+    "test:onboarding": "node verify-onboarding-v2.cjs",
+    "test:br": "node verify-br-integration.cjs",
+    "serve": "node scripts/serve.mjs",
+    "build:pages": "npm run build && node scripts/build-pages.mjs",
+    "test:extra": "node verify-admin-extra.cjs"
+  },
+  "dependencies": {
+    "@tesseract.js-data/chi_tra": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0",
+    "pdfjs-dist": "6.3.289",
+    "tesseract.js": "7.0.0"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

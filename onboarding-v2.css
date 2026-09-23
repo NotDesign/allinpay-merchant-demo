@@ -2,3 +2,36 @@
 @media(min-width:1750px){.v2-form .grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:1150px){.v2-form .grid,.v2-product-grid,.v2-summary,.v2-form .check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-product-foot{flex-wrap:wrap}}
 @media(max-width:700px){.v2-form .card{padding:18px}.v2-form .grid,.v2-form .upload-list,.v2-product-grid,.v2-summary,.v2-ocr-list,.v2-form .check-grid{grid-template-columns:minmax(0,1fr)}.v2-fee-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-person-link{align-items:stretch}.v2-person-link select{width:100%}.v2-check-row{flex-wrap:wrap}.v2-check-row>div{flex-basis:100%}.v2-form .br-callout{display:block}.v2-form .br-callout>div:last-child{margin-top:18px}.v2-form .repeat-heading{gap:12px}.v2-form .upload-row{padding:18px}.v2-form .upload-actions{flex-wrap:wrap}}
+/* Figma 948:6768: a single-column, three-status import result, not the generic modal layout. */
+#modal:has(.v2-import-result){width:min(1000px,calc(100vw - 32px));background:#fff;border-color:var(--border);border-radius:6px}
+#modal:has(.v2-import-result) .modal-head{padding:32px 32px 0;border:0;background:#fff}
+#modal:has(.v2-import-result) .modal-head h2{font-size:24px;line-height:32px;font-weight:700}
+#modal:has(.v2-import-result) .modal-body{padding:24px 32px 0}
+.v2-import-result{display:flex;flex-direction:column;gap:24px;font-size:14px;line-height:20px}
+.v2-import-result section{display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:6px;min-width:0}
+.v2-import-result h3{font-size:18px;line-height:26px;font-weight:700;margin:0}
+.v2-import-result ol{margin:0;padding-left:17px;line-height:26px;overflow-wrap:anywhere}
+.v2-import-pending ol,.v2-import-unrecognized ol{line-height:20px}
+.v2-import-result p{margin:0;line-height:20px}
+.v2-import-success{background:#e8f7ee;color:#137a42}
+.v2-import-pending{background:#fff4d6;color:#a75d00}
+.v2-import-unrecognized{background:#f2f4f8;color:#586174}
+.v2-import-result .v2-import-note{color:#586174}
+#modal:has(.v2-import-result) .modal-foot{padding:24px 32px 32px;border:0;background:#fff;position:static}
+#modal:has(.v2-import-result) .modal-foot button{width:150px;height:44px;min-height:44px;font-size:13px;font-weight:500;line-height:16px}
+@media(max-width:600px){#modal:has(.v2-import-result) .modal-head{padding:24px 20px 0}#modal:has(.v2-import-result) .modal-body{padding:24px 20px 0}#modal:has(.v2-import-result) .modal-foot{padding:24px 20px}.v2-import-result section{padding:20px}.v2-import-result ol{line-height:26px}#modal:has(.v2-import-result) .modal-head h2{font-size:22px}}
+/* Layout measurements from the current Figma forms (110:15, 595:5192, 110:39). */
+.v2-form .card{padding:16px;margin-bottom:16px}.v2-form .card>h2{font-size:18px;line-height:26px;margin:0 0 12px}.v2-form .card>p.hint{margin:0 0 16px;font-size:12px;line-height:17px}
+.v2-form .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.v2-form .field label{font-size:13px;line-height:18px;font-weight:500;margin-bottom:8px}.v2-form .field .en{display:inline;font-size:13px;line-height:18px;margin-left:6px;color:#8a94a6}.v2-form .field input,.v2-form .field select{height:38px;min-height:38px;padding:8px 12px;font-size:12px;border-color:#c8cfdb}.v2-form .field .hint{font-size:11px;line-height:16px;min-height:16px;margin-top:8px}
+.v2-form [data-section="商戶名稱"] .grid{grid-template-columns:repeat(6,minmax(0,1fr))}.v2-form [data-section="商戶名稱"] .field{grid-column:span 3}.v2-form [data-section="商戶名稱"] [data-field-wrap="dbaNo"]{grid-column:span 2}
+.v2-form [data-section="業務地址"] .grid{grid-template-columns:repeat(6,minmax(0,1fr))}.v2-form [data-section="業務地址"] .field{grid-column:span 2}.v2-form [data-section="業務地址"] [data-field-wrap="addrStreet"],.v2-form [data-section="業務地址"] [data-field-wrap="addrStreetEn"]{grid-column:span 3}
+.v2-br-status{display:flex;gap:16px;justify-content:space-between;align-items:center;padding:16px;background:#eaf6fc;border-radius:6px;margin-bottom:16px}.v2-br-status p{margin:0 0 8px;font-size:14px}.v2-br-status small{font-size:12px;color:#586174}.v2-br-status button{flex-shrink:0;min-width:150px}
+.v2-form .br-callout{background:#eaf6fc;border:0;padding:24px;align-items:flex-start}.v2-form .br-callout p{font-size:14px;line-height:20px}.v2-form .br-callout small{font-size:12px;line-height:17px}.v2-form .br-callout button{min-width:174px;min-height:44px}
+@media(max-width:1100px){.v2-form .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-form [data-section="業務地址"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-form [data-section="業務地址"] .field{grid-column:span 1!important}.v2-form .field label{min-height:36px}.v2-br-status{align-items:flex-start}}
+@media(max-width:700px){.v2-form .grid,.v2-form [data-section="商戶名稱"] .grid,.v2-form [data-section="業務地址"] .grid{grid-template-columns:1fr}.v2-form .field{grid-column:span 1!important}.v2-form .field label{min-height:0}.v2-br-status{flex-direction:column}}
+/* Product catalogue: use the open three-column rows in Figma 1023:7168. */
+.v2-form [data-section="產品配置"]{padding:20px}.v2-form [data-section="產品配置"] .check-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:20px 16px}.v2-form [data-section="產品配置"] .check{min-height:32px}
+.v2-form [data-section*="產品項目"]{padding:20px}.v2-product-grid{gap:24px 20px}.v2-product,.v2-product.selected{padding:0;border:0;background:transparent}.v2-product>.check{min-height:32px;font-size:13px;font-weight:400}.v2-product-foot{margin-top:8px;min-height:36px}.v2-product-foot small{font-size:11px;line-height:16px}.v2-product-foot button{min-width:88px;background:#fff}.v2-product-foot .hint{font-size:12px}
+.v2-form [data-section="特計商戶 SME 配置"] .grid{grid-template-columns:1fr}.v2-sme{padding:8px 0;border:0;display:grid;grid-template-columns:210px minmax(200px,400px);gap:16px;align-items:center}.v2-sme select{height:36px;font-size:12px}
+@media(max-width:1300px){.v2-form [data-section="產品配置"] .check-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.v2-form [data-section="產品配置"] .check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-sme{grid-template-columns:1fr}.v2-product-grid{gap:24px}}

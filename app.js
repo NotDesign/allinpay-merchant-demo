@@ -34,7 +34,7 @@ function modal(title,body,actions=btn('確定','close','primary')){$('#modal').i
 const scopeMessage=()=>modal('示例功能','<p>此項為儀表板資訊展示，目前未連接實際待辦、統計或外部服務。</p><p class="hint">可使用側欄進入商戶管理、新增商戶、帳號管理及草稿等互動流程。</p>');
 function sidebar(page){return `<aside class="sidebar" aria-label="主選單"><a class="brand" href="#/dashboard" aria-label="ALLINPAY 儀表板"><img src="4864c.png" alt="ALLINPAY International"><small>Application Agency System</small></a><div class="nav-label">主選單</div><a class="nav-link ${page==='dashboard'?'active':''}" href="#/dashboard"><img src="dashboard-icon.svg" alt="">儀表板</a><div class="nav-link"><img src="merchant-icon.svg" alt="">商戶入網 <span style="margin-left:auto">⌄</span></div><a class="nav-link sub ${page==='application'?'active':''}" href="#/application/1">新增商戶</a>${btn('批量導入','scope','nav-link sub')}<a class="nav-link sub ${page==='merchants'?'active':''}" href="#/merchants">商戶管理 ${state.noticeCount?`<span class="badge" title="${state.noticeCount} 筆新加入或修改">${state.noticeCount}</span>`:''}</a>${btn('查閱更新記錄','activity','nav-link sub')}<div class="nav-divider"></div>${btn('<img src="d0541.svg" alt="">帳號管理','scope','nav-link')}<a class="nav-link ${page==='drafts'?'active':''}" href="#/drafts"><img src="f57a5.svg" alt="">已儲存的草稿</a><div class="sidebar-bottom"><div class="user-name">MR STEPHEN LI</div><div>最高管理員 · Demo</div><div>繁體中文</div>${btn('設定','settings')}${btn('登出','logout')}</div></aside>`}
 function tabs(page){return page==='dashboard'||page==='drafts'?'':`<nav class="tabs" aria-label="工作頁籤"><a href="#/dashboard">⌂</a><a href="#/dashboard">交易量統計</a><a class="${page==='merchants'?'active':''}" href="#/merchants">商戶管理</a>${page==='application'?'<a class="active" href="#/application/1">新增客戶</a>':''}</nav>`}
-function demoBar(form=false){return `<div class="demo-bar"><span>DEMO · 僅使用模擬資料，未連接正式系統</span>${form?btn('填入完整示例','sample')+btn('清空表單','clear-form'):''}<label style="margin-left:auto"><input type="checkbox" id="simulate-failure" ${state.fail?'checked':''}>模擬儲存／提交失敗</label></div>`}
+function demoBar(form=false){return `<div class="demo-bar"><span>DEMO · ${form?'BR 可本機辨識，其餘業務流程為示例':'使用模擬業務資料，未連接正式系統'}</span>${form?btn('填入完整示例','sample')+btn('清空表單','clear-form'):''}<label style="margin-left:auto"><input type="checkbox" id="simulate-failure" ${state.fail?'checked':''}>模擬儲存／提交失敗</label></div>`}
 function dashboard(){return `<div class="page-heading"><h1>儀表板</h1><p>營運總覽 · 優先處理風險、待辦及重點商戶。所有數據為模擬示例。</p></div>${demoBar()}<div class="toolbar"><select aria-label="統計日期範圍" style="width:290px" id="dashboard-range"><option>最近 30 天 · 2026/08/16–09/14</option><option>最近 7 天 · 2026/09/08–09/14</option></select><span class="hint grow">資料範圍：全部商戶 · 更新於 12:30（模擬）</span>${btn('新增商戶','new','primary')}</div><div class="metrics">${[['商戶總數','120','本月新增 16 間'],['待審核','18','其中 4 間已等待超過 2 天'],['待補資料','9','其中 3 間為重點商戶'],['同步失敗','3','請核對失敗原因後重試']].map((m,i)=>`<button class="metric" data-action="metric" data-index="${i}"><span>${m[0]}</span><strong data-metric="${i}">${m[1]}</strong><small>${m[2]}</small></button>`).join('')}</div><div class="dashboard-grid"><section class="card"><h2>優先待辦 <span class="muted">Priority Actions</span></h2><p class="hint">依處理急迫程度排序。點擊「處理」可進入相關資料頁面。</p>${[['緊急','red','同步失敗','3 間商戶等待重新同步，優先確認銀行資料及驗證結果。','sync-task'],['即將到期','amber','證照提醒','7 間商戶的 BR／CR 將於 30 日內到期。','expiry-task'],['待跟進','blue','審核與補件','18 間待審核；9 間待補資料。','review-task'],['可續填','','尚未提交草稿','11 份草稿尚未完成，最近一份更新於今天 11:40。','drafts']].map(m=>`<div class="task-row">${pill(m[0],m[1])}<div class="task-copy"><h3>${m[2]}</h3><p>${m[3]}</p></div>${btn('處理',m[4])}</div>`).join('')}</section><section class="card"><h2>VIP／重點商戶 <span class="muted">Key Accounts</span></h2><p class="hint">以需要優先跟進的商戶為主，顯示負責人、風險提示及下一步。以下為重點名單示例。</p>${[['海港科技有限公司','陳偉明','待補銀行月結單','今天跟進 · 優先'],['新星零售有限公司','李志豪','BR 將於 14 日後到期','9/16 前聯絡'],['城市精選有限公司','張家輝','新服務申請待審核','待審核 · 2 天']].map((m,i)=>`<div class="task-row"><div class="task-copy"><h3>${m[0]}</h3><p>負責人：${m[1]}</p><p>${m[2]} · ${m[3]}</p></div>${btn('查看商戶','detail','',`data-mid="${sourceRows[i]['公司 MID']}"`)}</div>`).join('')}</section></div><section class="card activity"><h2>最新動態 <span class="muted">Recent Activity</span></h2><p class="hint">保留關鍵操作紀錄，方便交接及追蹤。</p>${['12:18　林嘉欣更新海港科技有限公司的聯絡資料','11:52　黃嘉敏完成 2 間商戶的資料審核','11:40　陳偉明儲存一份新商戶草稿','10:26　系統發現 3 間商戶同步失敗，等待處理'].map(t=>`<p>${t}</p>`).join('')}</section><p class="hint">僅顯示登入者有權查看的商戶、數字及操作記錄；代理商登入後改為自己的資料範圍。</p>`}
 function labelHTML(label){const [zh,...en]=String(label||'').split(/\s{2,}/);return esc(zh).replace('*','<span class="required">*</span>')+(en.length?`<span class="en">${esc(en.join(' '))}</span>`:'')}
 function fieldOptions(f){
@@ -58,7 +58,7 @@ if(s.uploads.length)content+=`<div class="upload-list">${s.uploads.map(u=>upload
 if(s.texts.length>2)content+=s.texts.slice(2).map(t=>`<p class="hint">${esc(t)}</p>`).join('');
 return `<section class="card" data-section="${esc(s.name)}"><h2>${esc(s.texts[0]||s.name)}</h2><p class="hint">${esc(s.texts[1]||'')}</p>${lead}${content}</section>`}
 function uploadRow(u){const file=state.files[u.id],err=state.errors['file-'+u.id];return `<div class="upload-row" data-upload-row="${u.id}"><div><div class="upload-name">${labelHTML(u.name)}</div><div class="hint">${esc(u.hint)}</div>${err?`<div class="error" style="color:var(--error)">${esc(err)}</div>`:''}</div><div class="file-state ${file?'ready':''}">${file?`${esc(file.name)}<br>${file.demo?'示例附件（未上傳）':file.needsReselect?'已還原檔名，請重新選取檔案':`${(file.size/1024).toFixed(0)} KB · 已選取（僅本機）`}`:'尚未上傳'}</div><div class="upload-actions">${file?btn('移除','remove-file','danger',`data-id="${u.id}"`):''}${btn(file?'重新上傳':'選擇文件','upload','',`data-id="${u.id}"`)}<input class="hidden" type="file" data-upload="${u.id}" accept=".jpg,.jpeg,.png,.zip"></div></div>`}
-function footer(step){return `<footer class="footer"><div class="hint">${state.savedAt?'上次儲存：'+esc(state.savedAt):'資料可隨時儲存為草稿，下次繼續填寫。'}<br>第 ${step}／6 步 · ${steps[step-1]}</div><div class="actions">${step>1?btn('上一步','previous'):''}${btn('儲存草稿','save-draft')}${step<6?btn('下一步','next','primary'):btn('確認提交','submit','primary')}</div></footer>`}
+function footer(step){return `<footer class="footer"><div class="footer-left">${step>1?btn('上一步','previous'):''}${btn('儲存草稿','save-draft')}<span class="hint">${state.savedAt?'上次儲存：'+esc(state.savedAt):'可隨時儲存草稿'}</span></div><div class="actions"><span class="hint">Step ${step}／6</span>${step<6?btn('下一步','next','primary'):btn('確認提交','submit','primary')}</div></footer>`}
 function stepper(current){return `<nav class="stepper" aria-label="申請步驟">${steps.map((t,i)=>`<button type="button" class="step ${i+1===current?'active':''} ${i+1<current?'done':''}" data-action="step" data-step="${i+1}" ${i+1===current?'aria-current="step"':''}><span class="number">${i+1}</span>${t}</button>`).join('')}</nav>`}
 function value(id){return esc(state.values[id]||'尚未填寫')}
 function productChecks(){return forms[3].sections.slice(0,7).flatMap(s=>s.checks).filter(c=>state.checks[c.id])}
@@ -404,7 +404,7 @@ function v2Field(f,index=0,linked=false) {
   else control=`<input ${attrs} type="${type}" value="${esc(v)}" placeholder="${esc(f.placeholder)}" ${key==='mcc'?'list="v2-mcc" inputmode="numeric"':key==='cardBankCode'&&v2Raw('cardCountryCode')==='HKG'?'list="v2-banks" inputmode="numeric"':key==='settlePeriod'?'list="v2-settlement"':''}>`;
   return `<div class="field ${error?'invalid':''}" data-field-wrap="${esc(key)}"><label for="${id}">${heading}</label>${control}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}${key==='contactEmail'?btn(state.emailVerified?'已驗證（模擬）':'驗證電郵（模擬）','verify-email','mini-action'):''}${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
 }
-function v2Card(title,copy,body) {return `<section class="card"><h2>${esc(title)}</h2>${copy?`<p class="hint">${esc(copy)}</p>`:''}${body}</section>`;}
+function v2Card(title,copy,body) {return `<section class="card" data-section="${esc(title)}"><h2>${esc(title)}</h2>${copy?`<p class="hint">${esc(copy)}</p>`:''}${body}</section>`;}
 function v2PersonSection(s) {
   const group=s.fields[0].id.split('[')[0],links=v2Model().links[group];let html='';
   for(let i=0;i<state.people[group];i++){const linked=links?.[i]!==undefined&&links?.[i]!==null;
@@ -453,15 +453,16 @@ const v2MissingDocs=()=>V2.documents.filter(d=>v2FileRequired()[d.id]&&(!state.f
 function v2Consistency() {
   const list=[],add=(key,title,values,step,hard=false)=>{const filled=values.filter(x=>x[1]);if(filled.length<2)return;const same=filled.every(x=>v2NormalizeName(x[1])===v2NormalizeName(filled[0][1]));const fingerprint=JSON.stringify(filled);list.push({key,title,values:filled,step,hard,same,fingerprint,confirmed:!same&&v2Model().ack[key]?.fingerprint===fingerprint});};
   if(v2Raw('isCompay')==='Y')add('bank-name','公司英文名稱與對公帳戶名稱',[['商戶',v2Raw('merchantEnglishName')],['銀行帳戶',v2Raw('cardName')]],4);
-  for(const o of v2Model().ocr.filter(o=>o.applied))add('ocr-'+o.key,v2Label(o.key)+' · 文件與表單',[['示例辨識',o.applied],['目前表單',v2Raw(o.key)]],o.step||2);
+  for(const o of v2Model().ocr.filter(o=>o.applied))add('ocr-'+o.key,v2Label(o.key)+' · 文件與表單',[['已核對辨識',o.applied],['目前表單',v2Raw(o.key)]],o.step||2);
   return list;
 }
 function v2ConsistencyCard() {
-  const list=v2Consistency();return v2Card('資料一致性檢查','比較本次表單及已套用的示例辨識結果；尚未提供的文件不代表已完成核實。',list.length?`<div class="v2-consistency">${list.map(c=>`<div class="v2-check-row"><div><strong>${esc(c.title)}</strong><small>${c.values.map(([l,v])=>esc(l)+'：'+esc(v)).join('／')}</small></div>${pill(c.same?'一致':c.confirmed?'已確認差異':'待核對',c.same?'green':c.confirmed?'blue':'amber')}${!c.same?btn('查看差異','v2-difference','',`data-key="${esc(c.key)}"`):''}</div>`).join('')}</div>`:'<p class="hint">尚未有足夠資料可比對。可先填寫表單，或使用文件辨識示例。</p>');
+  const list=v2Consistency();return v2Card('資料一致性檢查','比較本次表單及已套用的辨識結果；尚未提供的文件不代表已完成核實。',list.length?`<div class="v2-consistency">${list.map(c=>`<div class="v2-check-row"><div><strong>${esc(c.title)}</strong><small>${c.values.map(([l,v])=>esc(l)+'：'+esc(v)).join('／')}</small></div>${pill(c.same?'一致':c.confirmed?'已確認差異':'待核對',c.same?'green':c.confirmed?'blue':'amber')}${!c.same?btn('查看差異','v2-difference','',`data-key="${esc(c.key)}"`):''}</div>`).join('')}</div>`:'<p class="hint">尚未有足夠資料可比對。可先填寫表單，或匯入 BR 核對後套用。</p>');
 }
+function v2BrStatus(){const count=v2Model().ocr.filter(o=>o.applied&&/BR/.test(o.source)).length;return `<section class="v2-br-status"><div><p>${count?'已從 BR 帶入 '+count+' 個欄位，請繼續核對':'尚未匯入 BR，可先手動填寫'}</p><small>BR 可預填名稱、證書資料、完整地址及業務性質；MCC、地區及聯絡方式需另行填寫。</small></div>${btn(count?'查看辨識來源':'匯入 BR 並辨識',count?'br-sources':'br-start')}</section>`;}
 function v2Documents() {
   const miss=v2MissingDocs(),req=requiredFiles(),log=v2Model().ocr;
-  return `<section class="br-callout"><div><h2>先匯入文件，核對後帶入資料</h2><p>支援 BR、CI、NAR1／NNC1、身份證及銀行月結單的示例流程。</p><small>Demo 不會讀取文件內容；辨識畫面使用固定假資料。請勿上傳真實個人或銀行文件。</small></div><div>${btn('匯入 BR','br-start','primary')}${btn('多文件辨識示例','v2-ocr')}</div></section>`+v2Card('辨識結果及來源','只會套用你已核對並選取的欄位；低信心或無法辨識的項目不會自動寫入。',log.length?`<div class="table-scroll"><table><thead><tr><th>欄位</th><th>辨識內容（假資料）</th><th>來源／信心</th><th>狀態</th></tr></thead><tbody>${log.map(o=>`<tr><td>${esc(v2Label(o.key))}</td><td>${esc(o.value)}</td><td>${esc(o.source)} · ${o.confidence}%</td><td>${pill(o.applied?'已套用':'待核對',o.applied?'green':'amber')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="hint">尚未匯入文件，可先手動填寫。</p>')+v2ConsistencyCard()+v2Card('必交文件檢查','必交清單會隨法律主體、風險級別、產品及董事／股東設定更新。',`<div class="notice ${miss.length?'warn':''}">${req.length-miss.length}／${req.length} 項必交文件已備妥${miss.length?'；仍缺 '+miss.length+' 項':''}</div>${miss.length?'<ul class="v2-missing">'+miss.map(d=>`<li>${esc(d.name.split('\n')[0])}</li>`).join('')+'</ul>':''}`)+v2Card('文件材料','PDF／JPG／PNG／ZIP，每檔上限 10 MB。多頁或多位董事資料可合併為 PDF／ZIP；本機附件不會上傳。',`<div class="upload-list">${V2.documents.map(d=>uploadRow(d)).join('')}</div>`);
+  return `<section class="br-callout"><div><h2>文件上傳與識別</h2><p>先匯入 BR，在 Overlay 核對後帶入 Step 2 主體資料及 Step 3 經營與聯繫。</p><small>BR 支援 PDF、JPG、PNG，文件僅在瀏覽器本機辨識；其他文件提供示例流程。</small></div><div>${btn('匯入 BR','br-start','primary')}${btn('多文件辨識示例','v2-ocr')}</div></section>`+v2Card('辨識結果及來源','只會套用你已核對並選取的欄位；低信心或無法辨識的項目不會自動寫入。',log.length?`<div class="table-scroll"><table><thead><tr><th>欄位</th><th>核對內容</th><th>辨識來源</th><th>狀態</th></tr></thead><tbody>${log.map(o=>`<tr><td>${esc(v2Label(o.key))}</td><td>${esc(o.value)}</td><td>${esc(o.source)}${o.confidence==null?'':' · 示例信心 '+o.confidence+'%'}</td><td>${pill(o.applied?'已套用':'待核對',o.applied?'green':'amber')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="hint">尚未匯入文件，可先手動填寫。</p>')+v2ConsistencyCard()+v2Card('必交文件檢查','必交清單會隨法律主體、風險級別、產品及董事／股東設定更新。',`<div class="notice ${miss.length?'warn':''}">${req.length-miss.length}／${req.length} 項必交文件已備妥${miss.length?'；仍缺 '+miss.length+' 項':''}</div>${miss.length?'<ul class="v2-missing">'+miss.map(d=>`<li>${esc(d.name.split('\n')[0])}</li>`).join('')+'</ul>':''}`)+v2Card('文件材料','PDF／JPG／PNG／ZIP，每檔上限 10 MB。多頁或多位董事資料可合併為 PDF／ZIP；本機附件不會上傳。',`<div class="upload-list">${V2.documents.map(d=>uploadRow(d)).join('')}</div>`);
 }
 function v2ValidateFields(index) {
   const errors={},required=v2Required();
@@ -528,7 +529,7 @@ function v2Review() {
   html+=v2Card('文件材料','',`<div class="toolbar">${btn('返回修改','step','',`data-step="1"`)}</div><div class="v2-summary">${V2.documents.filter(d=>state.files[d.id]||v2FileRequired()[d.id]).map(d=>`<div><dt>${esc(d.name.split('\n')[0])}</dt><dd>${esc(state.files[d.id]?.name||'尚未提供')}${state.files[d.id]?.needsReselect?'（須重新選取）':''}</dd></div>`).join('')}</div>`);
   html+=v2Card('帳單名稱預覽','建議使用全大寫「品牌名*城市」，25 字元內。',`<div class="statement">${esc(v2Raw('merchantEnglishShortName')||'尚未填寫')}</div>`)+v2Card('聲明及確認','此 Demo 只產生本機申請紀錄，不會向正式平台提交。',check({id:'613:4956',label:'我已核對申請資料，並確認獲授權代表此商戶提交。'}));return html;
 }
-application=function(step){v2Ensure();v2SyncDerived();return `<div class="v2-form" data-schema="oats-v2">${demoBar(true)}<div class="v2-version">OATS V2 · 六步申請流程</div>${v2Model().legacy?'<div class="notice warn">已保留舊草稿內容。欄位及產品規則已更新至 V2，請重新核對選項、產品費率及新增必填資料。</div>':''}${state.editing?`<div class="notice">正在編輯 ${esc(state.editing)} 的模擬資料</div>`:''}${state.errors._form?`<div class="notice error" role="alert">${esc(state.errors._form)}<ul>${Object.entries(state.errors).filter(([k])=>k.startsWith('_')&&k!=='_form').map(([,v])=>`<li>${esc(v)}</li>`).join('')}</ul></div>`:''}${step===1?v2Documents():step===5?v2Products():step===6?v2Review():v2FormSections(step-2)}<datalist id="v2-mcc">${V2.catalog.MCCS.map(m=>`<option value="${m.c}">${esc(m.n)}</option>`).join('')}</datalist><datalist id="v2-banks">${[['004','滙豐銀行'],['003','渣打銀行'],['012','中國銀行（香港）'],['024','恒生銀行'],['015','東亞銀行'],['016','星展銀行（香港）']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</datalist><datalist id="v2-settlement">${['T1','T2','T3','T7','D1'].map(v=>`<option>${v}</option>`).join('')}</datalist></div>`;};
+application=function(step){v2Ensure();v2SyncDerived();return `<div class="v2-form" data-schema="oats-v2">${demoBar(true)}<div class="v2-version">OATS V2 · 六步申請流程</div>${v2Model().legacy?'<div class="notice warn">已保留舊草稿內容。欄位及產品規則已更新至 V2，請重新核對選項、產品費率及新增必填資料。</div>':''}${state.editing?`<div class="notice">正在編輯 ${esc(state.editing)} 的模擬資料</div>`:''}${state.errors._form?`<div class="notice error" role="alert">${esc(state.errors._form)}<ul>${Object.entries(state.errors).filter(([k])=>k.startsWith('_')&&k!=='_form').map(([,v])=>`<li>${esc(v)}</li>`).join('')}</ul></div>`:''}${[2,3].includes(step)?v2BrStatus():''}${step===1?v2Documents():step===5?v2Products():step===6?v2Review():v2FormSections(step-2)}<datalist id="v2-mcc">${V2.catalog.MCCS.map(m=>`<option value="${m.c}">${esc(m.n)}</option>`).join('')}</datalist><datalist id="v2-banks">${[['004','滙豐銀行'],['003','渣打銀行'],['012','中國銀行（香港）'],['024','恒生銀行'],['015','東亞銀行'],['016','星展銀行（香港）']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</datalist><datalist id="v2-settlement">${['T1','T2','T3','T7','D1'].map(v=>`<option>${v}</option>`).join('')}</datalist></div>`;};
 fillSample=function(row){
   const existing=row;row=row||rows[0];
   v2Reset();const future=n=>{const d=new Date();d.setFullYear(d.getFullYear()+n);return d.toISOString().slice(0,10);};
@@ -547,7 +548,12 @@ fillSample=function(row){
 const v2OldBrStart=actions['br-start'];
 actions['br-start']=()=>{v2OldBrStart();DEMO.br.values=[['merchantName','中文名稱','海港科技有限公司'],['merchantEnglishName','英文名稱','SAMPLE HARBOUR TECHNOLOGY LIMITED'],['registerCertName','註冊證書名稱','SAMPLE HARBOUR TECHNOLOGY LIMITED'],['registerCertNo','BR 號碼','12345678-000'],['registerCertPeriod','證書有效期','2028-08-31'],['legalStatus','法律地位','BODY_CORPORATE'],['registerCertType','證書類型','01']];};
 brReview=function(ready=false){const b=DEMO.br;b.phase=ready?'ready':'review';modal(ready?'已核對，準備套用':'核對辨識結果',`<p class="hint">${esc(b.filename)} · 固定示例辨識結果，並非讀取上傳文件。</p><div class="br-fields">${b.values.map(([k,l,v])=>`<div class="field"><label for="br-${k}">${l}</label>${V2.options[k]?`<select id="br-${k}" data-br-field="${k}" ${ready?'disabled':''}>${V2.options[k].map(([val,label])=>`<option value="${val}" ${v===val?'selected':''}>${label}</option>`).join('')}</select>`:`<input id="br-${k}" data-br-field="${k}" value="${esc(v)}" ${ready?'readonly':''}>`}</div>`).join('')}</div><div class="notice warn">仍待核對：英文營業地址；無法辨識：BR 繳款日期。這些項目不會帶入。</div>${ready?'<p class="br-status">已核對，可套用；地址仍待確認。</p>':'<label class="check"><input type="checkbox" id="br-checked">我已核對以上 7 個欄位，確認可套用。</label>'}<p id="br-error" class="error"></p>`,btn('取消，保留原資料','close')+btn(ready?'確認並套用 7 個欄位':'已核對，準備套用',ready?'br-apply':'br-ready','primary'));};
-brResult=function(){const b=DEMO.br;modal('已成功寫入申請資料',`<div class="notice">7 個欄位已帶入，現在可以繼續填寫。</div><div class="import-result"><section><h3>完成匯入</h3><ol>${b.values.map(([k,l,v])=>`<li><strong>${esc(l)}</strong>：${esc(v2Display(k,v))}</li>`).join('')}</ol></section><section><h3>仍待核對 · 未帶入</h3><ol><li>英文營業地址：請核對並拆分地區與街道。</li></ol><h3>無法辨識 · 未帶入</h3><ol><li>商業登記證繳款日期。</li></ol></section></div><p class="hint">BR 示例附件已加入 Step 1，其餘必填資料及文件仍須補齊。</p>`,btn('完成','close','primary'));};
+function v2ImportResult(imported,pending,unrecognized=[],done='close',unchanged=[]) {
+  const list=items=>`<ol>${items.map(item=>`<li>${esc(item)}</li>`).join('')}</ol>`;
+  modal(imported.length?'已成功寫入申請資料':'已完成匯入核對',`<div class="v2-import-result" data-figma-node="948:6768"><section class="v2-import-success"><h3>完成匯入 · ${imported.length} 個欄位已帶入</h3>${imported.length?list(imported):'<p>本次沒有需要新增或取代的欄位。</p>'}${unchanged.length?'<p>'+unchanged.length+' 個欄位與目前表單一致，已保留原值。</p>':''}</section><section class="v2-import-pending"><h3>仍待核對 · ${pending.length} 個欄位未帶入</h3>${pending.length?list(pending):'<p>本次沒有仍待核對的欄位。</p>'}</section><section class="v2-import-unrecognized"><h3>無法辨識</h3>${unrecognized.length?list(unrecognized):'<p>本次沒有無法辨識的欄位。</p>'}</section><p class="v2-import-note">尚未帶入的項目不會覆蓋原有資料。按「完成」返回申請表後，可繼續核對及補充。</p></div>`,btn('完成',done,'primary'));
+  $('#modal .modal-head [data-action="close"]').remove();
+}
+brResult=function(){const b=DEMO.br;v2ImportResult(b.values.map(([k,l,v])=>`${l}：${k==='registerCertPeriod'?v.replaceAll('-','/'):v2Display(k,v)}`),['英文地址：請對照 BR 原件核對完整地址後，再手動填寫。']);};
 function v2OcrStart(){v2OcrEdit=null;modal('多文件辨識（模擬）','<div class="notice warn">使用固定假資料演示，沒有 OCR 服務，選取的文件不會上傳。</div><p>可選擇多份空白測試文件，或直接使用示例。</p><input id="v2-ocr-files" type="file" multiple accept=".pdf,.png,.jpg,.jpeg"><p class="hint">PDF／PNG／JPG，每檔不超過 10 MB。</p>',btn('取消','close')+btn('使用示例辨識','v2-ocr-recognize','primary'));}
 function v2OcrReview(ready=false){modal(ready?'已核對，準備套用':'核對辨識結果',`<div class="notice warn">以下全為示例資料，請確認選取欄位。低信心地址先保留，不會帶入。</div><div class="v2-ocr-list">${v2OcrEdit.map((o,i)=>`<label><input type="checkbox" data-v2-ocr-item="${i}" ${o.selected?'checked':''} ${ready||o.confidence<80?'disabled':''}><span><strong>${esc(v2Label(o.key))}</strong><small>${esc(o.value)}</small><small class="hint">${o.source} · 信心 ${o.confidence}%${o.confidence<80?' · 仍待核對':''}</small></span></label>`).join('')}</div><p class="hint">${ready?'已核對的欄位可套用；地址仍待確認。':'請勾選已確認可套用的資料，未選項目保留原值。'}</p><p id="v2-ocr-error" class="error" role="alert"></p>`,btn('取消，保留原資料','close')+btn(ready?'確認並套用':'已核對，準備套用',ready?'v2-ocr-apply':'v2-ocr-ready','primary'));}
 function v2OcrRecognize(){
@@ -598,6 +604,145 @@ document.addEventListener('change',e=>{
 });
 // Updated, read-only QA inventory. All form mutations remain in the visible UI.
 Object.assign(window.AllinPayDemo,{version:'2026.09.23-oats-v2',getOnboarding:()=>({version:2,fields:v2Fields.map(f=>f.id),documents:V2.documents.map(d=>d.id),products:v2Groups.map(g=>({key:g.k,count:g.rows.length})),errors:validateAll(),score:v2Score(),selectedProducts:v2Rows().map(x=>({key:x.key,name:x.r.n,pricing:x.st.ct,values:{...x.st.v}}))})});
+
+// BR is part of the backoffice. Original documents and raw OCR stay in memory.
+// No upload API, external OCR, or automatic persistence of review candidates.
+let brModules;
+const brDefs = [
+  ['businessNameZh','中文名稱','merchantName',2],
+  ['businessNameEn','英文名稱','merchantEnglishName',2],
+  ['brNumber','BR 號碼及分支碼','registerCertNo',2],
+  ['expiryDate','註冊證書有效期','registerCertPeriod',2],
+  ['legalStatus','法律地位','legalStatus',2],
+  ['businessAddressZh','中文地址','addrStreet',3],
+  ['businessAddressEn','英文地址','addrStreetEn',3],
+  ['natureOfBusiness','業務性質','remark',3],
+];
+const brTargets = {businessNameEn:['merchantEnglishName','registerCertName'],brNumber:['registerCertNo','registerCertType']};
+const brLabels = Object.fromEntries(brDefs.map(([,label,target])=>[target,label]));
+Object.assign(brLabels,{registerCertName:'註冊證書名稱',registerCertType:'註冊證書類型',remark:'備註（BR 業務性質）'});
+const brAlive = b => DEMO.br === b && !b.disposed;
+async function brLoadModules(){
+  if(location.protocol==='file:')throw Error('本機檔案辨識需要 HTTP 服務。請開啟同一後台的 GitHub 網址，或以 npm run serve 啟動下載的完整原始碼。單一 HTML 仍可使用示範資料。');
+  if(!brModules)brModules=Promise.all([import('./br-engine/engine.mjs'),import('./br-engine/parser.mjs')]).catch(e=>{brModules=null;throw e;});
+  return brModules;
+}
+function brRelease(b=DEMO.br){
+  if(!b||b.disposed)return;b.disposed=true;b.controller?.abort();clearTimeout(b.timer);
+  if(b.page)b.page.canvas.width=1;
+  Promise.resolve(b.document?.destroy()).catch(()=>{});
+  b.document=null;b.page=null;b.file=null;b.result=null;b.fields={};b.rawText='';
+}
+function brModal(title,body,buttons,kind='review'){
+  modal(title,body,buttons);$('#modal').classList.add('br-dialog');$('#modal').dataset.br=kind;
+}
+function brUpload(error=''){
+  const b=DEMO.br;if(!brAlive(b))return;b.phase='upload';
+  brModal('匯入香港商業登記證',`<p class="hint">選擇文件後，先確認 BR 所在頁面，再開始辨識。</p>${error?`<p class="notice error" role="alert">${esc(error)}</p>`:''}<section class="br-drop" id="br-drop"><h3>拖曳 BR 到這裡，或選擇本機檔案</h3><p>PDF、JPG、PNG · 每檔最多 10 MB／PDF 最多 5 頁</p><label class="br-file-label" for="demo-br-file">選擇檔案</label><input id="demo-br-file" type="file" accept=".pdf,.jpg,.jpeg,.png" class="br-file-input"><p class="hint">文件只在此瀏覽器處理，不會傳送至外部辨識服務。</p></section>${b.document?`<div class="br-file-summary"><strong>${esc(b.filename)}</strong><label>BR 頁面 <select id="br-page" aria-label="選擇 BR 頁面">${Array.from({length:b.document.pages},(_,i)=>`<option value="${i+1}" ${b.pageNumber===i+1?'selected':''}>第 ${i+1} 頁／共 ${b.document.pages} 頁</option>`).join('')}</select></label><span>${(b.file.size/1024/1024).toFixed(2)} MB</span></div><div id="br-upload-preview" class="br-upload-preview"></div>`:'<p class="hint">未準備文件時，可使用虛構示範資料查看完整流程。</p>'}<p class="hint br-privacy">首次圖片辨識會下載本網站的辨識模型，可能需要較長時間。辨識原文不會存入草稿；按「儲存草稿」才會把已填表單欄位保存在此瀏覽器。</p>`,btn('取消','close')+(b.document?btn('開始辨識','br-recognize','primary'):btn('使用示範資料','br-recognize','primary')),'upload');
+  if(b.page){const c=b.page.canvas.cloneNode();c.getContext('2d').drawImage(b.page.canvas,0,0);c.setAttribute('aria-label','所選 BR 原件預覽');$('#br-upload-preview').append(c);}
+}
+brStart=function(){brRelease();DEMO.br={phase:'upload',disposed:false,fields:{},selected:new Set(),choices:{},filename:'',pageNumber:1,confirmed:false,applied:false};brUpload();};
+async function brAccept(file){
+  const b=DEMO.br;if(!brAlive(b)||b.phase==='loading'||b.phase==='processing')return;
+  if(!file)return;b.phase='loading';b.controller=new AbortController();const source=b.controller;
+  brModal('正在開啟 BR',`<div class="progress-demo"></div><p>正在本機讀取 ${esc(file.name)}…</p>`,btn('取消','close'),'progress');
+  try{
+    const [engine]=await brLoadModules();if(!brAlive(b)||source.signal.aborted)return;
+    const opened=await engine.loadDocument(file);if(!brAlive(b)||source.signal.aborted){await opened.destroy();return;}
+    if(b.page)b.page.canvas.width=1;await b.document?.destroy();b.document=opened;b.file=file;b.filename=file.name;b.pageNumber=1;b.fields={};b.result=null;b.selected.clear();b.choices={};b.demo=false;
+    const page=await opened.render(1);if(!brAlive(b)){page.canvas.width=1;return;}b.page=page;b.controller=null;brUpload();
+  }catch(e){if(brAlive(b))brUpload(e.message||'文件無法開啟，請重新選擇。');}
+}
+async function brPage(number){
+  const b=DEMO.br;if(!brAlive(b)||b.phase!=='upload')return;b.phase='loading';$('#br-page').disabled=true;$('#modal [data-action=br-recognize]').disabled=true;
+  try{const page=await b.document.render(number);if(!brAlive(b)){page.canvas.width=1;return;}if(b.page)b.page.canvas.width=1;b.page=page;b.pageNumber=number;b.result=null;b.fields={};b.selected.clear();b.choices={};brUpload();}
+  catch(e){if(brAlive(b))brUpload('此頁無法讀取，請重新選擇文件。');}
+}
+function brDemo(){
+  const b=DEMO.br;b.demo=true;b.filename='SAMPLE-BR（虛構資料）';b.fields=Object.fromEntries(brDefs.map(([key])=>[key,{value:'',source:'虛構示例',page:1}]));
+  const values={businessNameZh:'示例海港科技有限公司',businessNameEn:'SAMPLE HARBOUR TECHNOLOGY LIMITED',brNumber:'12345678-000',expiryDate:'2028-08-31',legalStatus:'法人團體 · Body Corporate',businessAddressEn:'UNIT 1201, 12/F, 88 EXAMPLE ROAD, HONG KONG',natureOfBusiness:'TECHNOLOGY SERVICES'};
+  for(const [k,v]of Object.entries(values))b.fields[k].value=v;
+  b.fields.businessAddressEn.warning='示例低信心地址，請對照原件核對。';b.fields.businessAddressEn.autoSelect=false;
+  b.result={recognized:true,warnings:[],method:'demo'};b.selected=new Set(brDefs.filter(([k])=>values[k]&&b.fields[k].autoSelect!==false).map(([k])=>k));b.choices={};brReview();
+}
+async function brRecognize(){
+  const b=DEMO.br;if(!brAlive(b))return;if(!b.document)return brDemo();if(!b.page||b.phase!=='upload')return;
+  b.phase='processing';b.confirmed=false;b.controller=new AbortController();const controller=b.controller;
+  brModal('正在辨識你的 BR',`<p>${esc(b.filename)} · 第 ${b.pageNumber} 頁</p><section class="br-progress"><h3 id="br-progress-label">載入本機辨識引擎</h3><progress id="br-progress" max="1" value="0"></progress><p>校正文件方向、讀取文字並整理可預填欄位。</p></section><p class="hint">原件與辨識原文只留在本頁；你可以隨時取消。</p>`,btn('取消辨識','br-cancel'),'progress');
+  b.timer=setTimeout(()=>{if(brAlive(b)&&b.phase==='processing'){b.timedOut=true;controller.abort();}},120000);
+  try{
+    const [engine]=await brLoadModules();const result=await engine.recognizeDocument({...b.page,page:b.pageNumber,signal:controller.signal,onProgress:({progress,label})=>{if(brAlive(b)&&b.phase==='processing'){$('#br-progress').value=progress;$('#br-progress-label').textContent=label;}}});
+    if(!brAlive(b)||controller.signal.aborted)return;b.result=result;b.fields=result.fields;b.selected=new Set(brDefs.filter(([k])=>result.recognized&&b.fields[k]?.value&&b.fields[k].autoSelect!==false).map(([k])=>k));b.choices={};b.demo=false;
+    if(!brDefs.some(([k])=>b.fields[k]?.value))brModal('暫時無法辨識這份 BR','<div class="notice warn">未找到可預填欄位。請使用較清晰、完整的文件，或手動填寫。</div>',btn('手動填寫','close')+btn('重新選檔','br-start','primary'),'failure');else brReview();
+  }catch(e){if(brAlive(b))brUpload(controller.signal.aborted?(b.timedOut?'辨識超過 120 秒，已停止。可換一份較清晰的文件，或手動填寫。':'已取消辨識，尚未更改申請資料。'):'本機辨識未完成。請重試或改用較清晰的文件。');}
+  finally{clearTimeout(b.timer);b.controller=null;b.timedOut=false;}
+}
+function brValue(key,b=DEMO.br){return String(b.fields[key]?.value||'').trim();}
+function brPlan(b=DEMO.br){
+  const planned=[];for(const [key,,target,step]of brDefs){if(!b.selected.has(key)||!brValue(key,b))continue;
+    for(const to of brTargets[key]||[target]){const value=to==='registerCertType'?'01':v2Canonical(to,brValue(key,b)),before=v2Raw(to);planned.push({key,target:to,value,before,step,label:brLabels[to],conflict:!!before&&before!==value,same:before===value,write:!before||before!==value&&b.choices[to]==='replace'});}}
+  return planned;
+}
+function brInvalidate(){const b=DEMO.br;if(!b)return;b.confirmed=false;const c=$('#br-checked');if(c)c.checked=false;const submit=$('[data-action="br-ready"]');if(submit)submit.disabled=true;}
+brReview=function(ready=false){
+  const b=DEMO.br;if(!brAlive(b))return;b.phase=ready?'ready':'review';b.confirmed=ready;
+  const plans=brPlan(b);const warnings=b.result?.warnings||[];
+  const rows=brDefs.map(([key,label,target,step])=>{const d=b.fields[key]||{value:''},candidate=brValue(key),targets=brTargets[key]||[target];
+    const conflicts=targets.map(to=>{const val=to==='registerCertType'?'01':v2Canonical(to,candidate),before=v2Raw(to);return candidate&&before&&before!==val?`<div class="br-conflict"><small>目前${esc(brLabels[to])}：${esc(v2Display(to,before))}</small><label>套用方式<select aria-label="${esc(brLabels[to])}衝突處理" data-br-conflict="${to}" ${ready?'disabled':''}><option value="keep" ${b.choices[to]!=='replace'?'selected':''}>保留原有資料</option><option value="replace" ${b.choices[to]==='replace'?'selected':''}>使用本次核對值</option></select></label></div>`:'';}).join('');
+    return `<section class="br-candidate ${d.warning||d.autoSelect===false?'attention':''}"><label class="check"><input type="checkbox" data-br-select="${key}" aria-label="帶入${esc(label)}" ${b.selected.has(key)?'checked':''} ${ready?'disabled':''}><strong>${esc(label)}</strong><span>${!candidate?'未辨識':d.warning||d.autoSelect===false?'待核對':'待確認'}</span></label><label class="sr-only" for="br-${key}">${esc(label)}辨識值</label><input id="br-${key}" data-br-value="${key}" value="${esc(candidate)}" ${ready?'readonly':''} autocomplete="off" spellcheck="false"><small>帶入：Step ${step} · ${targets.map(t=>esc(brLabels[t])).join('、')}</small>${d.warning?`<p class="hint">${esc(d.warning)}</p>`:''}${d.alternatives?.length?`<p class="hint">候選：${d.alternatives.map(esc).join('／')}</p>`:''}${!b.demo&&d.source?`<details><summary>查看來源文字 · 第 ${d.page||b.pageNumber} 頁</summary><p>${esc(d.source)}</p></details>`:''}${conflicts}<p class="error" data-br-error="${key}" role="alert"></p></section>`;
+  }).join('');
+  brModal(ready?'已核對，準備套用':'核對辨識結果',`<p class="hint">對照原件核對資料，再帶入其他步驟。向下捲動查看所有欄位；不確定的資料先留空。</p>${b.demo?'<div class="notice warn">目前使用虛構示範資料，並未讀取文件。</div>':`<div class="notice ${warnings.length?'warn':''}">${warnings.length?warnings.map(w=>esc(w)).join('<br>'):'辨識完成。所有候選欄位均需對照原件核對。'}</div>`}<div class="br-workbench"><aside class="br-original"><h3>原件預覽</h3><p>${esc(b.filename)} · 第 ${b.pageNumber} 頁</p><div id="br-original-canvas"></div>${b.demo?'<div class="br-synthetic"><h3>商業登記證</h3><p>BUSINESS REGISTRATION CERTIFICATE</p><p>示例海港科技有限公司<br>SAMPLE HARBOUR TECHNOLOGY LIMITED</p><p>12345678-000</p><p>僅供介面演示 · 非真實文件</p></div>':''}<p class="hint">文件只留在本機。OCR 信心分數不代表實際辨識正確率。</p></aside><div class="br-candidates">${rows}${b.fields.certificateNumber?.value||b.fields.startDate?.value?`<div class="notice"><strong>只供核對，不自動帶入</strong><p>完整證書號碼：${esc(b.fields.certificateNumber?.value||'未辨識')}<br>本張 BR 生效日期：${esc(b.fields.startDate?.value||'未辨識')}</p><small>生效日期不是公司成立日期；不推算經營年限。</small></div>`:''}</div></div><section class="br-confirm"><p>預設只填空欄；有差異的欄位須逐項選擇保留或取代。</p>${ready?`<p class="br-status">已核對 · ${plans.filter(p=>p.write).length} 個欄位將寫入 · ${plans.filter(p=>!p.write).length} 個保留原值</p>`:'<label class="check"><input type="checkbox" id="br-checked">我已對照原件，核對勾選欄位及取代選項。</label>'}<p id="br-error" class="error" role="alert"></p></section>`,btn('取消，保留原資料','close')+(ready?btn('返回核對','br-return'):'')+btn(ready?'確認並套用':'已核對，準備套用',ready?'br-apply':'br-ready','primary',ready?'':'disabled'));
+  if(b.page){const c=document.createElement('canvas');c.width=b.page.canvas.width;c.height=b.page.canvas.height;c.getContext('2d').drawImage(b.page.canvas,0,0);c.setAttribute('aria-label','BR 原件');$('#br-original-canvas').append(c);}
+};
+async function brReady(){
+  const b=DEMO.br;if(!brAlive(b)||!$('#br-checked')?.checked)return;
+  if(!brDefs.some(([k])=>b.selected.has(k)&&brValue(k))){$('#br-error').textContent='請至少選取一個已核對、非空白的欄位。';return;}
+  let errors={};if(!b.demo){try{const [,parser]=await brLoadModules();errors=parser.validateFields(Object.fromEntries(Object.entries(b.fields).filter(([k])=>b.selected.has(k)||k==='startDate')));}catch{errors._load='驗證引擎未能載入，請重試。';}}
+  else {if(b.selected.has('brNumber')&&!/^\d{8}-\d{3}$/.test(brValue('brNumber')))errors.brNumber='請輸入 8 位號碼及 3 位分支碼。';}
+  if(!brAlive(b)||b.phase!=='review'||!$('#br-checked')?.checked)return;
+  for(const [key,,target]of brDefs){if(!b.selected.has(key))continue;const val=v2Canonical(target,brValue(key));if(V2.options[target]&&val&&!V2.options[target].some(o=>o[0]===val))errors[key]='辨識值不符合此欄位的選項，請對照原件修正。';}
+  for(const [k,msg]of Object.entries(errors)){const el=$(`[data-br-error="${k}"]`);if(el)el.textContent=msg;}
+  if(Object.keys(errors).length){$('#br-error').textContent='請修正標示的欄位，或取消選取該項。';return;}brReview(true);
+}
+function brApply(){
+  const b=DEMO.br;if(!brAlive(b)||!b.confirmed||b.phase!=='ready')return;
+  if(state.fail)return brModal('資料寫入失敗','<div class="notice error">這次資料尚未寫入，原有申請內容已保留。</div><p>本頁仍保留核對結果。關閉失敗模擬後可重試。</p>',btn('取消','close')+btn('返回核對','br-return')+btn('關閉失敗模擬並重試','br-retry','primary'),'failure');
+  const plans=brPlan(b),before=structuredClone(state.values),files=structuredClone(state.files);let fileURL;
+  try{
+    const apply=plans.filter(p=>p.write);for(const p of apply)state.values[p.target]=p.value;
+    const oldLog=v2Model().ocr.filter(o=>!apply.some(p=>p.target===o.key));
+    v2Model().ocr=[...oldLog,...apply.map(p=>({key:p.target,value:p.value,applied:p.value,source:b.demo?'BR 虛構示例':'BR · 本機辨識 · 第 '+b.pageNumber+' 頁',step:p.step,confidence:null,selected:true,method:b.result.method}))];
+    if(b.file){fileURL=URL.createObjectURL(b.file);state.files['140101']={name:b.file.name,size:b.file.size,type:b.file.type,demo:false,needsReselect:false,page:b.pageNumber};}
+    else if(!state.files['140101'])state.files['140101']={name:'SAMPLE-BR.pdf',size:0,demo:true};
+    v2SyncDerived();state.errors={};state.savedAt=null;
+    b.applied=true;b.phase='result';b.imported=apply.map(p=>p.label+'：'+v2Display(p.target,p.value));
+    b.pending=plans.filter(p=>!p.write&&!p.same).map(p=>p.label+'：保留原有資料');
+    for(const [k,l]of brDefs)if(!b.selected.has(k)&&brValue(k))b.pending.push(l+'：未選取，待核對');
+    b.unrecognized=brDefs.filter(([k])=>!brValue(k)).map(([,l])=>l+'：未取得候選值');
+    render();v2ImportResult(b.imported,b.pending,b.unrecognized,'close',plans.filter(p=>p.same));$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;
+    if(fileURL){const previous=DEMO.fileURLs.get('140101');DEMO.fileURLs.set('140101',fileURL);if(previous)URL.revokeObjectURL(previous);}
+  }catch(e){b.phase='ready';b.applied=false;state.values=before;state.files=files;if(fileURL)URL.revokeObjectURL(fileURL);brModal('資料寫入失敗','<div class="notice error">未能完成套用，已還原申請資料。請重試或返回核對。</div>',btn('取消','close')+btn('返回核對','br-return')+btn('重試寫入','br-apply','primary'),'failure');}
+}
+Object.assign(actions,{'br-start':brStart,'br-recognize':()=>void brRecognize(),'br-ready':()=>void brReady(),'br-return':()=>brReview(),'br-apply':brApply,'br-retry':()=>{state.fail=false;brApply();},'br-cancel':()=>DEMO.br?.controller?.abort()});
+document.addEventListener('change',e=>{const el=e.target;
+  if(el.id==='demo-br-file')void brAccept(el.files[0]);
+  if(el.id==='br-page')void brPage(+el.value);
+  if(el.id==='br-checked'){$('[data-action="br-ready"]').disabled=!el.checked;}
+  if(el.dataset.brSelect){el.checked?DEMO.br.selected.add(el.dataset.brSelect):DEMO.br.selected.delete(el.dataset.brSelect);brInvalidate();}
+  if(el.dataset.brConflict){DEMO.br.choices[el.dataset.brConflict]=el.value;brInvalidate();}
+});
+document.addEventListener('input',e=>{if(e.target.dataset.brValue){const b=DEMO.br;b.fields[e.target.dataset.brValue].value=e.target.value;brInvalidate();}});
+// Rebuild conflict controls after an edit, preserving keyboard focus and scroll.
+document.addEventListener('change',e=>{if(e.target.dataset.brValue){const id=e.target.id,pos=$('.br-workbench')?.scrollTop||0;brReview();$('#'+id)?.focus();$('.br-workbench').scrollTop=pos;}});
+document.addEventListener('dragover',e=>{if(e.target.closest('#br-drop'))e.preventDefault();});
+document.addEventListener('drop',e=>{if(!e.target.closest('#br-drop'))return;e.preventDefault();if(e.dataTransfer.files.length!==1)return brUpload('請一次選擇一份 BR 文件。');void brAccept(e.dataTransfer.files[0]);});
+$('#modal').addEventListener('close',()=>{brRelease();$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;});
+addEventListener('pagehide',()=>brRelease());
+const brOldPreview=actions['preview-demo-file'];
+actions['preview-demo-file']=el=>{const f=state.files[el.dataset.id],url=DEMO.fileURLs.get(el.dataset.id);if(f&&url&&/\.pdf$/i.test(f.name))modal('文件預覽',`<p>${esc(f.name)}</p><iframe class="br-pdf-preview" src="${url}" title="所選 PDF 原件"></iframe><p class="hint">本機文件預覽，未上傳至伺服器。</p>`);else brOldPreview(el);};
+Object.assign(window.AllinPayDemo,{version:'2026.09.23-backoffice-br-integrated',brLocalOCR:true});
+
+actions['br-sources']=()=>modal('BR 辨識來源',v2ConsistencyCard(),btn('關閉','close')+btn('重新匯入 BR','br-start','primary'));
 
 render();
 })();

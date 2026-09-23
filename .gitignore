@@ -2,3 +2,7 @@
 node_modules/
 *.log
 qa-*.png
+
+vendor/
+_pages/
+vendor-manifest.json

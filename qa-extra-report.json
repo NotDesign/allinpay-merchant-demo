@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "date": "2026-09-23T09:44:05.411Z",
-  "url": "http://127.0.0.1:4319/backoffice.html",
+  "date": "2026-09-23T10:41:38.707Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "sync success/failure/retry",
     "hide/reorder/freeze columns",
@@ -9,7 +9,7 @@
     "batch import example and real CSV with duplicates",
     "local image selection",
     "draft save failure",
-    "BR recognition failure",
+    "BR atomic write failure",
     "forgot/reset password",
     "registration validation"
   ],
