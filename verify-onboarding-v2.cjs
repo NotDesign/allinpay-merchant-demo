@@ -1,8 +1,8 @@
-const {chromium}=require(process.env.PLAYWRIGHT_PATH||'../node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const base=process.env.DEMO_URL||'http://127.0.0.1:4319/backoffice.html';
 (async()=>{
- const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'});
+ const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
  const context=await browser.newContext({viewport:{width:1440,height:1000}}),p=await context.newPage(),errors=[],checks=[];
  p.on('pageerror',e=>errors.push(e.message));
  const click=async(a,extra='')=>p.locator(`[data-action="${a}"]${extra}`).first().click();
@@ -15,6 +15,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4319/backoffice.html';
  let s=await summary();assert.equal(s.version,2);assert.equal(s.fields.length,109);assert.equal(s.documents.length,21);assert.equal(s.products.reduce((n,g)=>n+g.count,0),117);assert.deepEqual(s.errors,{});
  const c={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'onboarding-v2-data.js'),'utf8')+';this.data=V2_DATA',c);for(const id of c.data.sourceFieldIds)assert(s.fields.includes(id),'Missing source field '+id);
  checks.push('61 source base fields covered; 109 total field definitions; 21 document types; 117 products');
+ await p.evaluate(()=>location.hash='/merchants');await click('edit','[data-mid="M000238"]');await click('confirm-edit');await go(2);assert.equal(await field('registerCertNo').inputValue(),'71234567-000');await go(4);assert.equal(await field('cardBankCode').inputValue(),'004');checks.push('Existing merchant BR, bank identifiers retained on V2 edit migration');await sample();await go(2);
  assert.equal(await field('dbaNo').count(),1);await select('legalStatus','PERSON');assert.equal(await field('nar1Period').count(),0);await select('legalStatus','BODY_CORPORATE');assert.equal(await field('nar1Period').count(),1);
  await set('registerCertNo','BAD');await click('next');assert.equal(await field('registerCertNo').getAttribute('aria-invalid'),'true');await set('registerCertNo','12345678-000');
  await set('merchantName','長'.repeat(34));assert((await summary()).errors.merchantName.includes('bytes'));await sample();
