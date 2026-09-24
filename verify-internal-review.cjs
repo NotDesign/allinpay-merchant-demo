@@ -26,6 +26,7 @@ fs.mkdirSync(out,{recursive:true});
  };
  await p.goto(base+'#/login');await p.locator('[data-action="pick-role"][data-index="0"]').click();await click('bo-login');await p.waitForSelector('.metrics');
  await p.locator('a[href="#/internal-review"]').click();await p.waitForSelector('#ir-count');
+ await p.waitForFunction(()=>{const icon=document.querySelector('a[href="#/internal-review"] img');return icon?.complete&&icon.naturalWidth>0;},{},{timeout:15000});
  await assertFill();
  assert.equal(await p.locator('.ir-case .ir-badges').count(),5);assert.equal(await p.locator('.ir-case.selected .ir-badge.blue').count(),1);assert.equal(await p.locator('.ir-stage-badge.red').filter({hasText:'L3 終審'}).count(),1);assert(await p.locator('.ir-badge.green').count()>0);
  assert.equal(await p.locator('.ir-case').count(),5);assert(await p.locator('.ir-case.selected').count());
