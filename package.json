@@ -6,13 +6,15 @@
   "scripts": {
     "setup": "node scripts/vendor.mjs",
     "build": "node build-admin.cjs",
+    "build:external": "node build-external.cjs",
+    "test:external": "node verify-external-header.cjs",
     "test": "node verify-admin.cjs",
     "test:onboarding": "node verify-onboarding-v2.cjs",
     "test:products": "node verify-products-catalog.cjs",
     "test:risk": "node verify-application-status.cjs",
     "test:br": "node verify-br-integration.cjs",
     "serve": "node scripts/serve.mjs",
-    "build:pages": "npm run build && node scripts/build-pages.mjs",
+    "build:pages": "npm run build && npm run build:external && node scripts/build-pages.mjs",
     "test:extra": "node verify-admin-extra.cjs"
   },
   "dependencies": {
