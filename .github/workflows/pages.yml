@@ -37,6 +37,8 @@ jobs:
           npm test
           npm run test:extra
           npm run test:onboarding
+          npm run test:products
+          npm run test:risk
           npm run test:br
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html
