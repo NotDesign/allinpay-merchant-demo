@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "date": "2026-09-23T10:59:14.570Z",
-  "url": "https://notdesign.github.io/allinpay-merchant-demo/backoffice.html",
+  "date": "2026-09-24T02:30:19.094Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "Text PDF recognition; selective Step 2/3/6 mapping; existing values preserved; no CR/MCC/years inferred; confirmation gate; invalid BR; escaped input; no automatic persistence",
     "Conflict replacement is explicit; atomic write failure retains review and supports retry",

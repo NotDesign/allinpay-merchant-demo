@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-09-24T02:32:05.782Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
+  "checks": [
+    "All six steps share one right-hand sticky sidebar with risk, missing documents and completion; source rules yield 27 points and medium/T2",
+    "Product changes update score; typing updates completion without losing focus; manual risk override/reset and sidebar drill-down work",
+    "1440 / 1024 / 390 widths: all six steps render without page overflow"
+  ],
+  "errors": []
+}

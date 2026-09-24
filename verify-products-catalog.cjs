@@ -1,0 +1,42 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
+(async()=>{
+ const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const p=await browser.newPage({viewport:{width:1600,height:1000}}),errors=[],checks=[];
+ p.on('pageerror',e=>errors.push(e.message));
+ const click=(a,extra='')=>p.locator('[data-action="'+a+'"]'+extra).first().click();
+ const qa=()=>p.evaluate(()=>AllinPayDemo.getOnboarding());
+ const rate=(key,f)=>p.locator('[data-v2-inline-key="'+key+'"][data-v2-inline-field="'+f+'"]');
+ await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');
+ await p.evaluate(()=>location.hash='/application/5');await p.waitForSelector('.v2-products-page');
+ assert.equal(await p.locator('[data-v2-group]').count(),11);assert.equal(await p.locator('[data-v2-group]:checked').count(),3);
+ assert.equal(await p.locator('[data-v2-product]').count(),50);assert.equal(await p.locator('[data-v2-field]').count(),24);
+ assert.equal(await p.locator('[data-action="v2-fee"]').count(),0);assert(await rate('POS|0','loc_rate').isVisible());
+ assert.equal(await p.getByText('未開通 · 費率僅供預覽',{exact:true}).count(),0);
+ await p.locator('[data-v2-group="CTV"]').check();assert.equal(await p.locator('[data-v2-product]').count(),54);await p.locator('[data-v2-group="CTV"]').uncheck();assert.equal(await p.locator('[data-v2-product]').count(),50);
+ checks.push('All 11 categories retained; 3 selected categories initially show 50 products; other categories expand only when selected; no fee modal buttons');
+ await rate('POS|0','loc_rate').fill('1.86');assert.equal((await qa()).selectedProducts.find(x=>x.key==='POS|0').values.loc_rate,'1.86');
+ assert.equal(await p.locator('#modal').evaluate(n=>n.open),false);
+ await rate('POS|0','loc_rate').press('End');await rate('POS|0','loc_rate').press('Backspace');await rate('POS|0','loc_rate').press('6');assert.equal(await rate('POS|0','loc_rate').inputValue(),'1.86');
+ await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption('Blended');await rate('POS|0','std_rate').fill('2.12');await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption('Regional');assert.equal(await rate('POS|0','loc_rate').inputValue(),'1.86');
+ await p.locator('[data-v2-inline-key="POS|0"][data-v2-inline-toggle="pref_on"]').check();await rate('POS|0','pref_rate').fill('0.89');
+ assert(await rate('POS|1','dcc_rate').isDisabled());await p.locator('[data-v2-combo="POS|DCC交易"]').check();assert(await rate('POS|1','dcc_rate').isEnabled());
+ await p.locator('[data-v2-inline-key="POS|6"][data-v2-inline-toggle="t36_on"]').check();await rate('POS|6','t36_rate').fill('3.60');
+ await rate('POS|0','loc_min').fill('20');await rate('POS|0','loc_max').fill('10');assert((await p.locator('[data-v2-rate-error="POS|0"]').innerText()).includes('保底'));await rate('POS|0','loc_max').fill('0');
+ await p.locator('[data-v2-group="POS"]').uncheck();assert.equal(await rate('POS|0','loc_rate').count(),0);
+ for(const key of await p.locator('[data-v2-group]').evaluateAll(ns=>ns.map(n=>n.dataset.v2Group)))await p.locator('[data-v2-group="'+key+'"]').check();
+ assert.equal(await p.locator('[data-v2-product]').count(),117);assert.equal(await rate('POS|0','loc_rate').inputValue(),'1.86');
+ await p.locator('[data-v2-product="POS|0"]').uncheck();assert(await rate('POS|0','loc_rate').isDisabled());await p.locator('[data-v2-product="POS|0"]').check();
+ checks.push('Direct editing preserves focus and pricing-type values; preference, DCC, 36-month instalment, min/max validation and retained deselected fees work');
+ assert.equal(await p.locator('.v2-sme-table tbody tr').count(),3);assert.equal(await p.getByText('請先在第 3 步填寫 MCC',{exact:true}).count(),3);assert.equal(await p.locator('[data-v2-sme]:enabled').count(),0);
+ await p.evaluate(()=>location.hash='/application/3');await p.waitForSelector('[data-field="mcc"]');await p.locator('[data-field="mcc"]').fill('5411');await p.locator('[data-field="mcc"]').blur();
+ await p.evaluate(()=>location.hash='/application/5');await p.waitForSelector('.v2-sme-table');assert(await p.locator('[data-v2-sme="VISA"]').isEnabled());await p.locator('[data-v2-sme-type="VISA"]').selectOption('SMESMK');
+ checks.push('SME table has three card organizations; blank MCC locks controls; eligible types depend on MCC');
+ for(const width of [1600,1024,768,390,320]){
+  await p.setViewportSize({width,height:1000});await p.evaluate(()=>scrollTo(0,0));assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Page overflow '+width);
+  const bounds=await p.locator('[data-v2-rate-row="POS|0"]').evaluate(n=>{const b=n.getBoundingClientRect();return [...n.querySelectorAll('input,select')].map(i=>{const r=i.getBoundingClientRect();return r.left>=b.left&&r.right<=b.right&&r.bottom<=b.bottom;});});assert(bounds.every(Boolean),'Input clipped '+width);await p.locator('[data-v2-rate-row="POS|0"]').screenshot({path:'qa-products-inline-'+width+'.png'});
+ }
+ checks.push('1600 / 1024 / 768 / 390 / 320 widths: no page overflow or clipped fee inputs');
+ assert.deepEqual(errors,[]);await browser.close();const report={passed:true,date:new Date().toISOString(),url:base,checks,errors};fs.writeFileSync('qa-products-catalog-report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+})().catch(e=>{console.error(e);process.exit(1)});

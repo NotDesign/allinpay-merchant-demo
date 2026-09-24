@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "date": "2026-09-24T02:29:56.352Z",
+  "url": "http://127.0.0.1:4321/backoffice.html",
+  "checks": [
+    "All 11 categories retained; 3 selected categories initially show 50 products; other categories expand only when selected; no fee modal buttons",
+    "Direct editing preserves focus and pricing-type values; preference, DCC, 36-month instalment, min/max validation and retained deselected fees work",
+    "SME table has three card organizations; blank MCC locks controls; eligible types depend on MCC",
+    "1600 / 1024 / 768 / 390 / 320 widths: no page overflow or clipped fee inputs"
+  ],
+  "errors": []
+}

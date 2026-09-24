@@ -1,6 +1,6 @@
 # ALLINPAY · 商戶申請與後台 Demo
 
-依指定 Figma 設計製作的繁體中文互動原型。2026-09-23 更新後台登入與系統，內含 240 間假商戶、28 個示例帳號、18 份可繼續填寫的草稿。既有外部申請保持獨立。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。
+依指定 Figma 設計製作的繁體中文互動原型。2026-09-24 更新後台新增商戶、頁內費率、特計商戶及風控側欄，內含 240 間假商戶、28 個示例帳號、18 份可繼續填寫的草稿。既有外部申請保持獨立。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。
 
 ## 直接使用
 
@@ -48,7 +48,8 @@
 - BR 匯入五階段：選檔／選頁 → 本機辨識 → 原件核對 → 準備套用 → 成功／失敗結果。線上版實際處理文字 PDF、掃描 PDF、JPG、PNG，支援方向與平面歪斜校正。
 - 新增商戶已同步 OATS V2：109 個欄位定義（含 61 個原型基本欄位、重複人員欄位及產品配置）、21 類文件、11 類／117 項產品。可點擊步驟列，並儲存／還原草稿。
 - 地區、法律地位、產品及風險級別決定條件必填；董事可被授權簽名人或控股股東沿用。香港／新加坡 AMEX 情境只可登記一位授權簽名人。
-- 各產品獨立費率 Overlay：Regional、Blended、Wallet、按筆及分期；包含優惠費率、DCC、優計劃及 7 種分期期數。
+- 11 類產品選項完整保留，預設選取收單、CNP、線下掃碼支付；勾選類別後顯示詳細費率。Regional、Blended、Wallet、按筆及分期直接在頁面編輯，包含優惠費率、DCC、優計劃及 7 種分期期數，毋須逐項開啟 Overlay。
+- 六步均顯示右側固定風控、缺件及提交完整度側欄；內容依目前填寫資料更新。特計商戶以三欄表格呈現，未填 MCC 時停用，填寫後依各卡組織規則提供可用方案。
 - BR 以外的 CI、NAR1／NNC1、身份證及銀行月結單辨識仍使用固定假資料；缺件及風控是本機規則示例，不代表正式合規驗證。
 - 帳號管理、個別帳號權限 Overlay；儲存前輸入示例密碼。修改只影響選取帳號，不影響同角色其他帳號。
 - 四層角色及「權限不足」演示：只顯示自己的帳號、隱藏其他人的權限且不可編輯。
@@ -73,7 +74,7 @@ Logo、圖片及功能圖示使用 Figma 回傳素材。`asset-manifest.json` �
 
 ### OATS V2 更新
 
-先更新 Figma 六個既有畫面及費率 Overlay，再同步後台 HTML。欄位定義、各選項及產品清單保存在 `onboarding-v2-data.js`，互動在 `onboarding-v2.js`，版面在 `onboarding-v2.css`。未將使用者提供的原始 HTML 或其外部編輯腳本加入公開 Repository。
+依照 Figma 六個既有畫面同步後台 HTML；2026-09-24 改為頁內編輯費率。欄位定義、各選項及產品清單保存在 `onboarding-v2-data.js`，互動在 `onboarding-v2.js`，即時狀態在 `onboarding-risk.js`，版面在 `onboarding-v2.css`。未將使用者提供的原始 HTML 或其外部編輯腳本加入公開 Repository。
 
 - 原有 DBA no. 及香港分行代碼選填功能保留。SWIFT Code 改為選填；結算週期可自行輸入。
 - MCC 行業名稱由代碼帶出；維護人名稱／電郵替換舊財務聯絡欄位。
@@ -113,6 +114,8 @@ npx playwright install chromium
 # 先以任意靜態伺服器提供目前目錄，再指定 URL
 DEMO_URL=http://127.0.0.1:4321/backoffice.html node verify-admin.cjs
 DEMO_URL=http://127.0.0.1:4321/backoffice.html node verify-onboarding-v2.cjs
+DEMO_URL=http://127.0.0.1:4321/backoffice.html npm run test:products
+DEMO_URL=http://127.0.0.1:4321/backoffice.html npm run test:risk
 DEMO_URL=http://127.0.0.1:4321/backoffice.html node verify-admin-extra.cjs
 npm run test:br
 ```

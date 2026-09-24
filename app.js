@@ -296,7 +296,6 @@ const v2Groups = V2.catalog.GROUPS;
 const v2Fields = V2.forms.flatMap(f => f.sections.flatMap(s => s.fields));
 const v2ById = Object.fromEntries(v2Fields.map(f => [f.id, f]));
 const v2PersonKeys = ['name','firstNameEn','lastNameEn','idcardType','idcardNo','idcardNoPeriod','birthDay'];
-let v2FeeEdit = null;
 let v2OcrEdit = null;
 const v2Raw = k => String(state.values[k] ?? '').trim();
 const v2Num = k => Number(v2Raw(k)) || 0;
@@ -336,6 +335,7 @@ function v2Ensure() {
   for(const k of ['addrProvinceCode','addrCityCode','cardProvinceCode','cardCityCode'])if(geoAlias[v2Raw(k)])state.values[k]=k==='cardProvinceCode'&&v2Raw('cardCountryCode')==='HKG'?'HKG':geoAlias[v2Raw(k)];
   state.values.__v2={version:2,groups:{},rates:{},combo:{},sme:{},links:{authSigners:{},shareHolders:{}},signals:{},ocr:[],ack:{},manualRisk:false,legacy:hadData};
   if(hadData)for(const [id,g] of [['603:4689','POS'],['603:4745','INQR'],['603:4709','CNP']])if(state.checks[id])v2SetGroup(g,true);
+  if(!hadData)for(const key of ['POS','CNP','INQR'])v2SetGroup(key,true);
   state.values.mccName=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc'))?.n||'';
 }
 function v2Reset() {
@@ -422,32 +422,49 @@ function v2PersonSection(s) {
 function v2FormSections(index) {return V2.forms[index].sections.map(s=>{if(!s.fields.length)return '';if(s.fields[0]?.id.includes('[]'))return v2PersonSection(s);const fs=s.fields.filter(v2Visible);if(!fs.length)return '';let tail='';if(s.name==='結算參數')tail=`<div class="toolbar v2-quick">${['T1','T2','T3','T7'].map(x=>btn(x,'v2-settlement','',`data-value="${x}"`)).join('')}${btn('使用建議值 '+({1:'T1',2:'T2',3:'T3'}[state.values.riskLevel]),'v2-settlement','',`data-value="${({1:'T1',2:'T2',3:'T3'}[state.values.riskLevel])}"`)}</div>`;if(fs.some(f=>f.id==='riskLevel'))tail=v2RiskSummary();return v2Card(s.name,s.texts[1],`<div class="grid">${fs.map(f=>v2Field(f)).join('')}</div>`+tail);}).join('');}
 function v2RiskSummary(){const score=v2Score();return `<div class="notice ${score.reject?'error':'warn'} v2-risk-summary"><strong>V2 風控示例：${score.total} 分 · ${score.reject?'拒件':v2Display('riskLevel',score.level)}</strong><p>${score.items.map(x=>esc(x.label)+' +'+x.n).join('；')||'暫無加分項。'}</p>${v2Model().manualRisk?btn('恢復系統建議','v2-reset-risk'):''}<small>只模擬參考原型規則，不代表正式審核結果。</small></div>`;}
 function v2SmeOptions(brand) {const m=+v2Raw('mcc'),rules=V2.catalog.SME_RULES[brand];return ['SME','SMESMK','SMEB2B'].filter(t=>{const r=rules[t];return r&&m&&(r.only?r.only.includes(m):!r.ex.some(x=>Array.isArray(x)?m>=x[0]&&m<=x[1]:m===x));});}
-function v2Sme() {return v2Card('特計商戶 SME 配置','依 MCC 及卡組織清單只列出適用方案。',`<div class="grid">${['VISA','MASTERCARD','AMERICAEXPRESS'].map(b=>{const opts=v2SmeOptions(b),s=v2Model().sme[b]||{};return `<div class="v2-sme"><label class="check"><input type="checkbox" data-v2-sme="${b}" ${s.on?'checked':''} ${!opts.length?'disabled':''}>${b}</label><select aria-label="${b} 特計商戶類型" data-v2-sme-type="${b}" ${!opts.length?'disabled':''}>${opts.map(o=>`<option ${s.type===o?'selected':''}>${o}</option>`).join('')||'<option>目前 MCC 不適用</option>'}</select></div>`;}).join('')}</div>`);}
+function v2Sme() {return v2Card('特計商戶','',`<div class="v2-sme-table-wrap"><table class="v2-sme-table"><thead><tr><th scope="col">開通</th><th scope="col">卡組織</th><th scope="col">特計商戶類型</th></tr></thead><tbody>${['VISA','MASTERCARD','AMERICAEXPRESS'].map(b=>{const opts=v2SmeOptions(b),s=v2Model().sme[b]||{},hasMcc=!!v2Raw('mcc');return `<tr><td><input aria-label="開通 ${b} 特計商戶" type="checkbox" data-v2-sme="${b}" ${s.on?'checked':''} ${!opts.length?'disabled':''}></td><th scope="row">${b}</th><td>${!hasMcc?'<span class="hint">請先在第 3 步填寫 MCC</span>':!opts.length?'<span class="hint">目前 MCC 不適用任何特計商戶類型</span>':`<select aria-label="${b} 特計商戶類型" data-v2-sme-type="${b}">${opts.map(o=>`<option ${s.type===o?'selected':''}>${o}</option>`).join('')}</select>`}</td></tr>`;}).join('')}</tbody></table></div><p class="hint v2-sme-help">下拉只列出目前 MCC 可用的特計類型（按卡組織排除清單自動判定）。</p>`);}
 function v2FeeSummary(r,st) {const v=st.v,ct=st.ct;if(r.mode==='NONE')return '無手續費';if(r.mode==='PER')return '每筆 HKD '+(v.per_fix??'0.00');if(r.mode==='INST')return V2.catalog.TENORS.filter(t=>v['t'+t+'_on']).map(t=>t+' 期').join('／')||'請設定開通期數';if(ct==='Regional')return '本地 '+(v.loc_rate??'0.00')+'%／跨境 '+(v.crs_rate??'0.00')+'%';if(ct==='Wallet')return '國內錢包 '+(v.cn_rate??'0.00')+'%／香港錢包 '+(v.hk_rate??'0.00')+'%';return (v.std_rate??'0.00')+'% + HKD '+(v.std_fix??'0.00');}
 function v2Products() {
-  let html=v2Card('產品配置','先選擇產品類別，再設定每項產品。V2 共 11 類、117 個項目。',`<div class="check-grid">${v2Groups.map(g=>`<label class="check"><input type="checkbox" data-v2-group="${g.k}" ${v2Model().groups[g.k]?'checked':''}>${g.n}</label>`).join('')}</div>`)+v2Sme();
-  html+=v2Groups.filter(g=>v2Model().groups[g.k]).map(g=>v2Card(g.n+' · 產品項目',g.tip||'每項產品可獨立設定收費類型及費率。',`${g.combo?`<div class="toolbar">${g.combo.map(c=>`<label class="check"><input type="checkbox" data-v2-combo="${g.k+'|'+c}" ${v2Model().combo[g.k+'|'+c]?'checked':''}>${esc(c)}</label>`).join('')}</div>`:''}<div class="v2-product-grid">${g.rows.map((r,i)=>{const key=v2RowKey(g,i),st=v2Model().rates[key];return `<div class="v2-product ${st.on?'selected':''}"><label class="check"><input type="checkbox" data-v2-product="${key}" ${st.on?'checked':''}>${esc(r.n)}</label><div class="v2-product-foot"><div><span class="hint">${r.mode==='INST'?'分期':r.mode==='PER'?'按筆':r.ct?esc(st.ct):''}</span><small>${esc(v2FeeSummary(r,st))}</small></div>${r.mode!=='NONE'?btn('設定費率','v2-fee','',`data-key="${key}" ${st.on?'':'disabled'}`):''}</div>${r.note?`<p class="hint">${esc(r.note)}</p>`:''}</div>`;}).join('')}</div>`)).join('');
-  return html+v2FormSections(3);
+  const shown=v2Groups.filter(g=>v2Model().groups[g.k]);
+  let html=v2Card('產品配置','先選擇產品類別，再勾選開通項目；費率直接顯示於產品同列，毋須逐項開啟視窗。',`<div class="check-grid">${v2Groups.map(g=>`<label class="check"><input type="checkbox" data-v2-group="${g.k}" ${v2Model().groups[g.k]?'checked':''}>${g.n}</label>`).join('')}</div>`)+v2Sme();
+  if(!shown.length)html+='<div class="notice v2-catalog-empty">尚未選擇產品類別。請勾選上方類別以設定產品與費率。</div>';
+  html+=shown.map(g=>{
+    const enabled=!!v2Model().groups[g.k];
+    return v2Card(g.n+' · 產品項目',(g.tip?g.tip+' ':'')+'勾選產品後直接編輯同列費率；未開通時只顯示、不帶入申請。',`${g.combo?`<div class="toolbar">${g.combo.map(c=>`<label class="check"><input type="checkbox" data-v2-combo="${g.k+'|'+c}" ${enabled&&v2Model().combo[g.k+'|'+c]?'checked':''} ${enabled?'':'disabled'}>${esc(c)}</label>`).join('')}</div>`:''}<div class="v2-product-grid">${g.rows.map((r,i)=>{
+      const key=v2RowKey(g,i),st=v2Model().rates[key]||{on:false,ct:r.ct||null,v:{}},selected=enabled&&st.on;
+      const mode=r.mode==='INST'?'分期費率':r.mode==='PER'?'按筆收費':r.mode==='NONE'?'無手續費':'固定費率';
+      return `<div class="v2-product ${selected?'selected':'preview'}" data-v2-rate-row="${key}"><div class="v2-product-name"><label class="check"><input type="checkbox" data-v2-product="${key}" ${selected?'checked':''} ${enabled?'':'disabled'}><span>${esc(r.n)}</span></label>${r.note?`<p class="hint v2-product-note">${esc(r.note)}</p>`:''}</div><div class="v2-inline-pricing"><label for="pricing-${key}">收費類型</label>${r.ct?`<select id="pricing-${key}" data-v2-inline-pricing="${key}" aria-label="${esc(r.n)} 收費類型" ${selected?'':'disabled'}>${(r.wal?['Wallet','Blended']:['Regional','Blended']).map(x=>`<option ${st.ct===x?'selected':''}>${x}</option>`).join('')}</select>`:`<span>${mode}</span>`}</div><div class="v2-inline-fees">${v2InlineFees(g,r,key,st,!selected)}<p class="error v2-inline-error" data-v2-rate-error="${key}" role="alert">${selected?esc(v2FeeErrors(r,st).join('；')):''}</p></div></div>`;
+    }).join('')}</div>`);
+  }).join('');
+  return '<div class="v2-products-page">'+html+v2FormSections(3)+'</div>';
 }
-function v2FeeInputs(prefix,values,fields=[['rate','費率（%）','0.00'],['fix','每筆費用（HKD）','0.00'],['min','保底（HKD）','0'],['max','封頂（HKD）','0']],disabled=false) {
-  return `<div class="v2-fee-grid">${fields.map(([k,l,d])=>{const key=prefix?prefix+'_'+k:k;return `<div class="field"><label for="fee-${key}">${l} <span class="required">*</span></label><input id="fee-${key}" data-v2-fee-field="${key}" inputmode="decimal" value="${esc(values[key]??d)}" ${disabled?'disabled':''}></div>`;}).join('')}</div>`;
-}
-function v2FeeModal(key,keep=false) {
-  const [gk,idx]=key.split('|'),g=v2Groups.find(g=>g.k===gk),r=g.rows[+idx];if(!keep)v2FeeEdit={key,...structuredClone(v2Model().rates[key])};const st=v2FeeEdit,v=st.v;
-  let html=`<p class="hint">只修改目前產品；所有金額以 HKD 計算。儲存後才會套用，取消保留原費率。</p>`;
-  if(r.ct)html+=`<div class="field"><label for="v2-pricing">收費類型 <span class="required">*</span></label><select id="v2-pricing">${(r.wal?['Wallet','Blended']:['Regional','Blended']).map(x=>`<option ${st.ct===x?'selected':''}>${x}</option>`).join('')}</select></div>`;
-  if(r.mode==='INST')html+=V2.catalog.TENORS.map(t=>`<section class="v2-fee-section"><label class="check"><input type="checkbox" data-v2-term="${t}" ${v['t'+t+'_on']?'checked':''}>${t} 期</label>${v2FeeInputs('t'+t,v,[['rate','費率（%）','0.00'],['fix','固定費用（HKD）','0']],!v['t'+t+'_on'])}</section>`).join('');
-  else if(r.mode==='PER')html+=v2FeeInputs('',v,[['per_fix','每筆費用（HKD）','0.00']]);
+function v2InlineFees(g,r,key,st,disabled) {
+  const v=st.v,standard=[['rate','費率（%）','0.00'],['fix','每筆費用（HKD）','0.00'],['min','保底（HKD）','0'],['max','封頂（HKD）','0']];
+  const header=fields=>`<div class="v2-rate-line v2-rate-head" style="--fee-count:${fields.length}" aria-hidden="true"><span>適用範圍</span>${fields.map(f=>`<span>${f[1]}</span>`).join('')}</div>`;
+  const line=(prefix,label,fields=standard,toggle=null,locked=false)=>`<div class="v2-rate-line" style="--fee-count:${fields.length}">${toggle?`<label class="check v2-rate-scope"><input type="checkbox" data-v2-inline-key="${key}" data-v2-inline-toggle="${toggle}" ${v[toggle]?'checked':''}>${label}</label>`:`<span class="v2-rate-scope">${label}</span>`}${fields.map(([k,l,d])=>{const f=prefix?prefix+'_'+k:k,id='rate-'+key+'-'+f;return `<div class="v2-rate-input"><label for="${id}">${label} ${l}</label><input id="${id}" aria-label="${esc(r.n)} · ${label} ${l}" data-v2-inline-key="${key}" data-v2-inline-field="${f}" inputmode="decimal" value="${esc(v[f]??d)}" ${locked?'disabled':''}></div>`;}).join('')}</div>`;
+  let html='';
+  if(r.mode==='NONE')html='<span>此項服務無手續費</span>';
+  else if(r.mode==='INST'){const fields=[['rate','費率（%）','0.00'],['fix','固定費用（HKD）','0']];html=header(fields)+V2.catalog.TENORS.map(t=>line('t'+t,t+' 期',fields,'t'+t+'_on',!v['t'+t+'_on'])).join('');}
+  else if(r.mode==='PER'){const fields=[['per_fix','每筆費用（HKD）','0.00']];html=header(fields)+line('','每筆',fields);}
   else {
-    if(st.ct==='Regional'){if(r.pref)html+=`<section class="v2-fee-section"><label class="check"><input type="checkbox" id="v2-pref" ${v.pref_on?'checked':''}>啟用優惠費率</label>${v2FeeInputs('pref',v,undefined,!v.pref_on)}</section>`;html+=['loc','crs'].map((p,i)=>`<section class="v2-fee-section"><h3>${i?'跨境卡':'本地卡'}</h3>${v2FeeInputs(p,v)}</section>`).join('');}
-    else if(st.ct==='Wallet')html+=['cn','hk'].map((p,i)=>`<section class="v2-fee-section"><h3>${i?'香港錢包':'國內錢包'}</h3>${v2FeeInputs(p,v)}</section>`).join('');
-    else html+=v2FeeInputs('std',v);
-    if(r.dcc)html+=`<section class="v2-fee-section"><h3>DCC 交易</h3><p class="hint">${v2Model().combo[gk+'|DCC交易']?'DCC 已啟用':'請先在產品頁勾選 DCC 交易後設定'}</p>${v2FeeInputs('dcc',v,[['rate','DCC（%）','0.00'],['fix','每筆費用（HKD）','0.00'],['markup','Markup（%）','0.00']],!v2Model().combo[gk+'|DCC交易'])}</section>`;
-    if(r.upi)html+=`<div class="field"><label for="v2-upi">開通優計劃</label><select id="v2-upi"><option value="N" ${v.upi!=='Y'?'selected':''}>否</option><option value="Y" ${v.upi==='Y'?'selected':''}>是</option></select></div>`;
+    html=header(standard);
+    if(st.ct==='Regional'){html+=line('loc','本地卡')+line('crs','跨境卡');if(r.pref)html+=line('pref','優惠費率',standard,'pref_on',!v.pref_on);}
+    else if(st.ct==='Wallet')html+=line('cn','國內錢包')+line('hk','香港錢包');
+    else html+=line('std','統一費率');
+    if(r.dcc){const fields=[['rate','DCC（%）','0.00'],['fix','每筆費用（HKD）','0.00'],['markup','Markup（%）','0.00']];html+=`<p class="hint">DCC 交易 · ${v2Model().combo[g.k+'|DCC交易']?'已啟用':'勾選上方 DCC 交易後可編輯'}</p>`+header(fields)+line('dcc','DCC',fields,null,!v2Model().combo[g.k+'|DCC交易']);}
+    if(r.upi)html+=`<div class="v2-rate-upi"><label for="upi-${key}">開通優計劃</label><select id="upi-${key}" data-v2-inline-key="${key}" data-v2-inline-field="upi"><option value="N" ${v.upi!=='Y'?'selected':''}>否</option><option value="Y" ${v.upi==='Y'?'selected':''}>是</option></select></div>`;
   }
-  modal(esc(r.n)+' · 費率設定',html+'<p id="v2-fee-error" class="error" role="alert"></p>',btn('取消','close')+btn('儲存費率','v2-fee-save','primary'));
+  return `<fieldset class="v2-inline-fieldset" aria-label="${esc(r.n)} 費率" ${disabled?'disabled':''}>${html}</fieldset>`;
 }
-function v2CaptureFees() {$$('[data-v2-fee-field]').forEach(i=>{if(!i.disabled)v2FeeEdit.v[i.dataset.v2FeeField]=i.value;});if($('#v2-upi'))v2FeeEdit.v.upi=$('#v2-upi').value;}
+// Page-local edits update the application model; draft persistence remains explicit.
+function v2InlineChange(t) {
+  const key=t.dataset.v2InlineKey||t.dataset.v2InlinePricing;if(!key||t.matches(':disabled'))return;
+  const st=v2Model().rates[key],[gk,index]=key.split('|');if(!st?.on||!v2Model().groups[gk])return;
+  const r=v2Groups.find(g=>g.k===gk).rows[+index];
+  if(t.dataset.v2InlinePricing){st.ct=t.value;render();return;}
+  if(t.dataset.v2InlineToggle){st.v[t.dataset.v2InlineToggle]=t.checked;render();return;}
+  if(t.dataset.v2InlineField){st.v[t.dataset.v2InlineField]=t.value;const error=t.closest('[data-v2-rate-row]').querySelector('[data-v2-rate-error]');error.textContent=v2FeeErrors(r,st).join('；');t.setAttribute('aria-invalid',String(!!error.textContent));}
+}
 function v2FeeErrors(r,st) {
   const e=[],v=st.v,number=(k,d,percent=false)=>{const raw=String(v[k]??d);if(!/^\d+(\.\d{1,2})?$/.test(raw)||Number(raw)<0||percent&&Number(raw)>100)e.push('請填寫有效的'+(percent?' 0–100 費率':'非負金額')+'（最多 2 位小數）');};
   const line=p=>{number(p+'_rate','0',true);for(const k of ['fix','min','max'])number(p+'_'+k,'0');if(+v[p+'_max']>0&&+v[p+'_min']>+v[p+'_max'])e.push('保底不可大於封頂');};
@@ -581,8 +598,6 @@ Object.assign(actions,{
     else{const links=v2Model().links[g];for(let j=i;j<n-1;j++)links[j]=links[j+1]??null;delete links[n-1];}render();},
   'v2-settlement':el=>{state.values.settlePeriod=el.dataset.value;render();},
   'v2-reset-risk':()=>{v2Model().manualRisk=false;render();},
-  'v2-fee':el=>v2FeeModal(el.dataset.key),
-  'v2-fee-save':()=>{v2CaptureFees();const [gk,i]=v2FeeEdit.key.split('|'),r=v2Groups.find(g=>g.k===gk).rows[+i],e=v2FeeErrors(r,v2FeeEdit);if(e.length){$('#v2-fee-error').textContent=e.join('；');return;}const {key,...data}=v2FeeEdit;v2Model().rates[key]=structuredClone(data);$('#modal').close();render();toast('此產品費率已套用，記得儲存草稿');},
   'v2-difference':el=>{const c=v2Consistency().find(c=>c.key===el.dataset.key);if(!c)return;modal('核對資料差異',`<h3>${esc(c.title)}</h3><ul>${c.values.map(([l,v])=>`<li>${esc(l)}：${esc(v)}</li>`).join('')}</ul><div class="field"><label for="v2-difference-reason">確認差異原因 <span class="required">*</span></label><textarea id="v2-difference-reason" maxlength="500" rows="3">${esc(v2Model().ack[c.key]?.reason||'')}</textarea></div><p class="hint">確認只針對目前資料；相關內容再次修改後須重新核對。</p><p id="v2-difference-error" class="error"></p>`,btn('返回修改','step','',`data-step="${c.step}"`)+btn('確認差異','v2-ack','primary',`data-key="${esc(c.key)}"`));},
   'v2-ack':el=>{const reason=$('#v2-difference-reason').value.trim();if(!reason){$('#v2-difference-error').textContent='請填寫確認原因';return;}const c=v2Consistency().find(c=>c.key===el.dataset.key);v2Model().ack[c.key]={fingerprint:c.fingerprint,reason};$('#modal').close();render();},
   'v2-ocr':v2OcrStart,'v2-ocr-recognize':v2OcrRecognize,
@@ -594,6 +609,7 @@ const v2OldRestore=actions.restore;actions.restore=el=>{v2OldRestore(el);v2Ensur
 const v2OldEdit=actions['confirm-edit'];actions['confirm-edit']=el=>{v2OldEdit(el);v2Ensure();v2SyncDerived();if(route().page==='application')render();};
 const v2Step=actions.step;actions.step=el=>{if($('#modal').open)$('#modal').close();v2Step(el);};
 const v2SubmitConfirm=actions['confirm-submit'];actions['confirm-submit']=()=>{if(state.fail)return submit();v2SubmitConfirm();};
+document.addEventListener('input',e=>{if(e.target.dataset.v2InlineField&&e.target.tagName==='INPUT')v2InlineChange(e.target);});
 document.addEventListener('change',e=>{
   const t=e.target;if(t.dataset.v2Field){const k=t.dataset.v2Field;if(k==='riskLevel')v2Model().manualRisk=true;if(k==='settlePeriod'){state.values[k]=t.value.trim().toUpperCase();t.value=state.values[k];}v2SyncDerived();const mccName=$('[data-field="mccName"]');if(mccName)mccName.value=state.values.mccName;if(t.tagName==='SELECT'&&route().page==='application')render();}
   if(t.dataset.v2Group){v2SetGroup(t.dataset.v2Group,t.checked);render();}
@@ -604,13 +620,11 @@ document.addEventListener('change',e=>{
   if(t.dataset.v2Signal){v2Model().signals[t.dataset.v2Signal]=t.checked;render();}
   if(t.dataset.v2Sme){const b=t.dataset.v2Sme;v2Model().sme[b]={on:t.checked,type:v2Model().sme[b]?.type||v2SmeOptions(b)[0]};render();}
   if(t.dataset.v2SmeType){const b=t.dataset.v2SmeType;v2Model().sme[b]={on:v2Model().sme[b]?.on||false,type:t.value};}
-  if(t.id==='v2-pricing'){v2CaptureFees();v2FeeEdit.ct=t.value;v2FeeModal(v2FeeEdit.key,true);}
-  if(t.id==='v2-pref'){v2CaptureFees();v2FeeEdit.v.pref_on=t.checked;v2FeeModal(v2FeeEdit.key,true);}
-  if(t.dataset.v2Term){v2CaptureFees();v2FeeEdit.v['t'+t.dataset.v2Term+'_on']=t.checked;v2FeeModal(v2FeeEdit.key,true);}
+  if(t.dataset.v2InlineKey||t.dataset.v2InlinePricing)v2InlineChange(t);
   if(t.dataset.v2OcrItem!==undefined)v2OcrEdit[+t.dataset.v2OcrItem].selected=t.checked;
 });
 // Updated, read-only QA inventory. All form mutations remain in the visible UI.
-Object.assign(window.AllinPayDemo,{version:'2026.09.23-oats-v2',getOnboarding:()=>({version:2,fields:v2Fields.map(f=>f.id),documents:V2.documents.map(d=>d.id),products:v2Groups.map(g=>({key:g.k,count:g.rows.length})),errors:validateAll(),score:v2Score(),selectedProducts:v2Rows().map(x=>({key:x.key,name:x.r.n,pricing:x.st.ct,values:{...x.st.v}}))})});
+Object.assign(window.AllinPayDemo,{version:'2026.09.24-inline-products-risk-sidebar',getOnboarding:()=>({version:2,fields:v2Fields.map(f=>f.id),documents:V2.documents.map(d=>d.id),products:v2Groups.map(g=>({key:g.k,count:g.rows.length})),errors:validateAll(),score:v2Score(),selectedProducts:v2Rows().map(x=>({key:x.key,name:x.r.n,pricing:x.st.ct,values:{...x.st.v}}))})});
 
 // BR is part of the backoffice. Original documents and raw OCR stay in memory.
 // No upload API, external OCR, or automatic persistence of review candidates.
@@ -750,6 +764,44 @@ actions['preview-demo-file']=el=>{const f=state.files[el.dataset.id],url=DEMO.fi
 Object.assign(window.AllinPayDemo,{version:'2026.09.23-backoffice-br-integrated',brLocalOCR:true});
 
 actions['br-sources']=()=>modal('BR 辨識來源',v2ConsistencyCard(),btn('關閉','close')+btn('重新匯入 BR','br-start','primary'));
+
+// Shared application status, derived from the supplied OATS V2 prototype.
+// Advisory demo values only: never silently overwrite the merchant's fee settings.
+const v2RiskPolicies={
+ '1':{label:'低',cycle:'T1',deposit:'0%',limit:'單筆 20,000／月 500,000',path:'L1 抽檢 10% → 送 OATS',sla:'4 小時內'},
+ '2':{label:'中',cycle:'T2',deposit:'收單 5%，釋放 30 天',limit:'單筆 30,000／月 1,000,000',path:'L1 全審 → L2 風控複審 → 送 OATS',sla:'T+1'},
+ '3':{label:'高',cycle:'T3',deposit:'收單 10%，釋放 60 天；CNP 10%，釋放 180 天',limit:'逐戶設定，首月壓縮 50%',path:'L1 → L2 → L3 終審（須書面理由）',sla:'T+3'},
+ D:{label:'拒件',cycle:'—',deposit:'—',limit:'—',path:'直接拒絕，30 天內不得重提',sla:'即時'}
+};
+const v2RiskOpen={risk:true,blocks:true};
+function v2ProgressData(){
+ const errors=validateAll(),required=[...v2Required()],unfilled=required.filter(k=>!v2Raw(k)),completed=required.length-unfilled.length,percent=Math.round(completed/required.length*100);
+ const score=v2Score(),checks=v2Consistency(),missing=v2MissingDocs();
+ const policy=v2RiskPolicies[score.reject?'D':v2Raw('riskLevel')]||v2RiskPolicies[score.level];
+ const recommended=v2RiskPolicies[score.reject?'D':score.level];
+ const blocks=[];
+ if(unfilled.length)blocks.push({step:2,label:'尚有 '+unfilled.length+' 項必填未完成：'+unfilled.slice(0,3).map(v2Label).join('、')+(unfilled.length>3?'等':'')});
+ for(const step of [2,3,4,5,6]){const entries=Object.entries(validateStep(step)).filter(([k])=>!unfilled.includes(k));if(entries.length)blocks.push({step,label:entries[0][1]+(entries.length>1?'（另有 '+(entries.length-1)+' 項）':'')});}
+ if(missing.length)blocks.push({step:1,label:'缺件／需重新提供 '+missing.length+' 項：'+missing.slice(0,2).map(d=>d.name.split('\n')[0]).join('、')+(missing.length>2?'等':'')});
+ return {errors,score,policy,recommended,required:required.length,completed,percent,unfilled,missing,checks,blocks};
+}
+function v2RiskOverview(){
+ const d=v2ProgressData(),s=d.score,tier=s.reject?'D':s.level;
+ const row=(label,value,cls='')=>`<div class="v2-status-line ${cls}"><span>${label}</span><strong>${value}</strong></div>`;
+ const details=(key,label,html)=>`<details data-v2-status-details="${key}" ${v2RiskOpen[key]?'open':''}><summary>${label}</summary>${html}</details>`;
+ return `<section class="v2-status-overview" aria-label="申請即時狀態">
+ <article class="v2-status-card" data-risk-tier="${tier}"><h2>風控評分（系統參考）</h2><div class="v2-status-score"><strong data-risk-score>${s.total}</strong><span>／100</span><div class="v2-status-tier"><b>${d.recommended.label}</b><small>系統建議</small></div></div><meter min="0" max="100" value="${s.total}" aria-label="風控評分"></meter><div class="v2-status-ticks"><span>0</span><span>20 低</span><span>45 中</span><span>70 高</span><span>100</span></div><p>採用風控級別：<b>${d.policy.label}</b>（${v2Model().manualRisk?'人工設定':'跟隨系統建議'}）</p>${details('risk','評分明細與處置',`<h3>評分明細</h3>${s.reject?row(esc(s.reject),'阻擋','danger'):''}${s.items.map(i=>row(esc(i.label),'+'+i.n)).join('')||'<p class="hint">暫無加分項</p>'}<h3>按風控級別處置 · 系統參考</h3><dl>${[['風控級別',s.reject?'—':v2Raw('riskLevel')],['結算週期',d.policy.cycle],['保證金',d.policy.deposit],['限額',d.policy.limit],['審批路徑',d.policy.path],['目標時效',d.policy.sla]].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><small class="hint">此為原型的系統參考，不代表實際審核結果；不會覆寫已填費率或結算設定。</small>`)}</article>
+ <article class="v2-status-card"><h2>資料核對與缺件</h2>${row('資料不一致',d.checks.filter(c=>!c.same).length+' 項')}${row('差異待人工確認',d.checks.filter(c=>!c.same&&!c.confirmed).length+' 項')}${row('缺件／需重新提供',`<span data-risk-missing>${d.missing.length}</span> 項`,d.missing.length?'danger':'')}${row('補件通知',d.missing.length?'未發送':'無需','muted')}<div class="v2-status-links">${btn('查看核對明細 →','v2-status-checks','text-button')}${btn('查看缺件 →','step','text-button','data-step="1"')}</div></article>
+ <article class="v2-status-card"><h2>提交完整度</h2><progress max="100" value="${d.percent}" aria-label="必填項目完成度"></progress><p class="v2-status-fill"><span><b data-risk-completed>${d.completed}</b>／${d.required} 必填項已填寫</span><strong>${d.percent}%</strong></p><small class="hint">填寫率不等於驗證通過；格式、文件與費率仍須核對。</small><div class="v2-status-blockers">${d.blocks.slice(0,2).map(b=>`<button data-action="step" data-step="${b.step}"><span>${esc(b.label)}</span><strong>阻擋</strong></button>`).join('')||'<p class="v2-status-ok">目前無阻擋項</p>'}</div>${d.blocks.length>2?details('blocks','另有 '+(d.blocks.length-2)+' 項待處理',d.blocks.slice(2).map(b=>`<button class="v2-status-extra" data-action="step" data-step="${b.step}">${esc(b.label)} →</button>`).join('')):''}</article></section>`;
+}
+const v2ApplicationWithoutStatus=application;
+application=function(step){const html=v2ApplicationWithoutStatus(step),marker='<div class="v2-version">OATS V2 · 六步申請流程</div>',split=html.indexOf(marker)+marker.length;return html.slice(0,split)+'<div class="v2-application-columns"><div class="v2-application-main">'+html.slice(split,-6)+'</div><aside id="v2-application-status" aria-label="申請狀態側欄">'+v2RiskOverview()+'</aside></div></div>';};
+actions['v2-status-checks']=()=>modal('資料核對明細',v2ConsistencyCard()+`<h3>缺件／需重新提供</h3><ul>${v2MissingDocs().map(d=>`<li>${esc(d.name.split('\n')[0])}</li>`).join('')||'<li>沒有缺件</li>'}</ul>`,btn('關閉','close')+btn('前往文件材料','step','primary','data-step="1"'));
+function v2RefreshStatus(){const n=document.getElementById('v2-application-status');if(n&&route().page==='application'){const top=n.scrollTop;n.innerHTML=v2RiskOverview();n.scrollTop=top;}}
+document.addEventListener('toggle',e=>{if(e.target.dataset.v2StatusDetails)v2RiskOpen[e.target.dataset.v2StatusDetails]=e.target.open;},true);
+document.addEventListener('input',e=>{if(e.target.dataset.field||e.target.dataset.v2InlineKey)v2RefreshStatus();});
+document.addEventListener('change',e=>{if(e.target.closest('.v2-form'))v2RefreshStatus();});
+Object.assign(window.AllinPayDemo,{getApplicationStatus:()=>{const d=v2ProgressData();return {step:route().step,score:d.score,policy:d.policy,required:d.required,completed:d.completed,percent:d.percent,missing:d.missing.length,blockers:d.blocks.length};}});
 
 render();
 })();

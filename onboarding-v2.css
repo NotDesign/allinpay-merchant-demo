@@ -35,3 +35,94 @@
 .v2-form [data-section="特計商戶 SME 配置"] .grid{grid-template-columns:1fr}.v2-sme{padding:8px 0;border:0;display:grid;grid-template-columns:210px minmax(200px,400px);gap:16px;align-items:center}.v2-sme select{height:36px;font-size:12px}
 @media(max-width:1300px){.v2-form [data-section="產品配置"] .check-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.v2-form [data-section="產品配置"] .check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-sme{grid-template-columns:1fr}.v2-product-grid{gap:24px}}
+/* Original Figma 110:31: fees are visible and editable in their product row. */
+.v2-products-page .card{padding:24px}
+.v2-products-page .card>h2{margin-bottom:16px}
+.v2-products-page .card>p.hint{margin-bottom:16px}
+.v2-products-page .v2-catalog-note{margin:16px 0;font-size:11px}
+.v2-catalog-switch{display:flex;gap:8px;flex-wrap:wrap}
+.v2-catalog-switch button{height:36px;min-height:36px;padding:6px 14px;font-size:13px}
+.v2-catalog-switch button.active{background:#eaf6fc;border-color:var(--brand);color:#087fad}
+.v2-products-page .v2-product-grid{display:flex;flex-direction:column;gap:12px}
+.v2-products-page .v2-product{display:grid;grid-template-columns:minmax(160px,230px) 136px minmax(0,1fr);align-items:start;gap:16px;min-height:96px;padding:16px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.v2-products-page .v2-product.selected{border-color:#9ecfe1;background:#fafdff}
+.v2-product-name,.v2-inline-pricing,.v2-inline-fees{min-width:0}
+.v2-product-name>.check{min-height:44px;line-height:20px;align-items:center;font-size:13px}
+.v2-product-name>.check span{min-width:0;overflow-wrap:anywhere}
+.v2-products-page .v2-product-note{margin:8px 0 0;font-size:11px;line-height:16px}
+.v2-inline-pricing{display:flex;flex-direction:column;gap:8px;font-size:12px}
+.v2-inline-pricing>label{height:17px}
+.v2-inline-fieldset{border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:8px}
+.v2-rate-line{display:grid;grid-template-columns:96px repeat(var(--fee-count),minmax(0,1fr));align-items:center;gap:8px;min-width:0}
+.v2-rate-head{font-size:11px;line-height:17px;align-items:start;color:#586174}
+.v2-rate-scope{font-size:12px;line-height:18px;min-width:0}
+.v2-rate-input{min-width:0}
+.v2-rate-input label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.v2-inline-fieldset input:not([type=checkbox]),.v2-inline-fieldset select,.v2-inline-pricing select{width:100%;min-width:0;height:38px;min-height:38px;padding:8px 10px;font-size:12px;border:1px solid #c8cfdb;border-radius:6px;background:#fff;color:#263349}
+.v2-inline-fieldset input:disabled,.v2-inline-fieldset select:disabled,.v2-inline-pricing select:disabled{background:#f2f4f8;color:#68768a;opacity:1;cursor:not-allowed}
+.v2-inline-fieldset .hint{font-size:11px;margin:8px 0 0}
+.v2-inline-error{font-size:12px;line-height:18px;margin:8px 0 0}
+.v2-inline-error:empty{display:none}
+.v2-rate-upi{display:grid;grid-template-columns:96px minmax(0,186px);gap:8px;align-items:center;font-size:12px}
+.v2-products-page .field label{min-height:36px;margin-bottom:8px}
+.v2-products-page .field .hint{margin-top:8px;min-height:16px}
+.v2-products-page .v2-sme{grid-template-columns:240px 400px;min-height:38px;padding:0;gap:16px}
+.v2-products-page .v2-sme select{height:38px}
+.v2-products-page input[type=checkbox]{margin:0;width:14px;height:14px;flex:0 0 14px}
+@media(max-width:1250px){.v2-products-page .v2-product{grid-template-columns:minmax(0,1fr) 160px}.v2-inline-fees{grid-column:1/-1}.v2-products-page .v2-sme{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}}
+@media(max-width:700px){.v2-products-page .card{padding:16px}.v2-products-page .v2-product{grid-template-columns:minmax(0,1fr);padding:12px}.v2-inline-pricing{max-width:180px}.v2-products-page .v2-sme{grid-template-columns:1fr;gap:8px}.v2-products-page .field label{min-height:0}.v2-rate-line{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.v2-rate-scope{grid-column:1/-1;margin-top:8px}.v2-rate-head{display:none}.v2-rate-input label{position:static;display:block;width:auto;height:auto;overflow:visible;clip-path:none;font-size:11px;line-height:16px;margin:0 0 4px}.v2-rate-upi{grid-template-columns:96px minmax(0,1fr)}}
+@media(max-width:380px){.v2-rate-line{grid-template-columns:minmax(0,1fr)}}
+.v2-status-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 24px;align-items:start}
+.v2-status-card{border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;min-width:0;font-size:12px;line-height:18px}
+.v2-status-card h2{font-size:14px;line-height:20px;margin:0 0 16px;color:#586174}
+.v2-status-card h3{font-size:12px;line-height:18px;margin:16px 0 8px}
+.v2-status-card p{margin:10px 0}
+.v2-status-score{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.v2-status-score>strong{font-size:36px;line-height:44px;color:#18202c}
+.v2-status-score>span{color:#7e8a9e}
+.v2-status-tier{margin-left:auto;padding:6px 14px;border-radius:6px;background:#eaf6fc;color:#11698f;text-align:center}
+.v2-status-tier b{font-size:18px;display:block}.v2-status-tier small{font-size:10px}
+.v2-status-card[data-risk-tier="3"] .v2-status-tier{background:#fff4d6;color:#976100}
+.v2-status-card[data-risk-tier="D"] .v2-status-tier{background:#fce9ec;color:#b8293f}
+.v2-status-card meter,.v2-status-card progress{display:block;appearance:none;width:100%;height:8px;border:0;border-radius:6px;background:#edf1f6;overflow:hidden}
+.v2-status-card meter::-webkit-meter-bar{background:#edf1f6;border:0;height:8px}.v2-status-card meter::-webkit-meter-optimum-value{background:#215d9c;border-radius:6px}
+.v2-status-card progress::-webkit-progress-bar{background:#edf1f6}.v2-status-card progress::-webkit-progress-value{background:#126273;border-radius:6px}
+.v2-status-ticks,.v2-status-fill{display:flex;justify-content:space-between;gap:4px;font-size:11px;color:#7e8a9e;margin-top:6px}
+.v2-status-line{display:flex;justify-content:space-between;align-items:start;gap:12px;padding:8px 0;border-bottom:1px dashed #dde3ec}
+.v2-status-line strong{flex-shrink:0;font-weight:600;color:#9a5808}
+.v2-status-line.danger strong,.v2-status-blockers strong{color:#bf253f}
+.v2-status-line.muted strong{color:#8a94a6}
+.v2-status-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.v2-status-links button{font-size:12px!important;padding:0!important;min-height:24px!important;color:#11698f!important}
+.v2-status-card details{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.v2-status-card summary{cursor:pointer;color:#11698f;font-weight:500;list-style-position:inside}
+.v2-status-card dl{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;margin:8px 0 12px}.v2-status-card dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.v2-status-blockers button{display:flex;align-items:start;justify-content:space-between;text-align:left;gap:8px;width:100%;font-size:11px;line-height:17px;background:transparent;border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:10px 0;min-height:0;white-space:normal}
+.v2-status-blockers button strong{flex-shrink:0}
+.v2-status-extra{display:block;width:100%;font-size:11px;text-align:left;white-space:normal;border:0;background:transparent;min-height:0;padding:8px 0}
+.v2-status-ok{color:#177a48}
+@media(max-width:1100px){.v2-status-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-status-card:last-child{grid-column:1/-1}}
+@media(max-width:700px){.v2-status-overview{grid-template-columns:minmax(0,1fr)}.v2-status-card{padding:16px}}
+/* Match the source prototype: a persistent right-hand status rail on desktop. */
+.v2-application-columns{display:grid;grid-template-columns:minmax(0,1fr) 332px;gap:22px;align-items:start}
+.v2-application-main{min-width:0;container-type:inline-size}
+.form-content:has(.v2-application-columns){padding-bottom:12px}
+#v2-application-status{position:sticky;top:56px;max-height:calc(100dvh - 156px);overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}
+#v2-application-status .v2-status-overview{display:flex;flex-direction:column;gap:14px;margin:0}
+#v2-application-status .v2-status-card{width:100%;padding:18px}
+#v2-application-status .text-button{border:0;background:transparent}
+.v2-application-main .v2-product{grid-template-columns:minmax(0,1fr) 136px}
+.v2-application-main .v2-inline-fees{grid-column:1/-1}
+.v2-application-main .v2-sme{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.v2-application-main [data-section="產品配置"] .check-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@container(max-width:850px){.v2-form .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-form [data-section="商戶名稱"] .grid,.v2-form [data-section="業務地址"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v2-form .field{grid-column:span 1!important}.v2-product-name>.check{font-size:12px}}
+@media(max-width:1100px){.v2-application-columns{grid-template-columns:minmax(0,1fr)}#v2-application-status{position:static;max-height:none;overflow:visible;scrollbar-gutter:auto;grid-row:1}#v2-application-status .v2-status-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}#v2-application-status .v2-status-card:last-child{grid-column:auto}}
+@media(max-width:700px){#v2-application-status .v2-status-overview{grid-template-columns:minmax(0,1fr)}.v2-application-main .v2-product{grid-template-columns:minmax(0,1fr)}.v2-application-main .v2-sme,.v2-application-main [data-section="產品配置"] .check-grid{grid-template-columns:minmax(0,1fr)}}
+.v2-sme-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
+.v2-sme-table th,.v2-sme-table td{padding:12px;border:1px solid var(--line);text-align:left;overflow-wrap:anywhere;font-weight:400}
+.v2-sme-table thead th{background:#f7f9fc;color:#586174;font-weight:600}
+.v2-sme-table tbody th,.v2-sme-table tbody td{background:#fff;vertical-align:middle}
+.v2-sme-table th:first-child,.v2-sme-table td:first-child{width:72px;text-align:center}
+.v2-sme-table select{width:100%;height:38px;min-height:38px;font-size:12px}
+.v2-products-page .v2-sme-help{margin:12px 0 0!important;font-size:12px!important}
+@media(max-width:700px){.v2-sme-table th,.v2-sme-table td{padding:8px}.v2-sme-table th:first-child,.v2-sme-table td:first-child{width:48px}.v2-sme-table .hint{font-size:11px}}
