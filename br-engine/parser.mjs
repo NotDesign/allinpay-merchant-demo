@@ -2,8 +2,8 @@
 export const FIELD_DEFS = [
   {key:'businessNameZh',label:'業務／法團名稱（中文）',target:'merchantName'},
   {key:'businessNameEn',label:'業務／法團名稱（英文）',target:'merchantEnglishName'},
-  {key:'brNumber',label:'BR 號碼及分支碼',target:'registerCertNo'},
-  {key:'certificateNumber',label:'證書完整編號',target:null},
+  {key:'brNumber',label:'BR 號碼及分支碼（參考）',target:null},
+  {key:'certificateNumber',label:'登記證完整號碼',target:'registerCertNo'},
   {key:'businessAddressZh',label:'業務地址（中文原文）',target:'addrStreet'},
   {key:'businessAddressEn',label:'業務地址（英文原文）',target:'addrStreetEn'},
   {key:'natureOfBusiness',label:'業務性質',target:'remark'},
@@ -71,7 +71,13 @@ export function parseBR(text,{method='ocr',page=1,today=new Date().toISOString()
  // Require the printed branch code. Never guess -000 or correct O/0 automatically.
  const certs=[...rawText.normalize('NFKC').replace(/[‐‑–—−]/g,'-').matchAll(/(?<![\dA-Z])(\d{8})\s*-\s*(\d{3})(?:\s*-\s*(\d{2})\s*-\s*(\d{2})\s*-\s*([A-Z0-9]))?(?!\d)/gi)];
  const unique=[...new Set(certs.map(m=>m[1]+'-'+m[2]))];
- if(unique.length===1){const m=certs[0];set('brNumber',unique[0],m[0]);set('certificateNumber',[m[1],m[2],m[3],m[4],m[5]].filter(Boolean).join('-'),m[0]);}
+ if(unique.length===1){
+  set('brNumber',unique[0],certs[0][0]);
+  const complete=[...new Set(certs.filter(m=>m[5]).map(m=>m.slice(1,6).join('-').toUpperCase()))];
+  if(complete.length===1)set('certificateNumber',complete[0],certs.find(m=>m[5])[0]);
+  else if(complete.length>1){fields.certificateNumber.alternatives=complete;warnings.push('完整證書尾碼有不同結果，請對照原件確認；沒有自動選取。');}
+  else warnings.push('只讀到 BR 號碼及分支碼，未取得完整證書尾碼；登記證號碼留空，不會由日期推算。');
+ }
  else if(unique.length>1)warnings.push('同頁出現不同 BR 號碼，請手動確認；系統沒有自動選取。');
  // Single-column label/value dates.
  for(const [section,key] of [['start','startDate'],['expiry','expiryDate']]){
@@ -104,6 +110,7 @@ export function parseBR(text,{method='ocr',page=1,today=new Date().toISOString()
 export function validateFields(fields) {
  const errors={};const get=k=>String(fields[k]?.value||'').trim();
  if(get('brNumber')&&!/^\d{8}-\d{3}$/.test(get('brNumber')))errors.brNumber='請輸入 8 位號碼及 3 位分支碼，例如 12345678-000。';
+ if(get('certificateNumber')&&!/^\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]$/i.test(get('certificateNumber')))errors.certificateNumber='請按原件填寫完整登記證號碼，例如 12345678-000-03-26-7；不可省略最後三段。';
  for(const k of ['startDate','expiryDate'])if(get(k)&&!/^\d{4}-\d{2}-\d{2}$/.test(get(k)))errors[k]='請使用 YYYY-MM-DD。';else if(get(k)&&parseDate(get(k))!==get(k))errors[k]='日期不存在。';
  if(get('startDate')&&get('expiryDate')&&get('startDate')>get('expiryDate'))errors.expiryDate='屆滿日期不可早於生效日期。';
  return errors;
@@ -111,6 +118,6 @@ export function validateFields(fields) {
 export function toApplication(fields,selected) {
  const output={};for(const f of FIELD_DEFS) if(f.target&&selected.has(f.key)&&fields[f.key]?.value)output[f.target]=fields[f.key].value;
  if(selected.has('businessNameEn')&&fields.businessNameEn?.value)output.registerCertName=fields.businessNameEn.value;
- if(selected.has('brNumber')&&fields.brNumber?.value)output.registerCertType='01 營業執照／BR';
+ if(selected.has('certificateNumber')&&fields.certificateNumber?.value)output.registerCertType='01 營業執照／BR';
  return output;
 }

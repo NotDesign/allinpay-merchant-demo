@@ -69,7 +69,9 @@ export async function recoverCompactBR({worker,canvas,page,signal,run,onProgress
     const unique=[...new Set(candidates)];
     if(unique.length===1)set('brNumber',unique[0],`${item.first}\n${item.second}`,item.confidence);
     else if(unique.length>1){result.fields.brNumber.alternatives=unique;result.fields.brNumber.warning='兩次辨識的數字不一致，請對照原件輸入。';result.warnings.push('BR 號碼的辨識版本不一致，已留空，沒有自動挑選數字。');}
-    const full=([item.second,alternateCert].find(v=>/\b\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]\b/.test(v))||'').match(/\b\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]\b/);if(full&&unique.length===1)set('certificateNumber',full[0],item.second,item.confidence);
+    const full=[...new Set([item.first,item.second,alternateCert].flatMap(v=>v.match(/\b\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]\b/g)||[]))];
+    if(full.length===1&&unique.length===1)set('certificateNumber',full[0],`${item.first}\n${item.second}`,item.confidence);
+    else if(full.length>1){result.fields.certificateNumber.value='';result.fields.certificateNumber.autoSelect=false;result.fields.certificateNumber.alternatives=full;result.fields.certificateNumber.warning='完整號碼在不同辨識版本中不一致，請對照原件輸入，沒有自動挑選尾碼。';}
    }else{
     const candidates=[...new Set([parseDate(item.first),item.confidence>=40?parseDate(item.second):'',parseDate(alternateDates[item.key==='startDate'?0:1]?.text||'')].filter(Boolean))];
     if(candidates.length===1)set(item.key,candidates[0],`${item.first}\n${item.second}`,Math.max(item.firstConfidence||0,item.confidence));
