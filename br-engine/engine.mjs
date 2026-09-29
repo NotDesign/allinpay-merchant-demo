@@ -19,7 +19,7 @@ export async function loadDocument(file) {
   const task=pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableAutoFetch:true,disableStream:true,cMapUrl:asset('pdfjs/cmaps/'),cMapPacked:true,standardFontDataUrl:asset('pdfjs/standard_fonts/'),wasmUrl:asset('pdfjs/wasm/'),useSystemFonts:false,stopAtErrors:true});
   let doc;
   try{doc=await task.promise;}catch(error){await task.destroy();if(error.name==='PasswordException')throw new Error('這是加密 PDF，請先在本機解鎖後再選擇。');throw new Error('PDF 無法開啟，請檢查檔案是否損毀。');}
-  if(doc.numPages>MAX_PAGES){await task.destroy();throw new Error('測試版最多接受 5 頁，請只保留 BR 所在的頁面。');}
+  if(doc.numPages>MAX_PAGES){await task.destroy();throw new Error('每份文件最多接受 5 頁，請先拆分文件再重新選取。');}
   return {kind:'pdf',pages:doc.numPages,name:file.name,size:file.size,async render(pageNumber){
    const page=await doc.getPage(pageNumber);const base=page.getViewport({scale:1});const scale=Math.min(3,2600/Math.max(base.width,base.height));const viewport=page.getViewport({scale});
    const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
@@ -106,6 +106,21 @@ export function textByPosition(data) {
  return rows.sort((a,b)=>a.cy-b.cy).map(r=>r.words.sort((a,b)=>a.bbox.x0-b.bbox.x0).map(w=>w.text).join(' ')).join('\n');
 }
 
+// General document text reader used by the multi-file review workflow.
+export async function extractDocumentText({canvas,text,signal,onProgress=()=>{}}) {
+ if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+ if(String(text||'').trim().length>=20)return {text,method:'PDF 文字',confidence:null};
+ let worker;
+ const cancel=()=>{if(worker)void worker.terminate();};signal?.addEventListener('abort',cancel,{once:true});
+ try {
+  const pending=Tesseract.createWorker(['eng','chi_tra'],Tesseract.OEM.LSTM_ONLY,{workerPath:asset('tesseract/worker.min.js'),corePath:asset('core/'),langPath:asset('lang'),cacheMethod:'none',workerBlobURL:false,logger:m=>onProgress(m.progress||0),errorHandler:()=>{}});
+  pending.then(w=>{if(signal?.aborted)void w.terminate();},()=>{});
+  worker=await abortable(pending,signal);
+  await abortable(worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:Tesseract.PSM.AUTO,user_defined_dpi:'300'}),signal);
+  const {data}=await abortable(worker.recognize(canvas,{}, {text:true,blocks:true}),signal);
+  return {text:textByPosition(data),method:'本機 OCR',confidence:Math.round(data.confidence)};
+ } finally {signal?.removeEventListener('abort',cancel);if(worker)await worker.terminate().catch(()=>{});}
+}
 function abortable(promise,signal) {
  if(!signal)return promise;
  if(signal.aborted)return Promise.reject(new DOMException('Aborted','AbortError'));
