@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-09-29T03:39:17.240Z",
+  "date": "2026-09-29T04:09:15.206Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "sync success/failure/retry",

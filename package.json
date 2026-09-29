@@ -16,7 +16,7 @@
     "test:feedback": "node verify-document-feedback.cjs && node verify-upload-workflow.cjs",
     "serve": "node scripts/serve.mjs",
     "build:pages": "npm run build && npm run build:external && node scripts/build-pages.mjs",
-    "test:extra": "node verify-admin-extra.cjs"
+    "test:extra": "node verify-admin-extra.cjs && node verify-merchant-state.cjs"
   },
   "dependencies": {
     "@tesseract.js-data/chi_tra": "1.0.0",
