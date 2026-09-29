@@ -1,9 +1,9 @@
 import * as pdfjs from '../vendor/pdfjs/build/pdf.mjs';
 import {prepareSmallScan} from './layout.mjs';
-import {recoverCompactBR} from './compact-recovery.mjs';
-import {recoverLabelledBR} from './structured-recovery.mjs';
+import {recoverCompactBR} from './compact-recovery.mjs?v=20260929-uploads';
+import {recoverLabelledBR} from './structured-recovery.mjs?v=20260929-uploads';
 import Tesseract from '../vendor/tesseract/tesseract.esm.min.js';
-import {parseBR} from './parser.mjs';
+import {parseBR} from './parser.mjs?v=20260929-uploads';
 import {rotateCanvas,estimateSkew,enhanceCanvas} from './image-processing.mjs';
 const asset = path => new URL(`../vendor/${path}`, import.meta.url).href;
 pdfjs.GlobalWorkerOptions.workerSrc=asset('pdfjs/build/pdf.worker.mjs');

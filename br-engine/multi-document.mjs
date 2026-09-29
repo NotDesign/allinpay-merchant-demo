@@ -1,4 +1,4 @@
-import {parseBR} from './parser.mjs';
+import {parseBR} from './parser.mjs?v=20260929-uploads';
 export function candidatesFromBR(br){
  const result=[];
  if(!br.recognized)return result;

@@ -1,4 +1,4 @@
-import {parseBR,parseDate} from './parser.mjs';
+import {parseBR,parseDate} from './parser.mjs?v=20260929-uploads';
 import {ocrRows,cropCanvas,prepareSmallScan,findCompactLayout} from './layout.mjs';
 
 // Printed labels locate the value column. Never identify a document by filename,
