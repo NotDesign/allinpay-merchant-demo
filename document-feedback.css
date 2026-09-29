@@ -1,6 +1,12 @@
 .document-drag{outline:2px dashed #1498c7;outline-offset:-3px;background:#edf8ff!important}
+.file-drop-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0;padding:20px;border:1px dashed #aebed0;border-radius:6px;background:#f8fafc;text-align:center;transition:background .15s,border-color .15s}
+.file-drop-zone:focus-within{border-color:#1498c7;outline:2px solid #d5eff9;outline-offset:2px}
+.file-drop-zone .file-drop-title{font-size:14px;line-height:1.5}.file-drop-zone small,.file-drop-status{color:#64748b;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.file-drop-icon{color:#1498c7;flex-shrink:0}.file-drop-zone button{margin:2px 0;min-height:36px;white-space:nowrap}.file-drop-zone input[hidden]{display:none!important}
+.upload-row .file-drop-zone{margin-top:12px}.file-drop-status:empty{display:none}.external-readonly .file-drop-zone{opacity:.65}
+.batch-assignments{display:grid;gap:12px;margin:16px 0 24px}.batch-assignment{padding:16px;border:1px solid #dce3ec;border-radius:6px;display:grid;gap:10px;min-width:0}.batch-assignment>strong{overflow-wrap:anywhere}.batch-assignment select{width:100%;min-width:0}.batch-assignment .check{align-items:flex-start}
 .batch-drop{border:1px dashed #aebed0;border-radius:6px;padding:24px;margin:18px 0;text-align:center;background:#f8fafc}
-.batch-drop input{max-width:100%}.batch-files,.batch-candidates{display:grid;gap:16px}
+.batch-drop input{max-width:100%}.batch-files,.batch-candidates{display:grid;gap:16px}.batch-files{margin-top:16px}
 .batch-file{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #dce3ec;border-radius:6px}
 .batch-file>span{flex:1;min-width:0;overflow-wrap:anywhere}.batch-file select{width:190px;flex-shrink:0}
 .batch-source-list{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}

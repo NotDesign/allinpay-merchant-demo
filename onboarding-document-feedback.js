@@ -24,8 +24,7 @@ v2Documents=function(){return feedbackDocuments()
  .replaceAll(' · 示例信心 ',' · 辨識信心 ');};
 const feedbackReview=v2Review;
 v2Review=function(){return feedbackReview().replace('✓ 文件已備妥','文件為選填').replace('條件文件','選填文件');};
-const feedbackUpload=uploadRow;
-uploadRow=function(d){return feedbackUpload(d).replace('data-upload-row=', 'data-document-drop="'+esc(d.id)+'" data-upload-row=').replace('尚未選擇文件','拖曳文件至此，或按「選擇文件」（選填）');};
+uploadRow=function(d){const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id];return `<div class="upload-row" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已選取':'選填',f?'green':'gray')}</div><p class="hint">${esc(d.hint)}</p>${fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png,.zip',hint:'PDF／JPG／PNG／ZIP · 每份上限 10 MB',selected:f?f.name+(f.needsReselect?' · 請重新選取':' · 僅本機'):'',attributes:`data-demo-upload="${d.id}"`})}${error?`<p class="error">${esc(error)}</p>`:''}${f?`<div class="upload-actions">${btn('預覽','preview-demo-file','',`data-id="${d.id}"`)+btn('移除',actions['document-remove-file']?'document-remove-file':'remove-file','danger',`data-id="${d.id}"`)}</div>`:''}</div>`;};
 function acceptDocumentFile(id,files){
   if(files.length!==1)return toast('每個上傳位置接受一份文件；多頁可合併 PDF，多文件辨識請使用上方按鈕。');
   const f=files[0];if(!f||!f.size||f.size>10485760||!/\.(pdf|png|jpe?g|zip)$/i.test(f.name))return modal('文件格式不符','<p>請選擇非空白、10 MB 以下的 PDF／JPG／PNG／ZIP。原有文件不受影響。</p>');
@@ -36,8 +35,5 @@ function acceptDocumentFile(id,files){
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.demoUpload){e.stopImmediatePropagation();acceptDocumentFile(t.dataset.demoUpload,[...t.files]);}},true);
 document.addEventListener('change',e=>{if(['cardBankCode','cardCountryCode'].includes(e.target.dataset.v2Field)){syncBankName(true);const bank=$('[data-v2-field="cardBankName"]');if(bank)bank.dispatchEvent(new Event('input',{bubbles:true}));}});
 document.addEventListener('input',e=>{if(e.target.dataset.v2Field==='cardBankCode'){state.values.cardBankCode=e.target.value;syncBankName(true);}});
-document.addEventListener('dragover',e=>{const d=e.target.closest('[data-document-drop]');if(d){e.preventDefault();d.classList.add('document-drag');}});
-document.addEventListener('dragleave',e=>e.target.closest('[data-document-drop]')?.classList.remove('document-drag'));
-document.addEventListener('drop',e=>{const d=e.target.closest('[data-document-drop]');if(d){e.preventDefault();e.stopPropagation();d.classList.remove('document-drag');acceptDocumentFile(d.dataset.documentDrop,[...e.dataTransfer.files]);}});
-Object.assign(window.AllinPayDemo,{version:'2026.09.29-document-feedback'});
+Object.assign(window.AllinPayDemo,{version:'2026.09.29-full-br-unified-uploads'});
 /* MULTI_DOCUMENT_WORKFLOW */

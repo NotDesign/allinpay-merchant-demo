@@ -12,6 +12,7 @@ for (const form of V2_DATA.forms) for (const section of form.sections) {
     ]) if (!section.fields.some(x => x.id === f.id)) section.fields.push(f);
   }
   for (const field of section.fields) {
+    if (field.id === 'registerCertNo') Object.assign(field, {placeholder:'12345678-000-03-26-7', hint:'香港 BR 請填寫 Certificate No. 的完整號碼，包含最後三段；不會由日期推算尾碼'});
     if (['merchantShortName','merchantEnglishShortName'].includes(field.id)) field.hint += '；DBA 即中文或英文簡稱，不另設編號';
     if (field.id === 'cardBankName') field.hint = '按香港銀行代碼帶入；未列出銀行或其他地區請手動填寫';
   }

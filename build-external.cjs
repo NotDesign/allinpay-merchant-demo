@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path');
 const root=__dirname,read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const assets=JSON.parse(read('asset-manifest.json'));
 const safe=text=>text.replace(/<\/script/gi,'<\\/script');
-const shared=['external-onboarding-bootstrap.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','br-integration.js','onboarding-document-feedback.js','multi-document-workflow.js','external-onboarding-shell.js'].map(read).join('\n');
+const shared=['external-onboarding-bootstrap.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-document-feedback.js','multi-document-workflow.js','external-onboarding-shell.js'].map(read).join('\n');
 const source=read('external.js');
 const entry="document.addEventListener('input',e=>{const t=e.target;";
 if(!source.includes(entry))throw Error('Missing External extension entry');

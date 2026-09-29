@@ -212,7 +212,7 @@ function v2ValidateFields(index) {
       if(personKey==='birthDay'&&v2DateDays(v)>0)errors[k]='出生日期不能是未來日期';
       if(personKey==='idcardNoPeriod'&&v2DateDays(v)<0)errors[k]='證件已到期，請更新';
       if(k==='mcc'&&!/^\d{4}$/.test(v))errors[k]='請輸入 4 位 MCC 行業代碼';
-      if(k==='registerCertNo'&&v2Raw('addrCountryCode')==='HKG'&&!/^\d{8}-?\d{3}$/.test(v))errors[k]='香港 BR 格式為 8 位數字及 3 位分支碼';
+      if(k==='registerCertNo'&&v2Raw('addrCountryCode')==='HKG'&&!/^\d{8}-?\d{3}(?:-\d{2}-\d{2}-[A-Z0-9])?$/i.test(v))errors[k]='請按原件輸入完整登記證號碼，例如 12345678-000-03-26-7';
       if(k==='registerCertPeriod'&&v2DateDays(v)<30)errors[k]='BR 有效期不足 30 天；仍可儲存草稿';
       if(k==='nar1Period'&&v2DateDays(v)<30)errors[k]='NAR1 有效期不足 30 天，請提供最新周年申報表';
       if(k==='merchantAgreementPeriod'&&v2DateDays(v)<0)errors[k]=name+'已到期，請核對';
