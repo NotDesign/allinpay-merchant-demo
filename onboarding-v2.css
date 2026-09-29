@@ -125,4 +125,9 @@
 .v2-sme-table th:first-child,.v2-sme-table td:first-child{width:72px;text-align:center}
 .v2-sme-table select{width:100%;height:38px;min-height:38px;font-size:12px}
 .v2-products-page .v2-sme-help{margin:12px 0 0!important;font-size:12px!important}
+/* Figma 110:31: product title, charge type, then the full-width rate editor. */
+.v2-products-page .v2-product,.v2-application-main .v2-product{grid-template-columns:minmax(0,1fr);gap:16px}
+.v2-products-page .v2-product-name{grid-column:1}
+.v2-products-page .v2-inline-pricing{grid-column:1;width:180px;max-width:100%;justify-self:start}
+.v2-products-page .v2-inline-fees{grid-column:1;width:100%}
 @media(max-width:700px){.v2-sme-table th,.v2-sme-table td{padding:8px}.v2-sme-table th:first-child,.v2-sme-table td:first-child{width:48px}.v2-sme-table .hint{font-size:11px}}

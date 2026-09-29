@@ -83,9 +83,7 @@ function v2SyncDerived() {
   if(!v2Model().manualRisk)state.values.riskLevel=v2Score().level;
 }
 function v2FileRequired() {
-  const v=state.values,level=v2Score().reject?'D':v.riskLevel,extra=Object.keys(v2Model().links.shareHolders).filter(i=>v2Model().links.shareHolders[i]!==null).length;
-  const unlinked=state.people.shareHolders-extra>0,cnp=v2Cnp(),offline=v2Offline();
-  return {'140101':true,'140201':v.legalStatus==='BODY_CORPORATE','141101':v.legalStatus==='BODY_CORPORATE','140301':false,'100301':v.signType==='01','100302':v.signType==='01','140901':state.people.directors>1,'140902':level!=='1','141001':unlinked,'141002':level==='3'&&unlinked,'140401':true,'141301':['2','3'].includes(level),'101401':v.signType==='01'||offline,'101402':v.signType==='01'||offline,'140701':false,'141401':offline&&level!=='1','141601':cnp,'141201':cnp&&v.connectType==='0','141701':v2Num('avgMonthAmount')>500000||level==='3','109701':false,'109702':false};
+  return Object.fromEntries(V2.documents.map(d=>[d.id,false]));
 }
 requiredFiles=()=>Object.entries(v2FileRequired()).filter(([,yes])=>yes).map(([id])=>id);
 function v2Required() {

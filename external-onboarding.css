@@ -1,0 +1,20 @@
+.external-v2{width:100%;min-width:0;--border:#dce3ec;--text:#242c3a;--primary:#1295c5}
+.external-v2 .application-head{padding:24px 0;border:0}.external-v2 h1{margin:0 0 8px}
+.external-v2-steps{display:flex;gap:10px;overflow-x:auto;margin:0 0 24px;padding-bottom:8px}
+.external-v2-steps button{flex:1;white-space:nowrap}.external-v2-steps .active{background:#e9f5fb;color:#087fb2;border-color:#1198cc}
+.external-v2 .card{margin-bottom:20px;border-radius:6px}.external-v2 .card>button{width:auto;margin-top:12px}
+.external-v2 .card>h2{margin-bottom:12px}.external-v2 .v2-form .field{display:block}
+.external-v2 .br-callout{display:flex;justify-content:space-between;gap:24px;border:1px solid #b9d8e7;background:#eff8fc;border-radius:6px;padding:24px;margin-bottom:20px}
+.external-v2 .br-callout>div:first-child{flex:1}.external-v2 .br-callout h2{margin:0 0 10px}.external-v2 .br-callout p{margin:0 0 8px}
+.external-v2 .upload-row{border:1px solid #dce3ec;border-radius:6px}.upload-heading{display:flex;justify-content:space-between;gap:12px}.upload-actions{display:flex;gap:10px;flex-wrap:wrap}
+.external-v2 .check{display:flex;align-items:center;gap:9px;line-height:1.7}.external-v2 .check-grid{display:flex;gap:18px;flex-wrap:wrap}
+.external-v2 .repeat-heading{display:flex;align-items:center;justify-content:space-between}
+.external-v2 .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.external-v2 .notice.warn,#modal .notice.warn{background:#fff4d6;color:#945400;border-color:#ead59e}
+.external-v2 .v2-version{padding:4px 0}.external-v2 .form-actions{padding:20px;background:white;border:1px solid #dce3ec;border-radius:6px;position:sticky;bottom:0;z-index:5}
+.external-v2 .form-actions .primary{flex:0}.external-v2 .table-scroll{overflow:auto}.external-v2 th,.external-v2 td{border-bottom:1px solid #dce3ec;text-align:left}
+.external-v2 .v2-br-status{padding:16px;border:1px solid #dce3ec;border-radius:6px;margin-bottom:20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.external-v2 input:not([type=checkbox]):not([type=radio]),.external-v2 select,.external-v2 textarea{font:inherit;border:1px solid #c8cfdb;border-radius:6px;padding:8px 12px;background:#fff;color:inherit}
+.external-v2 fieldset{min-width:0}.external-readonly .toolbar{display:none}.external-readonly [data-section="風控示例設定"]{display:none}
+#modal .check{display:flex;align-items:center;gap:8px}#modal .field input,#modal .field textarea,#modal .field select{width:100%;padding:10px;border:1px solid #c8cfdb;border-radius:6px}
+@media(max-width:700px){.external-v2 .br-callout{display:block;padding:20px}.external-v2 .br-callout>div:last-child{margin-top:16px}.external-v2 .form-actions{position:static;padding:14px}.external-v2 .form-actions button{flex:1}.external-v2 .application-head{align-items:flex-start}.external-v2 .v2-br-status{flex-wrap:wrap}}

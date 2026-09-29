@@ -27,7 +27,7 @@ const base=process.env.EXTERNAL_URL||'http://127.0.0.1:4321/external.html';
  }
  checks.push('1920/1440/1024/900/768/700/390/320 widths across applications, form and review: no header overflow, overlap or wrapped button labels');
  await page.setViewportSize({width:1440,height:900});await page.locator('.header [data-action="home"]').click();await page.waitForSelector('.cards');await click('new');await page.waitForSelector('.application');
- await page.locator('[data-field="companyZh"]').fill('Header layout demo');await click('save');assert.equal(await page.locator('#modal-title').innerText(),'草稿儲存成功');await page.locator('#modal [data-action="close"]').first().click();
+ await page.evaluate(()=>location.hash='/form/2');await page.locator('[data-field="merchantName"]').fill('Header layout demo');await click('save');assert.equal(await page.locator('#modal-title').innerText(),'草稿儲存成功');await page.locator('#modal [data-action="close"]').first().click();
  await page.locator('.header [data-action="home"]').click();await page.waitForSelector('.cards');assert((await page.locator('.cards').innerText()).includes('Header layout demo'));
  await page.locator('.header [data-action="logout"]').click();await page.locator('#modal [data-action="close"]').first().click();assert.equal(await page.locator('.header').count(),1);
  await page.locator('.header [data-action="logout"]').click();await click('confirm-logout');await page.waitForSelector('#auth-form');assert.equal(await page.locator('.header').count(),0);

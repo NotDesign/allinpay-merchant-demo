@@ -1,17 +1,17 @@
 {
   "passed": true,
-  "date": "2026-09-24T02:29:37.444Z",
+  "date": "2026-09-29T02:03:49.732Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
-    "61 source base fields covered; 109 total field definitions; 21 document types; 117 products",
+    "Original base fields plus Word corrections: DBA number removed, parent merchant and inspection date added; 110 fields; 21 optional document types; 117 products",
     "Existing merchant BR, bank identifiers retained on V2 edit migration",
     "legal status, BR format, UTF8 length, linked directors update and safe unlink on removal",
     "MCC lookup, removed old fields, Mainland certificates/geography, optional HK branch/SWIFT, personal settlement, editable cycle",
     "All 117 product toggles and 116 inline fee editors; pricing values retained; validation; all pricing modes",
-    "AMEX signer condition; online website/PCI; risk-dependent documents; risk downgrade explanation",
+    "AMEX signer condition; online website; all documents optional at high risk; risk downgrade explanation unchanged",
     "V2 fee data survives draft save, browser reload and restore",
-    "Real file metadata restored with reselect requirement",
-    "Multi-document simulated OCR review/apply and selective import; difference confirmation invalidated on subsequent change",
+    "Real file metadata restored with non-blocking reselect notice",
+    "Real local document reading, explicit selection and conflict replacement; difference confirmation invalidated on subsequent change",
     "Risk redline block; submission and draft failure/retry; complete valid submission",
     "Six pages at 1440/1024/390 widths without horizontal overflow; mobile inline fee controls"
   ],

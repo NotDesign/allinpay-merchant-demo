@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-09-24T02:30:19.094Z",
+  "date": "2026-09-29T01:45:53.268Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "Text PDF recognition; selective Step 2/3/6 mapping; existing values preserved; no CR/MCC/years inferred; confirmation gate; invalid BR; escaped input; no automatic persistence",

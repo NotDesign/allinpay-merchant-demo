@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-09-24T02:32:05.782Z",
+  "date": "2026-09-29T02:10:21.710Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "All six steps share one right-hand sticky sidebar with risk, missing documents and completion; source rules yield 27 points and medium/T2",

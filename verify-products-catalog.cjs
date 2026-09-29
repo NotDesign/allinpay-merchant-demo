@@ -35,6 +35,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  checks.push('SME table has three card organizations; blank MCC locks controls; eligible types depend on MCC');
  for(const width of [1600,1024,768,390,320]){
   await p.setViewportSize({width,height:1000});await p.evaluate(()=>scrollTo(0,0));assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Page overflow '+width);
+  const placement=await p.locator('[data-v2-rate-row="POS|0"]').evaluate(n=>{const title=n.querySelector('.v2-product-name').getBoundingClientRect(),type=n.querySelector('.v2-inline-pricing').getBoundingClientRect(),fees=n.querySelector('.v2-inline-fees').getBoundingClientRect();return type.top>=title.bottom&&fees.top>=type.bottom&&Math.abs(type.left-title.left)<1;});assert(placement,'Charge type must be below the title '+width);
   const bounds=await p.locator('[data-v2-rate-row="POS|0"]').evaluate(n=>{const b=n.getBoundingClientRect();return [...n.querySelectorAll('input,select')].map(i=>{const r=i.getBoundingClientRect();return r.left>=b.left&&r.right<=b.right&&r.bottom<=b.bottom;});});assert(bounds.every(Boolean),'Input clipped '+width);await p.locator('[data-v2-rate-row="POS|0"]').screenshot({path:'qa-products-inline-'+width+'.png'});
  }
  checks.push('1600 / 1024 / 768 / 390 / 320 widths: no page overflow or clipped fee inputs');

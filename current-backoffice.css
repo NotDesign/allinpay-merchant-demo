@@ -15,3 +15,13 @@ button,input,select,textarea,.card,.notice,.readonly-banner,dialog,.column-popov
 @media(max-width:800px){.sidebar{transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:translateX(0);box-shadow:0 0 0 100vw #101a3d60}.mobile-menu{display:block;position:fixed;right:14px;top:12px;z-index:30;padding:6px 12px;min-height:32px}}
 @media(max-width:360px){.review-decisions{flex-direction:column}.review-decisions label{flex:auto}}
 #agency-message{height:112px;min-height:112px;line-height:1.6;resize:vertical}
+/* Fixed column widths keep long company names, emails and links inside the table. */
+.merchant-table-new{table-layout:fixed}
+.merchant-table-new th,.merchant-table-new td{min-width:0!important;max-width:none;padding:12px;vertical-align:middle}
+.merchant-table-new td{white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+.merchant-table-new .merchant-head{min-width:0;gap:4px}
+.merchant-table-new .merchant-head button{flex-shrink:0}
+.merchant-table-new td:last-child{display:table-cell}
+.merchant-table-new .row-actions{gap:6px;white-space:nowrap}
+.merchant-table-new .row-actions button{padding:6px 10px;flex:none}
+.merchant-table-new td .website{white-space:normal;overflow-wrap:anywhere;max-width:100%}
