@@ -12,7 +12,7 @@
     "test:onboarding": "node verify-onboarding-v2.cjs",
     "test:products": "node verify-products-catalog.cjs",
     "test:risk": "node verify-application-status.cjs",
-    "test:br": "node verify-br-integration.cjs",
+    "test:br": "node verify-br-parser.mjs && node verify-br-integration.cjs",
     "test:feedback": "node verify-document-feedback.cjs",
     "serve": "node scripts/serve.mjs",
     "build:pages": "npm run build && npm run build:external && node scripts/build-pages.mjs",

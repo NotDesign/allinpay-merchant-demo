@@ -862,9 +862,12 @@ async function batchRecognize(){const b=documentBatch;if(!b?.files.length||b.pha
    try{doc=await engine.loadDocument(entry.file);entry.text=[];
     for(let p=1;p<=doc.pages;p++){
      if(b.cancelled)return;let view;
-     try{view=await doc.render(p);timer=setTimeout(()=>b.controller.abort(),120000);const result=await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:n=>{if(!b.cancelled){$('#document-progress').textContent=`${i+1}／${b.files.length} · ${entry.file.name} · 第 ${p} 頁 · ${Math.round(n*100)}%`;}}});clearTimeout(timer);
+     try{view=await doc.render(p);timer=setTimeout(()=>b.controller.abort(),120000);
+      const progress=n=>{if(!b.cancelled){$('#document-progress').textContent=`${i+1}／${b.files.length} · ${entry.file.name} · 第 ${p} 頁 · ${Math.round(n*100)}%`;}};
+      const br=['BR','AUTO'].includes(entry.type)?await engine.recognizeDocument({...view,page:p,signal:b.controller.signal,onProgress:x=>progress(x.progress)}):null;
+      const result=br?.recognized?{text:br.rawText,method:br.method,confidence:br.ocrConfidence}:await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:progress});clearTimeout(timer);
       if(b.cancelled)return;entry.text.push(result.text);
-      const candidates=parser.extractCandidates(result.text,entry.type);
+      const candidates=br?.recognized?parser.candidatesFromBR(br):parser.extractCandidates(result.text,entry.type);
       for(const candidate of candidates)b.items.push({...candidate,value:v2Canonical(candidate.key,candidate.value),fileIndex:i,page:p,source:entry.file.name+' · 第 '+p+' 頁',method:result.method,confidence:result.confidence,selected:false,replace:false});
       if(!candidates.length)b.failures.push(entry.file.name+' · 第 '+p+' 頁：未能對應表單欄位，請查看文字或手動補充。');
      }finally{clearTimeout(timer);if(view)view.canvas.width=1;}

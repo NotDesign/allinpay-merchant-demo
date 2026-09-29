@@ -17,11 +17,16 @@ button,input,select,textarea,.card,.notice,.readonly-banner,dialog,.column-popov
 #agency-message{height:112px;min-height:112px;line-height:1.6;resize:vertical}
 /* Fixed column widths keep long company names, emails and links inside the table. */
 .merchant-table-new{table-layout:fixed}
-.merchant-table-new th,.merchant-table-new td{min-width:0!important;max-width:none;padding:12px;vertical-align:middle}
+.merchant-table-new th,.merchant-table-new td{min-width:0!important;max-width:none;padding:10px;vertical-align:middle}
 .merchant-table-new td{white-space:normal;overflow-wrap:anywhere;line-height:1.5}
 .merchant-table-new .merchant-head{min-width:0;gap:4px}
 .merchant-table-new .merchant-head button{flex-shrink:0}
 .merchant-table-new td:last-child{display:table-cell}
 .merchant-table-new .row-actions{gap:6px;white-space:nowrap}
-.merchant-table-new .row-actions button{padding:6px 10px;flex:none}
+.merchant-table-new .row-actions button{padding:6px 8px;flex:none}
+.column-freeze{display:grid}
+.column-freeze button{border:0;background:transparent;text-align:left;min-height:28px;padding:4px 12px;font-size:12px}
+.column-freeze button:hover{background:#f0f4f8}
+.column-freeze button.active{background:#e3f2fa;color:#087fb5}
+.column-freeze button.active:after{content:'✓';float:right}
 .merchant-table-new td .website{white-space:normal;overflow-wrap:anywhere;max-width:100%}
