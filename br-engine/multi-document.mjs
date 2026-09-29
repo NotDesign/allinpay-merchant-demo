@@ -1,4 +1,15 @@
 import {parseBR} from './parser.mjs';
+export function candidatesFromBR(br){
+ const result=[];
+ if(!br.recognized)return result;
+ for(const [source,key,step]of [['businessNameZh','merchantName',2],['businessNameEn','merchantEnglishName',2],['brNumber','registerCertNo',2],['expiryDate','registerCertPeriod',2],['legalStatus','legalStatus',2],['businessAddressZh','addrStreet',3],['businessAddressEn','addrStreetEn',3],['natureOfBusiness','remark',3]]){
+  const field=br.fields[source],value=field?.value;if(!value)continue;
+  result.push({key,value,step,confidence:field.confidence??null});
+  if(source==='businessNameEn')result.push({key:'registerCertName',value,step});
+  if(source==='brNumber')result.push({key:'registerCertType',value:'01',step});
+ }
+ return result;
+}
 // Conservative label-based extraction. No value is inferred from a file name.
 export function extractCandidates(text,type='AUTO') {
   const result=[];

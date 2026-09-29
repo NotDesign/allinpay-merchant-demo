@@ -6,7 +6,7 @@ export const FIELD_DEFS = [
   {key:'certificateNumber',label:'證書完整編號',target:null},
   {key:'businessAddressZh',label:'業務地址（中文原文）',target:'addrStreet'},
   {key:'businessAddressEn',label:'業務地址（英文原文）',target:'addrStreetEn'},
-  {key:'natureOfBusiness',label:'業務性質',target:'merchantProfile'},
+  {key:'natureOfBusiness',label:'業務性質',target:'remark'},
   {key:'legalStatus',label:'法律地位',target:'legalStatus'},
   {key:'startDate',label:'本張 BR 生效日期',target:null},
   {key:'expiryDate',label:'BR 屆滿日期',target:'registerCertPeriod'},
@@ -16,7 +16,7 @@ const normalize = text => text.normalize('NFKC').replace(/[‐‑–—−]/g,'-
 const labels = [
  ['name', /(?:業務\s*[\/／]?\s*法團所用名稱|業務名稱|法團名稱|Name\s+of\s+Business\s*[\/／]?\s*(?:Corporation)?|Corporation(?:\s+Name)?)/i],
  ['branch', /(?:業務\s*[\/／]\s*分行名稱|^Business\s*[\/／]\s*(?:Branch\s*Name)?|Branch\s*Name)/i],
- ['address', /(?:地\s*址|(?:Business\s+)?Address)/i],
+ ['address', /^(?:地\s*址|(?:Business\s+)?Address)(?=\s|[:：]|$)/i],
  ['nature', /(?:業務性質|Nature\s+of\s+Business)/i],
  ['status', /(?:法律地位|(?:Legal\s+)?Status)/i],
  ['start', /(?:生效日期|Date\s+of\s+Commencement)/i],
@@ -44,7 +44,7 @@ export function parseBR(text,{method='ocr',page=1,today=new Date().toISOString()
  function set(key,value,source) {value=clean(value);if(value)fields[key]={...fields[key],value,source};}
  const sections={};let current=null;
  for(const line of lines) {
-  if(/^(?:PLEASE PRODUCE|WILL ONLY BECOME|RECEIVED FEE|IRDB|IRDT)/i.test(line)){current=null;continue;}
+  if(/^(?:請注意|Please note|PLEASE PRODUCE|WILL ONLY BECOME|RECEIVED FEE|IRDB|IRDT)/i.test(line))break;
   const matches=labels.map(([key,re])=>({key,match:re.exec(line)})).filter(x=>x.match).sort((a,b)=>a.match.index-b.match.index);
   if(matches.length>1) {current=null;continue;} // Column headers are handled separately below.
   if(matches.length) {const {key,match}=matches[0];current=key;sections[key]??=[];
@@ -69,7 +69,7 @@ export function parseBR(text,{method='ocr',page=1,today=new Date().toISOString()
  const status=(sections.status||[]).map(x=>x.value).join(' ');
  for(const [re,value] of [[/BODY\s*CORPORATE|法人團體/i,'法人團體 · Body Corporate'],[/INDIVIDUAL|個人/i,'個人 · Individual'],[/PARTNERSHIP|合夥/i,'合夥 · Partnership'],[/UNINCORPORATED\s*BODY|非屬法團/i,'非屬法團 · Unincorporated Body']]) if(re.test(status)){set('legalStatus',value,evidence(sections.status));break;}
  // Require the printed branch code. Never guess -000 or correct O/0 automatically.
- const certs=[...rawText.normalize('NFKC').replace(/[‐‑–—−]/g,'-').matchAll(/(?<![\dA-Z])(\d{8})\s*-\s*(\d{3})(?:\s*-\s*(\d{2})\s*-\s*(\d{2})\s*-\s*([A-Z]))?(?!\d)/gi)];
+ const certs=[...rawText.normalize('NFKC').replace(/[‐‑–—−]/g,'-').matchAll(/(?<![\dA-Z])(\d{8})\s*-\s*(\d{3})(?:\s*-\s*(\d{2})\s*-\s*(\d{2})\s*-\s*([A-Z0-9]))?(?!\d)/gi)];
  const unique=[...new Set(certs.map(m=>m[1]+'-'+m[2]))];
  if(unique.length===1){const m=certs[0];set('brNumber',unique[0],m[0]);set('certificateNumber',[m[1],m[2],m[3],m[4],m[5]].filter(Boolean).join('-'),m[0]);}
  else if(unique.length>1)warnings.push('同頁出現不同 BR 號碼，請手動確認；系統沒有自動選取。');

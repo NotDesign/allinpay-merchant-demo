@@ -1,6 +1,7 @@
 import * as pdfjs from '../vendor/pdfjs/build/pdf.mjs';
 import {prepareSmallScan} from './layout.mjs';
 import {recoverCompactBR} from './compact-recovery.mjs';
+import {recoverLabelledBR} from './structured-recovery.mjs';
 import Tesseract from '../vendor/tesseract/tesseract.esm.min.js';
 import {parseBR} from './parser.mjs';
 import {rotateCanvas,estimateSkew,enhanceCanvas} from './image-processing.mjs';
@@ -69,6 +70,16 @@ export async function recognizeDocument({canvas,text,page=1,forceOCR=false,signa
      if(recovered){onProgress({progress:1,label:'已完成分區辨識，請逐項核對低畫質欄位。'});return {...recovered,rotation,skew:correction.angle,elapsed:performance.now()-start};}
     }finally{aligned.width=1;}
    }
+   await abortable(worker.reinitialize(['eng','chi_tra']),signal);
+   await abortable(worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.AUTO,tessedit_char_whitelist:'',preserve_interword_spaces:'1'}),signal);
+  }
+  // A readable scan can still have interleaved labels and values. Use independent
+  // label/value regions before accepting a high field-count from whole-page OCR.
+  if(Math.max(canvas.width,canvas.height)>=1400){
+   const correction=await estimateSkew(canvas,signal),aligned=rotateCanvas(canvas,correction.angle);
+   try{const recovered=await recoverLabelledBR({worker,canvas:aligned,page,signal,run:p=>abortable(p,signal),onProgress});
+    if(recovered){onProgress({progress:1,label:'分區辨識完成，請對照原件核對。'});return {...recovered,rotation:0,skew:correction.angle,elapsed:performance.now()-start};}
+   }finally{aligned.width=1;}
    await abortable(worker.reinitialize(['eng','chi_tra']),signal);
    await abortable(worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.AUTO,tessedit_char_whitelist:'',preserve_interword_spaces:'1'}),signal);
   }
