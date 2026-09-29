@@ -16,7 +16,11 @@ function midInfo(r){
 function midDisplay(r){const m=midInfo(r);return `<span class="merchant-mid" data-mid-state="${m.assigned?'assigned':esc(r.status)}" title="${esc(m.hint)}">${m.assigned?esc(m.label):pill(m.label,m.color)}</span>`;}
 // Migrate saved demo rows without clearing drafts, selections or company edits.
 // Legacy synthetic M numbers become stable internal IDs, not unassigned MIDs.
-rows.forEach((r,i)=>{
+rows.forEach(r=>{
+ // Previous form submissions generated M + 9 timestamp digits before any sync.
+ // Recognize that legacy format only on saved applications with no success response.
+ const legacyApplication=r.application&&/^M\d{9}$/.test(r['公司 MID']||'')&&!r.syncRespondedAt&&!['Synced','Enabled','Disabled'].includes(r.status);
+ if(legacyApplication){r.id||=r['公司 MID'];r['公司 MID']='';}
  if(r.id)return;
  const legacy=r['公司 MID'];r.id=legacy||'APP-'+crypto.randomUUID();
  const seeded=/^M\d{6}$/.test(legacy||'');

@@ -30,8 +30,12 @@ const fs=require('node:fs/promises');
  const download=p.waitForEvent('download');await click('export-merchants');const csv=await fs.readFile(await (await download).path(),'utf8');assert(csv.includes('MID 狀態'));assert(csv.includes(mid));assert(!csv.includes('M000531'),'CSV must not export internal IDs as MID');
  await p.locator('#search-scope').selectOption('公司 MID');await p.locator('#merchant-search').fill('等待回應');await click('search');assert(await p.locator('[data-mid-state="AwaitingResponse"]').count());await click('reset-search');
  // Upgrade a previous demo snapshot in place, preserving edits and drafts.
- await p.evaluate(k=>{const d=JSON.parse(localStorage.getItem(k));for(const r of d.rows){if(r.id==='M000531'){r['公司 MID']=r.id;r['客戶中文名稱']='保留的商戶修改';delete r.id;}}localStorage.setItem(k,JSON.stringify(d));},key);
+ await p.evaluate(k=>{const d=JSON.parse(localStorage.getItem(k));for(const r of d.rows){if(r.id==='M000531'){r['公司 MID']=r.id;r['客戶中文名稱']='保留的商戶修改';delete r.id;}if(r.id==='M000826'){r.id='M123456789';r['公司 MID']=r.id;r.application={values:{merchantName:'舊版已提交申請'}};}}localStorage.setItem(k,JSON.stringify(d));},key);
  await p.reload();await p.waitForSelector('.merchants');assert((await row('M000531').innerText()).includes('保留的商戶修改'));assert.equal(await row('M000531').locator('[data-mid-state="Pending"]').innerText(),'待審核');
+ const legacy=(await data()).find(r=>r.id==='M123456789');
+ // Migration runs on read; saving a demo action persists it without replacing the application.
+ await row('M123456789').locator('[data-action="detail"]').click();assert((await p.locator('.profile-summary').innerText()).includes('待審核'));await close();
+ assert.equal(await row('M123456789').locator('[data-mid-state="Pending"]').innerText(),'待審核');assert.equal(legacy.application.values.merchantName,'舊版已提交申請');
  await p.locator('[data-action="column-menu"][data-col="公司 MID"]').click();await click('column-freeze');
  await p.locator('.table-wrap').evaluate(e=>e.scrollLeft=500);await p.screenshot({path:'qa-excel-freeze-mid.png'});
  for(const width of [1440,768,390]){await p.setViewportSize({width,height:1000});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
