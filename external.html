@@ -923,7 +923,7 @@ async function batchRecognize(){
       const result=br?.recognized?{text:br.rawText,method:br.method,confidence:br.ocrConfidence}:await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:progress});clearTimeout(timer);
       if(b.cancelled)return;entry.text.push(result.text);classifications.push(parser.classifyDocument(result.text,{brRecognized:!!br?.recognized}));
       const candidates=br?.recognized?parser.candidatesFromBR(br):parser.extractCandidates(result.text,entry.type);
-      for(const candidate of candidates){const value=v2Canonical(candidate.key,candidate.value);if(!b.items.some(o=>o.key===candidate.key&&o.value===value&&o.fileIndex===i))b.items.push({...candidate,value,fileIndex:i,page:p,source:entry.file.name+' · 第 '+p+' 頁',method:result.method,confidence:candidate.confidence??result.confidence,selected:false,replace:false});}
+      for(const candidate of candidates){const value=v2Canonical(candidate.key,candidate.value);if(!b.items.some(o=>o.key===candidate.key&&o.value===value&&o.fileIndex===i))b.items.push({...candidate,value,fileIndex:i,page:p,source:(br?.recognized?'BR · ':'')+entry.file.name+' · 第 '+p+' 頁',method:result.method,confidence:candidate.confidence??result.confidence,selected:false,replace:false});}
      }finally{clearTimeout(timer);if(view)view.canvas.width=1;}
     }
     const ids=[...new Set(classifications.map(c=>c.id).filter(Boolean))];
