@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-09-29T03:43:13.346Z",
+  "date": "2026-10-09T07:05:53.384Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "All 11 categories retained; 3 selected categories initially show 50 products; other categories expand only when selected; no fee modal buttons",

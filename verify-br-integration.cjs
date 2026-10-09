@@ -1,3 +1,4 @@
+const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 // End-to-end tests of BR inside the complete backoffice; all documents are synthetic.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
@@ -12,7 +13,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  const scan=async()=>{await click('br-recognize');await p.locator('#br-checked').waitFor({timeout:130000});};
  const review=async()=>{await p.locator('#br-checked').check();await click('br-ready');await p.getByRole('heading',{name:'已核對，準備套用',exact:true}).waitFor();};
  try{
- await p.goto(base);await click('pick-role');await click('bo-login');await go(2);
+ await p.goto(base);await click('pick-role');await click('bo-login');await completeOTP(p);await go(2);
  await f('merchantEnglishName').fill('EXISTING EXAMPLE LIMITED');await f('merchantEnglishName').blur();await go(1);const initialStorage=await storage();
  await file('sample-br.pdf');await scan();assert.equal(await p.locator('#br-businessNameEn').inputValue(),'SAMPLE HARBOUR TECHNOLOGY LIMITED');assert.equal(await p.locator('#br-certificateNumber').inputValue(),'12345678-000-09-26-A');assert(await p.locator('[data-action="br-ready"]').isDisabled());assert.equal(await p.locator('[data-br-conflict="merchantEnglishName"]').inputValue(),'keep');
  await p.screenshot({path:path.join(__dirname,'qa-br-review-desktop.png')});

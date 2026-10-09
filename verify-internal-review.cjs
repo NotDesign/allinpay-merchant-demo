@@ -1,3 +1,4 @@
+const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -24,7 +25,7 @@ fs.mkdirSync(out,{recursive:true});
   if(p.viewportSize().width>1100)assert(buttons.every(b=>Math.abs(b.y-buttons[0].y)<1));
   else{assert.equal(buttons[0].y,buttons[1].y);assert.equal(buttons[2].y,buttons[3].y);assert(buttons[2].y>buttons[0].y);}
  };
- await p.goto(base+'#/login');await p.locator('[data-action="pick-role"][data-index="0"]').click();await click('bo-login');await p.waitForSelector('.metrics');
+ await p.goto(base+'#/login');await p.locator('[data-action="pick-role"][data-index="0"]').click();await click('bo-login');await completeOTP(p);await p.waitForSelector('.metrics');
  await p.locator('a[href="#/internal-review"]').click();await p.waitForSelector('#ir-count');
  await p.waitForFunction(()=>{const icon=document.querySelector('a[href="#/internal-review"] img');return icon?.complete&&icon.naturalWidth>0;},{},{timeout:15000});
  await assertFill();
@@ -53,8 +54,8 @@ fs.mkdirSync(out,{recursive:true});
  await p.setViewportSize({width:1600,height:1000});await route('merchants');await p.locator('#merchant-search').fill(firstName);await click('search');assert((await p.locator('.merchants tbody').innerText()).includes('通過審核'));
  // A submitted case owned by the signed-in reviewer must remain read-only.
  await p.evaluate(()=>{const k='allinpay-backoffice-20260923-v1',d=JSON.parse(localStorage.getItem(k)),r=d.rows.find(r=>r.status==='Pending');r.owner='ACC-1';r['客戶中文名稱']='自己的待審申請';localStorage.setItem(k,JSON.stringify(d));});await p.reload();await route('internal-review');await p.locator('#ir-query').fill('自己的待審申請');await p.locator('#ir-search-form button[type="submit"]').click();assert(await p.locator('[data-action="ir-reject"]').isDisabled());assert((await p.locator('.ir-detail').innerText()).includes('不得審批自己'));
- await click('logout');await click('bo-logout');await p.locator('[data-action="pick-role"][data-index="2"]').click();await click('bo-login');await p.waitForSelector('.metrics');assert.equal(await p.locator('a[href="#/internal-review"]').count(),0);await route('internal-review');assert.equal(await p.locator('.ir-case').count(),0);assert((await p.locator('.readonly-banner').innerText()).includes('權限不足'));
+ await click('logout');await click('bo-logout');await p.locator('[data-action="pick-role"][data-index="2"]').click();await click('bo-login');await completeOTP(p);await p.waitForSelector('.metrics');assert.equal(await p.locator('a[href="#/internal-review"]').count(),0);await route('internal-review');assert.equal(await p.locator('.ir-case').count(),0);assert((await p.locator('.readonly-banner').innerText()).includes('權限不足'));
  assert.deepEqual(errors,[]);await context.close();
- const offline=await browser.newContext({offline:true});const op=await offline.newPage();await op.goto('file://'+path.join(__dirname,'backoffice.html'));await op.locator('[data-action="pick-role"][data-index="0"]').click();await op.locator('[data-action="bo-login"]').click();await op.locator('a[href="#/internal-review"]').click();await op.waitForSelector('.ir-case');assert(await op.locator('.ir-case').count()>0);await offline.close();
+ const offline=await browser.newContext({offline:true});const op=await offline.newPage();await op.goto('file://'+path.join(__dirname,'backoffice.html'));await op.locator('[data-action="pick-role"][data-index="0"]').click();await op.locator('[data-action="bo-login"]').click();await completeOTP(op);await op.locator('a[href="#/internal-review"]').click();await op.waitForSelector('.ir-case');assert(await op.locator('.ir-case').count()>0);await offline.close();
  fs.writeFileSync(path.join(out,'internal-review-qa.json'),JSON.stringify({passed:true,url:base,date:new Date().toISOString(),checks:['menu placement/icon','queue pagination/page sizes','cross-field search/empty/reset','document switch/zoom','fields/risk/audit tabs','approval/check-required','reject/reason/note-required','L3 final justification','failure rollback','persistence/merchant sync','self-review denied','unauthorized route denied','1600/1280/768/390 responsive','standalone offline'],errors},null,2));await browser.close();console.log('PASS internal review: workflows, permissions, persistence, responsive and offline');
 })().catch(e=>{console.error(e);process.exit(1)});

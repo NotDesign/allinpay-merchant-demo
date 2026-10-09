@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "date": "2026-10-09T07:08:05.489Z",
+  "base": "http://127.0.0.1:4321",
+  "browser": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "checks": [
+    "backoffice: OTP errors and success, seven-step navigation, preserved sidebar/brand alignment, full mobile consent/photo/review/face/error/retry/callback, expired QR, identity-change invalidation, real synthetic ID extraction + confirmation enables face-only, responsive layouts and locale switching without data mutation",
+    "external: OTP errors and success, seven-step navigation, preserved sidebar/brand alignment, full mobile consent/photo/review/face/error/retry/callback, expired QR, identity-change invalidation, real synthetic ID extraction + confirmation enables face-only, responsive layouts and locale switching without data mutation",
+    "Registration email → authenticator setup → backup-code download/confirmation → dashboard; recovery code cannot be reused",
+    "External registration and authenticator setup preserve company/contact seed",
+    "OTP expiry blocks login; separate-device-context face-only flow and manual demo return code complete successfully"
+  ],
+  "errors": []
+}

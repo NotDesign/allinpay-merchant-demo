@@ -1,3 +1,4 @@
+const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
 (async()=>{
@@ -10,7 +11,7 @@ const fs=require('node:fs/promises');
  const close=()=>p.locator('#modal [data-action="close"]').first().click();
  const data=()=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)).rows,key);
  const row=id=>p.locator('.merchants tbody tr').filter({has:p.locator('[data-select="'+id+'"]')});
- await p.goto(base);await click('pick-role');await click('bo-login');await p.evaluate(()=>location.hash='/merchants');await p.waitForSelector('.merchants');
+ await p.goto(base);await click('pick-role');await click('bo-login');await completeOTP(p);await p.evaluate(()=>location.hash='/merchants');await p.waitForSelector('.merchants');
  for(const status of ['Draft','MoreInfo','Pending','Approved','Syncing','AwaitingResponse','SyncFailed','assigned'])assert(await p.locator('.merchants [data-mid-state="'+status+'"]').count(),status+' must be represented on the first demo page');
  let rows=await data();assert.equal(new Set(rows.map(r=>r.id)).size,240);assert(rows.filter(r=>!r['公司 MID']).length>100);
  assert.equal(rows.find(r=>r.id==='M000412')['公司 MID'],'');

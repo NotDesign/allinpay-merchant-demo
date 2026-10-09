@@ -1,3 +1,4 @@
+const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.EXTERNAL_URL||'http://127.0.0.1:4321/external.html';
@@ -8,7 +9,7 @@ const base=process.env.EXTERNAL_URL||'http://127.0.0.1:4321/external.html';
  const click=a=>page.locator('[data-action="'+a+'"]').first().click();
  const email='merchant.account.with.a.very.long.name.for.layout.testing@example.com';
  await page.goto(base+'#/login');await page.locator('[data-field="authEmail"]').fill(email);await click('login');
- await page.waitForSelector('[data-otp]');for(let i=0;i<6;i++)await page.locator('[data-otp="'+i+'"]').fill(String(i+1));await click('verify');await page.waitForSelector('.header');
+ await page.waitForSelector('[data-otp]');for(let i=0;i<6;i++)await page.locator('[data-otp="'+i+'"]').fill(String(i+1));await click('verify');await completeOTP(page);await page.waitForSelector('.header');
  assert.equal(await page.locator('.header .email').getAttribute('title'),email);
  for(const width of [1920,1440,1024,900,768,700,390,320]){
   await page.setViewportSize({width,height:900});

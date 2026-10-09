@@ -1,4 +1,7 @@
 # Local OCR runtime notices
+
+- QR Code Generator for JavaScript (`qrcode-generator` 2.0.4), Kazuhiko Arase: MIT. Bundled locally; see LICENSE-QR-Code.txt.
+- OpenCC JavaScript (`opencc-js` 1.0.5): MIT. Bundled locally; see LICENSE-OpenCC.txt. Used only for interface Traditional-to-Simplified conversion, not customer values.
 Runtime files are assembled by `npm run setup` from package-lock.json. Models and workers are served from this website; customer files are processed in the browser.
 
 - PDF.js / Mozilla (`pdfjs-dist` 6.3.289): Apache-2.0. License copied to vendor/pdfjs-dist.LICENSE. https://github.com/mozilla/pdf.js

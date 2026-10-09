@@ -42,6 +42,8 @@ jobs:
           npm run test:br
           npm run test:feedback
           npm run test:external
+          npm run test:azure
+          npm run test:review
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html
       - uses: actions/configure-pages@v5
