@@ -15,7 +15,7 @@ async function rejectLinks(directory){
 }
 await rejectLinks(source);
 const metadata=JSON.parse(await readFile(path.join(source,'version.json'),'utf8'));
-if(metadata.commit!==frozen.sourceCommit||metadata.version!==frozen.version)throw Error('Wrong frozen artifact: refusing to publish.');
+if(metadata.commit!==frozen.sourceCommit||metadata.version!==frozen.version)throw Error('Wrong frozen artifact: refusing to publish. Received '+metadata.version+' @ '+metadata.commit);
 const destination=path.join(root,'_pages',frozen.directory);
 if(await stat(destination).catch(()=>null))throw Error('Frozen destination already exists: refusing to overwrite. Rebuild the main artifact first.');
 await mkdir(path.dirname(destination),{recursive:true});

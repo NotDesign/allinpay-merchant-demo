@@ -55,9 +55,8 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm run setup
-          npm run build:pages
-        env:
-          GITHUB_SHA: 896fe605744fd0a39a0d06da9b1cd0617255ddcb
+          GITHUB_SHA=896fe605744fd0a39a0d06da9b1cd0617255ddcb npm run build:pages
+          node -p 'JSON.stringify(require("./_pages/version.json"))'
       - name: Add the fixed Demo and ZIP to Pages
         run: node scripts/append-frozen-release.mjs .release-archive/_pages
       - name: Verify both pinned versions and their downloadable ZIPs
