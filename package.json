@@ -9,6 +9,7 @@
     "build:external": "node build-external.cjs",
     "test:external": "node verify-external-header.cjs",
     "test:azure": "node verify-azure.cjs",
+    "test:camera": "node verify-ktc-camera.cjs",
     "test:review": "node verify-internal-review.cjs",
     "test": "node verify-admin.cjs",
     "test:onboarding": "node verify-onboarding-v2.cjs",

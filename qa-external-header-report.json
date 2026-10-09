@@ -1,7 +1,7 @@
 {
   "passed": true,
   "url": "http://127.0.0.1:4321/external.html",
-  "date": "2026-10-09T07:07:20.940Z",
+  "date": "2026-10-09T10:31:17.973Z",
   "checks": [
     "1920/1440/1024/900/768/700/390/320 widths across applications, form and review: no header overflow, overlap or wrapped button labels",
     "Email OTP login, draft save, My Applications, logout cancel and confirmed logout retain their behavior"

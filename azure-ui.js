@@ -6,7 +6,8 @@ if(!AZURE_EXTERNAL){
 }
 function azureAfterRender(){
  document.title=AZURE_EXTERNAL?'Azure · 商戶申請 Demo':'Azure · 後台管理 Demo';
- document.documentElement.dataset.release='2026.10.09-azure-otp-ktc';
+ document.documentElement.dataset.release='2026.10.09-ktc-camera-code-v2';
+ const home=$('.tabs a:first-child');if(home&&home.getAttribute('href')==='#/dashboard'){home.classList.add('home-tab');home.setAttribute('aria-label','首頁');home.title='首頁';home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';}
  const ktc=azureIsKTC(),r=route(),form=r.page==='application';
  if(form&&(AZURE_EXTERNAL?state.session:BO.user)){
   const nav=$(AZURE_EXTERNAL?'.external-v2-steps':'.stepper');if(nav)nav.outerHTML=ktcSteps(ktc?'ktc':r.step);
@@ -24,6 +25,11 @@ function azureAfterRender(){
  $$('.brand').forEach(n=>{n.setAttribute('aria-label','Azure');n.querySelector('img')?.setAttribute('alt','Azure');});
  const sidebarBottom=$('.sidebar-bottom');if(sidebarBottom&&!sidebarBottom.querySelector('[data-azure-language]')){
   [...sidebarBottom.children].find(c=>c.textContent.trim()==='繁體中文')?.remove();sidebarBottom.insertAdjacentHTML('afterbegin',azureLanguageSelect());
+ }
+ if(sidebarBottom&&!sidebarBottom.querySelector('.sidebar-user')){
+  const name=sidebarBottom.querySelector('.user-name'),role=name?.nextElementSibling;
+  if(name){const profile=document.createElement('div');profile.className='sidebar-user';profile.innerHTML='<span class="sidebar-avatar" role="img" aria-label="帳戶頭像"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 32v-4c0-7 22-7 22 0v4" fill="#85a9ff"/><path d="m12 23 4 4 4-4" fill="#fff"/><path d="M13 19h6v5l-3 2-3-2Z" fill="#f2bc92"/><ellipse cx="16" cy="14" rx="7" ry="8" fill="#ffd4ae"/><path d="M9 14V9c0-7 15-7 15 0l-1 6-3-6c-3 3-6 2-9 2l-1 5Z" fill="#213b70"/></svg></span><div class="sidebar-user-info"></div>';name.before(profile);const info=profile.querySelector('.sidebar-user-info');info.append(name);if(role?.tagName==='DIV')info.append(role);name.title=name.textContent;}
+  const controls=document.createElement('div');controls.className='sidebar-account-actions';sidebarBottom.querySelectorAll(':scope>button').forEach(b=>controls.append(b));sidebarBottom.append(controls);
  }
  const login=$('.login-wrap');if(login&&!login.querySelector('[data-azure-language]'))login.insertAdjacentHTML('afterbegin',azureLanguageSelect());
  $$('.auth-top select,.header-actions>select').forEach(n=>{if(!n.dataset.azureLanguage)n.outerHTML=azureLanguageSelect();});
@@ -68,4 +74,4 @@ function azureLocalize(root=document.body){
 document.addEventListener('change',e=>{if(e.target.hasAttribute('data-azure-language')){azureLocale=e.target.value;try{localStorage.setItem('azure-demo-language',azureLocale);}catch{}azureLocalize();}});
 new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length))azureLocalize();}).observe(document.body,{childList:true,subtree:true});
 setInterval(()=>{if(ktcPending&&Date.now()>ktcPending.expires&&!ktcPending.expiredRendered){ktcPending.expiredRendered=true;if(azureIsKTC())render();}},1000);
-Object.assign(window.AllinPayDemo,{version:'2026.10.09-azure-otp-ktc',getRelease:()=>({version:'2026.10.09-azure-otp-ktc',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'simulated',crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});
+Object.assign(window.AllinPayDemo,{version:'2026.10.09-ktc-camera-code-v2',getRelease:()=>({version:'2026.10.09-ktc-camera-code-v2',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});

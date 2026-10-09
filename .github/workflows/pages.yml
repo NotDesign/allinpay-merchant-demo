@@ -43,6 +43,7 @@ jobs:
           npm run test:feedback
           npm run test:external
           npm run test:azure
+          npm run test:camera
           npm run test:review
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html

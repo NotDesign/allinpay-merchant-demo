@@ -10,7 +10,9 @@ async function completeKTC(page){
  const previous=await page.evaluate(()=>location.hash);
  await page.evaluate(()=>location.hash=location.pathname.includes('external')?'/form/ktc':'/application/ktc');
  await page.locator('[data-action="ktc-start"]').click();
- await page.locator('[data-action="ktc-demo-success"]').click();
+ await page.locator('[data-action="ktc-demo-result"]').click();
+ await page.locator('#ktc-return-code').fill(await page.locator('#ktc-demo-code').innerText());
+ await page.locator('[data-action="ktc-return"]').click();
  await page.locator('[data-action="ktc-next"]').last().click();
  await page.waitForURL(/\/(application|form)\/2$/);
  await page.evaluate(hash=>location.hash=hash,previous);

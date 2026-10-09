@@ -244,9 +244,19 @@ button.primary,.btn.primary{background:#004ce8;border-color:#004ce8;color:white}
 .ktc-layout{display:grid;grid-template-columns:minmax(0,1fr) 332px;gap:24px;margin-bottom:24px}.ktc-panel{padding:32px;background:white;border:1px solid #dde2ea;border-radius:6px;display:flex;flex-direction:column;gap:24px;min-width:0}.ktc-panel h1{font-size:24px;line-height:32px;margin:0}.ktc-panel h2{font-size:18px;line-height:26px;margin:0 0 8px}.ktc-panel p{margin:0;line-height:1.6}.ktc-check{padding:24px;background:#f2f4f8;border:1px solid #dde2ea;border-radius:6px}.ktc-panel .actions{display:flex;flex-wrap:wrap;gap:12px}.ktc-panel .actions button{min-height:44px}.ktc-steps{display:flex;gap:8px;flex-wrap:wrap}.ktc-steps span{background:#eef3ff;border-radius:6px;padding:8px 12px;color:#004ce8}.ktc-link{overflow-wrap:anywhere}.ktc-photo{display:flex;align-items:center;justify-content:center;min-height:180px;background:#eef3ff;border:1px dashed #80a6ff;border-radius:6px;color:#586174}.ktc-photo svg{width:76px;height:76px}.ktc-mobile{max-width:430px;margin:0 auto;min-height:100dvh;background:white;padding:20px;display:flex;flex-direction:column;gap:20px}.ktc-mobile .brand img{width:148px;height:auto}.ktc-mobile h1{font-size:24px;margin:0}.ktc-mobile button{min-height:44px}.ktc-mobile .ktc-check{padding:16px}.ktc-mobile .notice{margin:0}.ktc-mobile .check{display:flex;gap:8px;align-items:flex-start}.ktc-mobile .check input{flex:0 0 auto}.ktc-mobile .azure-language{margin-left:auto}.azure-demo-label{font-size:12px;color:#586174}.ktc-success{color:#17763d}.ktc-error{color:#b73232}
 @keyframes azure-arrive{from{opacity:.3;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media(min-width:1200px){.v2-application-columns{grid-template-columns:minmax(0,1fr) 332px}.stepper .step{min-width:0;flex:1}.stepper .number{width:24px;height:24px}}
-@media(max-width:1050px){.ktc-layout{grid-template-columns:minmax(0,1fr)}.ktc-layout>aside{display:none}}
+/* KTC alone needs the same vertically stacked cards as the regular form sidebar. */
+.ktc-layout:not(:has(>.ktc-status-sidebar)){grid-template-columns:minmax(0,1fr)}
+.ktc-status-sidebar{min-width:0;align-self:start;position:sticky;top:56px;max-height:calc(100dvh - 156px);overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}
+.ktc-status-sidebar .v2-status-overview{display:flex;flex-direction:column;gap:14px;margin:0}
+.ktc-status-sidebar .v2-status-card{width:100%;min-width:0;padding:18px}
+.ktc-status-sidebar .text-button{border:0;background:transparent}
+@media(max-width:1050px){.ktc-layout{grid-template-columns:minmax(0,1fr)}.ktc-status-sidebar{position:static;max-height:none;overflow:visible;scrollbar-gutter:auto}}
 @media(max-width:800px){.tabs{padding-left:12px;padding-right:75px}.tabs a{padding:0 12px}.azure-auth-card{padding:24px}.ktc-panel{padding:20px}.header .brand img{width:148px!important}.auth-brand-panel .brand{width:220px}.auth-brand-panel:after{display:none}.azure-backup{font-size:16px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.tabs a.home-tab{width:48px;min-width:48px;padding:0;justify-content:center}.home-tab svg{width:20px;height:20px;flex:0 0 20px}
+select:not([multiple]):not([size]),select[size="1"]{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m3 6 5 5 5-5' stroke='%23586174' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:14px 14px;padding-right:40px!important}
+.sidebar-bottom{display:flex;flex-direction:column;gap:16px;padding:16px 14px;line-height:1.5}.sidebar-bottom select.azure-language{height:40px;min-height:40px;margin:0;padding-left:12px;border-radius:6px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m3 6 5 5 5-5' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}.sidebar-user{display:flex;align-items:center;gap:10px;min-width:0}.sidebar-avatar{width:36px;height:36px;flex:0 0 36px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;border-radius:50%;background:#eef3ff;border:1px solid #85a9ff}.sidebar-user-info{min-width:0;display:flex;flex-direction:column;gap:4px}.sidebar-user-info .user-name{font-size:13px;line-height:20px;font-weight:600;margin:0;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sidebar-user-info>div:not(.user-name){font-size:11px;line-height:16px;margin:0;color:#a7b6d3}.sidebar-account-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sidebar-account-actions button{min-height:40px;margin:0;padding:8px 4px;border:1px solid #657da7;border-radius:6px;color:#e4ecff;font-size:12px;white-space:nowrap}
+.ktc-camera-frame{position:relative;aspect-ratio:4/3;width:100%;overflow:hidden;background:#102044;border-radius:8px}.ktc-camera-frame.is-face{aspect-ratio:3/4}.ktc-camera-frame video{display:block;width:100%;height:100%;object-fit:contain}.ktc-camera-frame video.mirrored{transform:scaleX(-1)}.ktc-camera-guide{position:absolute;inset:15% 7%;border:2px solid #9dbbff;border-radius:10px;pointer-events:none}.is-face .ktc-camera-guide{inset:12% 16%;border-radius:50%}.ktc-camera-actions{display:flex;flex-wrap:wrap;gap:10px}.ktc-camera-actions button{flex:1 1 120px}.ktc-camera-actions .primary{flex-basis:100%}.ktc-captured-photo{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:8px;background:#eef3ff}.ktc-mobile details{padding:12px;border:1px solid #dde2ea;border-radius:6px}.ktc-mobile summary{cursor:pointer;font-size:13px;line-height:1.6}.ktc-mobile details .file-drop-zone{margin-top:12px;padding:16px}.ktc-mobile p{margin:0;line-height:1.65}.ktc-mobile .error:empty,.ktc-panel .error:empty{display:none}.ktc-mobile input[type="checkbox"]{margin-top:4px}
 </style></head><body><div id="app"></div><dialog id="modal" class="modal" aria-labelledby="modal-title"></dialog><div id="toast" class="toast" role="status" aria-live="polite"></div><script>//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -3705,6 +3715,26 @@ const AZURE_EN={
  '核對身分證資訊':'Review ID information','開始 KTC 認證':'Start KTC verification','重新進行 KTC 認證':'Restart KTC verification','查看／核對已導入身分證資訊':'Review imported ID information','確認資料正確':'Confirm information','返回 KTC':'Back to KTC','返回文件材料':'Back to documents','下一步：主體資料':'Next: entity information','手機拍照 — 身分證':'Take an ID photo','人像識別':'Face verification','識別成功（Demo）':'Verification successful (Demo)','識別成功':'Verification successful','需要手機拍照及人像識別':'ID photo and face verification required','使用手機完成 KTC 認證':'Complete KTC on your phone','識別連結已過期':'Verification link expired','重新產生 QR Code':'Generate a new QR code','取消識別':'Cancel verification','模擬識別成功回傳':'Simulate successful callback','模擬連結過期':'Simulate expired link','手機 Demo 回傳碼':'Mobile demo return code','確認手機回傳碼':'Confirm mobile return code','開啟手機識別 Demo ↗':'Open mobile verification demo ↗','繼續下一步':'Continue','查看 KTC':'View KTC','請先完成 KTC 認證':'Complete KTC verification first','回傳碼不正確':'Incorrect return code','安全身分認證 · KTC · Demo':'Identity verification · KTC · Demo','開始認證':'Start verification','使用示例照片':'Use demo photo','確認並繼續':'Confirm and continue','重新拍照':'Retake photo','完成人像識別（Demo）':'Complete face verification (Demo)','預覽無法識別':'Preview failed verification','暫時無法識別':'Unable to verify','重新進行人像識別':'Retry face verification','我了解並同意進行 Demo 演示':'I understand and agree to run this demo','已核對示例辨識資料':'I have reviewed the demo ID information','身分證相機預覽（示意）':'ID camera preview (illustration)',
  '選擇文件':'Choose file','重新選擇':'Choose again','移除':'Remove','預覽':'Preview','匯入 BR':'Import BR','多文件辨識':'Multi-document recognition','開始辨識':'Start recognition','完成匯入':'Imported','仍待核對 · 未帶入':'Awaiting review · not imported','無法辨識 · 未帶入':'Unrecognised · not imported','未選取':'Not selected','已選取':'Selected','請選擇':'Select','選填':'Optional','核對辨識結果':'Review recognition results','已核對，準備套用':'Reviewed, ready to apply','確認並套用':'Confirm and apply','文件上傳與識別':'Document upload & recognition','辨識結果及來源':'Recognition results & sources','必交文件檢查':'Required document checks','收費類型':'Pricing type','適用範圍':'Scope','費率（%）':'Rate (%)','每筆費用（HKD）':'Per-transaction fee (HKD)','保底（HKD）':'Minimum (HKD)','封頂（HKD）':'Maximum (HKD)','本地卡':'Local cards','跨境卡':'Cross-border cards','優惠費率':'Preferential rate','產品配置':'Product configuration','特計商戶':'Special merchant','開通':'Enable','卡組織':'Card network','特計商戶類型':'Special merchant type','收單':'Acquiring','線下掃碼支付':'In-store QR payments','線上掃碼支付':'Online QR payments','帳戶驗證':'Account verification','驗證':'Verify','返回登入頁面':'Back to sign in','最高管理員':'Administrator','基本管理員':'Manager','主代理商':'Primary agent','次代理商':'Sub-agent'
 };
+Object.assign(AZURE_EN,{
+ '確認驗證碼':'Confirm code','手機識別驗證碼（Demo）':'Mobile verification code (Demo)','手機完成後顯示的 6 位數':'6-digit code displayed on your phone','示例驗證碼：':'Demo code: ',
+ '模擬手機識別完成（顯示驗證碼）':'Simulate phone completion (show code)','等待手機識別完成及驗證碼確認。':'Waiting for phone completion and code confirmation.','已收到手機識別結果，請輸入驗證碼以完成認證。':'Phone result received. Enter the code to complete the demo.',
+ '請輸入完整的 6 位數驗證碼。':'Enter the complete 6-digit code.','驗證碼不正確，請核對手機顯示的驗證碼。':'Incorrect code. Check the code displayed on your phone.','資料已變更或連結已失效，請重新開始識別。':'Information changed or the link expired. Start again.','驗證碼已確認，已完成 KTC 認證示例':'Code confirmed. KTC demo completed.',
+ 'KTC／KYC 手機實拍 Demo':'KTC / KYC mobile photo demo','手機實拍 · KTC／KYC Demo':'Mobile photo capture · KTC / KYC Demo','人像拍攝':'Take a selfie','拍攝人像':'Capture selfie','拍攝身分證':'Capture ID photo','開啟／重試相機':'Open / retry camera','切換前後鏡頭':'Switch camera','同意並開始拍照':'Agree and open camera',
+ '核對身分證照片':'Review ID photo','核對人像照片':'Review selfie','確認並拍攝人像':'Confirm and take selfie','重新拍攝身分證':'Retake ID photo','重新拍攝人像':'Retake selfie','確認照片並取得驗證碼':'Confirm photo and get code','取消並清除照片':'Cancel and clear photos','照片已確認（Demo）':'Photos confirmed (Demo)',
+ '照片完整且清晰，我已核對':'I have checked that the photo is complete and clear','人像清晰，我確認使用此照片演示':'The selfie is clear. Use this photo for the demo','我了解照片的本機暫存方式，並同意開啟相機進行實拍 Demo':'I understand local-only photo storage and agree to open the camera for this demo',
+ '無法開啟預覽？使用系統相機／照片':'No preview? Use the system camera / photos','拍照或選擇照片':'Take or choose a photo','照片只在此手機頁面暫存 · 每份上限 10 MB':'Photos stay in this phone page only · 10 MB maximum each',
+ '需由你允許相機權限。照片只暫存在此頁，不上傳、不寫入草稿；離開或重新整理會清除。不執行正式身分、人臉比對或活體驗證。':'Camera permission is required. Photos remain only in this page, are not uploaded or saved to drafts, and are cleared when you leave or reload. No identity, face matching or liveness verification is performed.',
+ '僅供拍攝流程演示；正式證件辨識、人臉比對及活體驗證尚未串接。':'Photo-flow demo only. Document recognition, face matching and liveness verification are not connected.',
+ '請正視鏡頭，將臉部放入框內。這是實拍 Demo，不執行人臉比對或活體驗證。':'Look at the camera with your face inside the guide. This captures a real photo but does not perform face matching or liveness checks.',
+ '請將完整證件四角放入框內，避免反光。此步只拍照與人工核對，不會自動辨識證件內容。':'Place all four corners inside the guide and avoid glare. This step captures a photo for manual review, without document recognition.',
+ '請確認照片完整、清晰且無反光。本 Demo 沒有辨識或填入證件欄位。':'Check that the photo is complete, clear and glare-free. No document fields are recognised or filled by this demo.',
+ '請確認臉部清晰且未被遮擋。本 Demo 不執行人臉比對或活體驗證。':'Check that your face is clear and unobstructed. No face matching or liveness check is performed.',
+ '請返回電腦，輸入以下驗證碼並按「確認驗證碼」，才會顯示識別成功。':'Return to your computer, enter this code and select Confirm code to show the success dialog.',
+ '照片已從本頁釋放，沒有上傳。這不代表通過正式 KYC 認證。':'Photos have been cleared without upload. This does not represent a verified KYC result.',
+ '請允許相機權限，或使用下方系統相機。':'Allow camera access or use the system camera below.','正在請求相機權限…':'Requesting camera access…','相機已開啟，只會在你按下拍攝時擷取一張照片。':'Camera ready. A photo is captured only when you select Capture.','尚未拍攝照片。':'No photo captured yet.',
+ '相機權限未開啟。請在瀏覽器設定允許相機後重試，或使用系統相機。':'Camera access denied. Allow access in browser settings and retry, or use the system camera.','找不到可用相機，請改用有相機的手機。':'No camera found. Use a phone with a camera.','請使用 10 MB 以下的照片。':'Choose a photo smaller than 10 MB.','照片無法讀取或尺寸過大，請重新拍照或改用 JPG／PNG。':'Cannot read the photo or it is too large. Retake it or use JPG / PNG.',
+ '相機已暫停，請按「開啟／重試相機」。':'Camera paused. Select Open / retry camera.','已導入並核對身分證資訊，只需拍攝人像。':'Imported ID details have been reviewed. Only a selfie is needed.','手機拍攝身分證 → 預覽核對 → 前鏡頭拍攝人像。':'Take an ID photo → review it → take a front-camera selfie.'
+});
 
 /* Shared, explicitly simulated second-factor flow. No credentials leave this browser. */
 const azureAuth={stage:null,pending:null,expires:0,error:'',register:false,verified:false};
@@ -3777,7 +3807,7 @@ let ktcPending=null,ktcReview=false,ktcMobileStage='consent';
 const ktcChannel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('azure-ktc-demo'):null;
 const ktcValues=()=>state.values.__ktc||(state.values.__ktc={});
 const ktcFingerprint=()=>JSON.stringify(['directors[0].name','directors[0].idcardNo','directors[0].birthDay'].map(k=>state.values[k]||'').concat(Object.entries(state.files).filter(([id])=>V2.documents.find(d=>d.id===id)?.name.match(/身[份分].*證/)).map(([id,f])=>[id,f.name,f.size])));
-const ktcPassed=()=>ktcValues().passed===true&&ktcValues().fingerprint===ktcFingerprint();
+const ktcPassed=()=>ktcValues().passed===true&&ktcValues().codeVerified===true&&ktcValues().fingerprint===ktcFingerprint();
 function ktcImported(){return ['directors[0].name','directors[0].idcardNo'].every(key=>v2Model().ocr.some(o=>o.key===key&&o.applied&&String(o.value)===v2Raw(key)))&&Object.keys(state.files).some(id=>V2.documents.find(d=>d.id===id)?.name.match(/身[份分].*證/));}
 const ktcCanSkip=()=>ktcImported()&&ktcValues().confirmed===ktcFingerprint();
 function ktcGo(){go((AZURE_EXTERNAL?'form/':'application/')+'ktc');}
@@ -3786,55 +3816,165 @@ function ktcRenderPanel(){
  const passed=ktcPassed(),skip=ktcCanSkip(),expired=ktcPending&&Date.now()>ktcPending.expires;
  let body='';
  if(ktcReview){body=`<h1>核對身分證資訊</h1><p>只有成功匯入且已核對的身分證資訊才可略過手機拍照。</p><div class="ktc-check"><dl><dt>姓名</dt><dd>${esc(v2Raw('directors[0].name')||'尚未導入')}</dd><dt>身分證號碼</dt><dd>${esc(v2Raw('directors[0].idcardNo')||'尚未導入')}</dd></dl></div><label class="check"><input id="ktc-id-confirm" type="checkbox" ${ktcImported()?'':'disabled'}>我已核對原始證件及以上欄位，確認正確</label><p class="hint">${ktcImported()?'確認後只需進行人像識別。':'尚未成功導入身分證姓名及號碼，請返回文件材料使用多文件辨識，或進行手機拍照示例。'}</p><div class="actions">${btn('返回 KTC','ktc-review-back')}${btn('確認資料正確','ktc-confirm-id','primary',ktcImported()?'':'disabled')}${btn('返回文件材料','step','','data-step="1"')}</div>`;}
- else if(ktcPending){const link=new URL('external.html',location.href);link.hash='/ktc-mobile/'+ktcPending.token+'/'+ktcPending.mode+'/'+ktcPending.expires;body=`<h1>${expired?'識別連結已過期':'使用手機完成 KTC 認證'}</h1><p>${skip?'身分證資訊已確認，只進行人像識別。':'手機拍照 — 身分證 → 核對資料 → 人像識別'}</p>${expired?'<div class="notice warn">請重新產生 QR Code。舊連結及回傳已失效。</div>':`<div class="azure-qr">${azureQR(link.href)}</div><p class="center">等待識別結果 · 連結有效 10 分鐘</p><a class="ktc-link" href="${esc(link.href)}" target="_blank" rel="noopener">開啟手機識別 Demo ↗</a><p class="hint">同一瀏覽器分頁可自動回傳；跨手機因沒有後端，完成後須輸入手機顯示的 Demo 回傳碼。</p><label for="ktc-return-code">手機 Demo 回傳碼</label><input id="ktc-return-code" inputmode="numeric" maxlength="6" placeholder="手機完成後顯示的 6 位數"><div class="actions">${btn('確認手機回傳碼','ktc-return')}</div>`}<div class="actions">${btn('重新產生 QR Code','ktc-start','primary')}${btn('取消識別','ktc-cancel')}${!expired?btn('模擬識別成功回傳','ktc-demo-success')+btn('模擬連結過期','ktc-expire'):''}</div>`;}
- else {body=`<h1>KTC 認證</h1><p>完成身分證資料核對及人像識別後，繼續填寫主體資料。</p><div class="notice ${passed?'success':skip?'':'warn'}"><strong>${passed?'識別成功（Demo）':skip?'身分證資訊已核對，只需人像識別':'需要手機拍照及人像識別'}</strong><p>${passed?'此狀態只代表已完成原型演示，不是正式身分認證。':skip?'已成功導入並確認身分證資訊，可跳過手機拍照。':'目前尚未有已成功導入、並經你確認的身分證資訊。'}</p></div><div class="ktc-check"><h2>1. 手機拍照 — 身分證</h2><p>${skip?'已核對，可跳過此步驟':'使用手機拍攝證件，核對辨識後的資料。'}</p></div><div class="ktc-check"><h2>2. 人像識別</h2><p>掃描 QR Code 開啟手機識別頁，依提示完成操作。</p></div><div class="actions">${btn(passed?'重新進行 KTC 認證':'開始 KTC 認證','ktc-start','primary')}${btn('查看／核對已導入身分證資訊','ktc-review')}</div>`;}
- return `<div class="ktc-layout"><section class="ktc-panel">${body}<p class="azure-demo-label">Demo：不連接身分驗證服務，不拍攝或上傳人像；請勿使用真實身分證。正式跨裝置回傳需接入服務端。</p><div class="actions">${btn('上一步','step','','data-step="1"')}${btn('儲存草稿',AZURE_EXTERNAL?'save':'save-draft')}${btn('下一步：主體資料','ktc-next','primary',passed?'':'disabled')}</div></section>${typeof v2RiskOverview==='function'?'<aside>'+v2RiskOverview()+'</aside>':''}</div>`;
+ else if(ktcPending){
+  const link=new URL('external.html',location.href);link.searchParams.set('v','20261009-ktc-camera-v2');link.hash='/ktc-mobile/'+ktcPending.token+'/'+ktcPending.mode+'/'+ktcPending.expires;
+  body=`<h1>${expired?'識別連結已過期':'使用手機完成 KTC 認證'}</h1><p>${skip?'身分證資訊已確認，只進行人像識別。':'手機拍照 — 身分證 → 核對資料 → 人像識別'}</p>${expired?'<div class="notice warn">請重新產生 QR Code。舊連結及回傳已失效。</div>':`
+   <div class="azure-qr">${azureQR(link.href)}</div><p class="center">連結及驗證碼有效 10 分鐘</p>
+   <a class="ktc-link" href="${esc(link.href)}" target="_blank" rel="noopener">開啟手機識別 Demo ↗</a>
+   <p class="hint">完成手機識別後，請在此輸入手機顯示的 6 位數驗證碼。同一瀏覽器也需要輸入驗證碼，才會完成認證。</p>
+   <p id="ktc-return-status" role="status">${ktcPending.returned?'已收到手機識別結果，請輸入驗證碼以完成認證。':'等待手機識別完成及驗證碼確認。'}</p>
+   <p id="ktc-demo-code-hint" class="hint" ${ktcPending.demoCodeShown?'':'hidden'}>示例驗證碼：<strong id="ktc-demo-code">${ktcPending.demoCodeShown?ktcReturnCode(ktcPending.token):''}</strong></p>
+   <label for="ktc-return-code">手機識別驗證碼（Demo）</label><input id="ktc-return-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-describedby="ktc-return-error" placeholder="手機完成後顯示的 6 位數">
+   <p id="ktc-return-error" class="error" role="alert"></p><div class="actions">${btn('確認驗證碼','ktc-return','primary')}</div>`}
+   <div class="actions">${btn('重新產生 QR Code','ktc-start')}${btn('取消識別','ktc-cancel')}${!expired?btn('模擬手機識別完成（顯示驗證碼）','ktc-demo-result')+btn('模擬連結過期','ktc-expire'):''}</div>`;
+ }
+ else {body=`<h1>KTC 認證</h1><p>完成身分證資料核對及人像識別後，繼續填寫主體資料。</p><div class="notice ${passed?'success':skip?'':'warn'}"><strong>${passed?'識別成功（Demo）':skip?'身分證資訊已核對，只需人像識別':'需要手機拍照及人像識別'}</strong><p>${passed?'此狀態只代表已完成原型演示，不是正式身分認證。':skip?'已成功導入並確認身分證資訊，可跳過手機拍照。':'目前尚未有已成功導入、並經你確認的身分證資訊。'}</p></div><div class="ktc-check"><h2>1. 手機拍照 — 身分證</h2><p>${skip?'已核對，可跳過此步驟':'使用手機拍攝證件，預覽並人工核對照片。'}</p></div><div class="ktc-check"><h2>2. 人像識別</h2><p>掃描 QR Code 開啟手機識別頁，依提示完成操作。</p></div><div class="actions">${btn(passed?'重新進行 KTC 認證':'開始 KTC 認證','ktc-start','primary')}${btn('查看／核對已導入身分證資訊','ktc-review')}</div>`;}
+ return `<div class="ktc-layout"><section class="ktc-panel">${body}<p class="azure-demo-label">Demo：經你允許後開啟手機相機，照片只在手機頁面暫存，不上傳、不寫入草稿。不執行正式證件辨識、人臉比對或活體驗證；請使用測試證件。</p><div class="actions">${btn('上一步','step','','data-step="1"')}${btn('儲存草稿',AZURE_EXTERNAL?'save':'save-draft')}${btn('下一步：主體資料','ktc-next','primary',passed?'':'disabled')}</div></section>${typeof v2RiskOverview==='function'?'<aside class="ktc-status-sidebar" aria-label="申請狀態">'+v2RiskOverview()+'</aside>':''}</div>`;
 }
 function ktcReturnCode(token){let n=0;for(const c of token)n=(n*31+c.charCodeAt(0))%1000000;return String(n).padStart(6,'0');}
+const ktcSessionValid=()=>!!ktcPending&&Date.now()<ktcPending.expires&&ktcPending.fingerprint===ktcFingerprint();
 function ktcReceive(data){
- if(!ktcPending||data?.token!==ktcPending.token||data.status!=='success'||Date.now()>ktcPending.expires||ktcPending.fingerprint!==ktcFingerprint())return false;
- ktcValues().passed=true;ktcValues().fingerprint=ktcFingerprint();ktcValues().completedAt=new Date().toISOString();ktcValues().demo=true;ktcPending=null;render();
- modal('識別成功','<div class="notice success">已完成 KTC 認證示例</div><p>可以繼續下一步：主體資料。</p><p class="hint">此為 Demo 成功回傳，未執行真實身分／人像驗證。</p>',btn('繼續下一步','ktc-next','primary'));return true;
+ if(!ktcSessionValid()||data?.token!==ktcPending.token||data.status!=='success')return false;
+ // A phone callback is only a result notification, never verification of the entered code.
+ ktcPending.returned=true;
+ if($('#ktc-return-status'))$('#ktc-return-status').textContent='已收到手機識別結果，請輸入驗證碼以完成認證。';
+ return true;
+}
+function ktcVerifyCode(){
+ const input=$('#ktc-return-code'),code=input?.value.trim()||'';
+ const error=!ktcSessionValid()?'資料已變更或連結已失效，請重新開始識別。':!/^\d{6}$/.test(code)?'請輸入完整的 6 位數驗證碼。':code!==ktcReturnCode(ktcPending.token)?'驗證碼不正確，請核對手機顯示的驗證碼。':'';
+ if(error){if($('#ktc-return-error'))$('#ktc-return-error').textContent=error;else toast(error);input?.setAttribute('aria-invalid','true');input?.focus();return;}
+ // This is the only entry point allowed to complete KTC and display the success overlay.
+ Object.assign(ktcValues(),{passed:true,codeVerified:true,fingerprint:ktcFingerprint(),completedAt:new Date().toISOString(),demo:true});
+ ktcPending=null;render();
+ modal('識別成功','<div class="notice success">驗證碼已確認，已完成 KTC 認證示例</div><p>可以繼續下一步：主體資料。</p><p class="hint">此為 Demo 驗證流程，未執行真實身分／人像驗證。</p>',btn('繼續下一步','ktc-next','primary'));
 }
 ktcChannel?.addEventListener('message',e=>ktcReceive(e.data));
 window.addEventListener('storage',e=>{if(e.key==='azure-ktc-demo-result'){try{ktcReceive(JSON.parse(e.newValue));}catch{}}});
 Object.assign(actions,{
  'ktc-open':()=>{ktcReview=false;ktcGo();},'ktc-review':()=>{ktcReview=true;render();},'ktc-review-back':()=>{ktcReview=false;render();},
  'ktc-confirm-id':()=>{if(!ktcImported()||!$('#ktc-id-confirm')?.checked)return toast('請核對資料並勾選確認');ktcValues().confirmed=ktcFingerprint();ktcReview=false;render();},
- 'ktc-start':()=>{ktcPending={token:crypto.randomUUID(),mode:ktcCanSkip()?'face':'full',expires:Date.now()+600000,fingerprint:ktcFingerprint()};ktcValues().passed=false;ktcReview=false;render();},
+ 'ktc-start':()=>{ktcPending={token:crypto.randomUUID(),mode:ktcCanSkip()?'face':'full',expires:Date.now()+600000,fingerprint:ktcFingerprint(),returned:false};ktcValues().passed=false;ktcValues().codeVerified=false;ktcReview=false;render();},
  'ktc-cancel':()=>{ktcPending=null;render();},'ktc-expire':()=>{if(ktcPending)ktcPending.expires=Date.now()-1;render();},
- 'ktc-demo-success':()=>{if(!ktcReceive({token:ktcPending?.token,status:'success'}))toast('識別連結已失效，請重新開始');},
- 'ktc-return':()=>{if($('#ktc-return-code')?.value!==ktcReturnCode(ktcPending?.token||''))return toast('回傳碼不正確');actions['ktc-demo-success']();},
+ 'ktc-demo-result':()=>{if(!ktcReceive({token:ktcPending?.token,status:'success'}))return toast('識別連結已失效，請重新開始');ktcPending.demoCodeShown=true;$('#ktc-demo-code').textContent=ktcReturnCode(ktcPending.token);$('#ktc-demo-code-hint').hidden=false;},
+ 'ktc-return':ktcVerifyCode,
  'ktc-next':()=>{if(!ktcPassed())return toast('請先完成 KTC 認證');$('#modal').close();go('application/2');}
 });
-// Mobile HTML has no biometric implementation: exercise consent, photo/review, face, failure and callback states.
-function ktcMobile(){
- const parts=location.hash.slice(2).split('/'),token=parts[1],mode=parts[2],expires=+parts[3];
- const valid=/^[a-f0-9-]{36}$/.test(token||'')&&['full','face'].includes(mode)&&expires>Date.now()&&expires<Date.now()+660000;
- const logo=AZURE_EXTERNAL?ASSETS['4864c.png']:'azure-logo.png';let body='';
- const face='<div class="ktc-photo" style="height:310px"><div style="width:164px;height:210px;border:2px solid #3973f4;border-radius:50%"></div></div>';
- if(!valid)body='<h1>識別連結已過期或無效</h1><p>請返回電腦頁面，重新產生 QR Code。</p>';
- else if(ktcMobileStage==='consent')body='<h1>KTC 認證</h1><p>'+ (mode==='face'?'身分證資訊已核對，只需完成人像識別。':'手機拍照 — 身分證 → 核對資料 → 人像識別。')+'</p><div class="notice warn">這是操作原型。不會啟動相機、不會收集證件或人像。</div><label class="check"><input type="checkbox" id="ktc-consent">我了解並同意進行 Demo 演示</label>'+btn('開始認證','ktc-mobile-start','primary');
- else if(ktcMobileStage==='photo')body='<h1>手機拍照 — 身分證</h1><p>請將完整證件四角置於框內，確保光線均勻。</p><div class="ktc-photo">身分證相機預覽（示意）</div>'+btn('使用示例照片','ktc-mobile-photo','primary');
- else if(ktcMobileStage==='review')body='<h1>核對身分證資訊</h1><div class="ktc-check"><p>姓名：DEMO USER</p><p>證件號碼：DEMO-ID-001</p><small>純示例，不會覆寫目前申請人的真實欄位。</small></div><label class="check"><input type="checkbox" id="ktc-mobile-confirm">已核對示例辨識資料</label>'+btn('確認並繼續','ktc-mobile-face','primary')+btn('重新拍照','ktc-mobile-retake');
- else if(ktcMobileStage==='face')body='<h1>人像識別</h1><p>請正視鏡頭，將臉部保持在框內，依画面提示完成動作。</p>'+face+btn('完成人像識別（Demo）','ktc-mobile-success','primary')+btn('預覽無法識別','ktc-mobile-failure');
- else if(ktcMobileStage==='failed')body='<h1>暫時無法識別</h1><p>請移除遮擋、保持光線充足後重試。</p>'+btn('重新進行人像識別','ktc-mobile-retry','primary');
- else body='<h1 class="ktc-success">識別成功（Demo）</h1><p>已發出示例回傳。同一瀏覽器的電腦分頁會自動顯示成功。</p><div class="ktc-check"><h2>跨手機 Demo 回傳碼</h2><strong style="font-size:28px">'+ktcReturnCode(token)+'</strong></div><p>使用另一部手機時，請在電腦輸入此碼以完成模擬回傳。</p>';
- $('#app').innerHTML='<main class="ktc-mobile"><a class="brand" href="#/login"><img src="'+logo+'" alt="Azure"></a><small>安全身分認證 · KTC · Demo</small>'+body+'<p class="azure-demo-label">僅供功能演示，不代表通過正式身分認證。</p></main>';
-}
-Object.assign(actions,{
- 'ktc-mobile-start':()=>{if(!$('#ktc-consent')?.checked)return toast('請先確認 Demo 說明');ktcMobileStage=location.hash.split('/')[3]==='face'?'face':'photo';render();},
- 'ktc-mobile-photo':()=>{ktcMobileStage='review';render();},'ktc-mobile-retake':()=>{ktcMobileStage='photo';render();},
- 'ktc-mobile-face':()=>{if(!$('#ktc-mobile-confirm')?.checked)return toast('請先核對示例資料');ktcMobileStage='face';render();},
- 'ktc-mobile-failure':()=>{ktcMobileStage='failed';render();},'ktc-mobile-retry':()=>{ktcMobileStage='face';render();},
- 'ktc-mobile-success':()=>{if(ktcMobileStage!=='face')return;const parts=location.hash.slice(2).split('/');if(+parts[3]<Date.now())return render();const data={token:parts[1],status:'success'};ktcChannel?.postMessage(data);try{localStorage.setItem('azure-ktc-demo-result',JSON.stringify(data));localStorage.removeItem('azure-ktc-demo-result');}catch{}ktcMobileStage='success';render();}
-});
+document.addEventListener('keydown',e=>{if(e.target.id==='ktc-return-code'&&e.key==='Enter'){e.preventDefault();ktcVerifyCode();}});
+// Mobile camera capture lives in azure-ktc-camera.js and never uploads photos.
 const azureNext=actions.next,azurePrevious=actions.previous,azureStep=actions.step;
 actions.next=()=>{if(route().step===1){ktcGo();return;}azureNext();};
 if(!AZURE_EXTERNAL)actions.previous=()=>route().step===2?ktcGo():azurePrevious();
 const azureSubmit=actions.submit,azureConfirmSubmit=actions['confirm-submit'];
 for(const [key,fn] of [['submit',azureSubmit],['confirm-submit',azureConfirmSubmit]])actions[key]=el=>{if(!ktcPassed()){modal('請先完成 KTC 認證','<p>完成身分證核對及人像識別示例後，才可提交申請。</p>',btn('前往 KTC 認證','ktc-open','primary'));return;}fn(el);};
 Object.assign(window.AllinPayDemo,{getKTC:()=>({passed:ktcPassed(),canSkipPhoto:ktcCanSkip(),imported:ktcImported(),importedFields:(v2Model().ocr||[]).filter(o=>o.applied&&String(o.value)===v2Raw(o.key)).map(o=>o.key),pending:!!ktcPending,demo:true})});
+
+/* Opt-in, browser-local photo capture. No upload, OCR, face matching or liveness claim. */
+const ktcCapture={session:'',stream:null,request:0,consented:false,facing:'environment',photos:{id:null,face:null},error:''};
+function ktcMobileSession(){
+ const [,token,mode,expiry]=location.hash.slice(2).split('/'),expires=Number(expiry);
+ return {token,mode,expires,valid:/^[a-f0-9-]{36}$/.test(token||'')&&['full','face'].includes(mode)&&expires>Date.now()&&expires<Date.now()+660000};
+}
+function ktcStopCamera(){
+ ktcCapture.request++;
+ ktcCapture.stream?.getTracks().forEach(track=>track.stop());ktcCapture.stream=null;
+ const video=$('#ktc-camera');if(video)video.srcObject=null;
+ const button=$('[data-action="ktc-camera-capture"]');if(button)button.disabled=true;
+}
+function ktcClearPhoto(kind){if(ktcCapture.photos[kind])URL.revokeObjectURL(ktcCapture.photos[kind].url);ktcCapture.photos[kind]=null;}
+function ktcClearCapture(){ktcStopCamera();ktcClearPhoto('id');ktcClearPhoto('face');ktcCapture.consented=false;ktcCapture.session='';ktcCapture.error='';ktcMobileStage='consent';}
+function ktcCameraError(message){ktcCapture.error=message;if($('#ktc-camera-error'))$('#ktc-camera-error').textContent=message;}
+function ktcCameraView(kind){
+ const face=kind==='face';
+ return `<h1>${face?'人像拍攝':'手機拍照 — 身分證'}</h1><p>${face?'請正視鏡頭，將臉部放入框內。這是實拍 Demo，不執行人臉比對或活體驗證。':'請將完整證件四角放入框內，避免反光。此步只拍照與人工核對，不會自動辨識證件內容。'}</p>
+ <div class="ktc-camera-frame ${face?'is-face':''}"><video id="ktc-camera" autoplay muted playsinline aria-label="相機即時預覽"></video><div class="ktc-camera-guide" aria-hidden="true"></div></div>
+ <p id="ktc-camera-status" role="status">請允許相機權限，或使用下方系統相機。</p><p id="ktc-camera-error" class="error" role="alert">${esc(ktcCapture.error)}</p>
+ <div class="ktc-camera-actions">${btn('開啟／重試相機','ktc-camera-open')}${btn('切換前後鏡頭','ktc-camera-switch')}${btn(face?'拍攝人像':'拍攝身分證','ktc-camera-capture','primary','disabled')}</div>
+ <details><summary>無法開啟預覽？使用系統相機／照片</summary>${fileDropControl({inputId:'ktc-photo-file',accept:'image/*',title:'拍照或選擇照片',hint:'照片只在此手機頁面暫存 · 每份上限 10 MB',attributes:'capture="'+(face?'user':'environment')+'" data-ktc-photo="'+kind+'"'})}</details>`;
+}
+function ktcMobile(){
+ const session=ktcMobileSession();
+ if(ktcCapture.session!==location.hash){ktcClearCapture();ktcCapture.session=location.hash;}
+ // Any re-render releases the prior preview; explicit user actions reopen it.
+ ktcStopCamera();
+ let body='';
+ if(!session.valid){ktcClearPhoto('id');ktcClearPhoto('face');body='<h1>識別連結已過期或無效</h1><p>請返回電腦頁面，重新產生 QR Code。</p>';}
+ else if(ktcMobileStage==='consent')body='<h1>KTC／KYC 手機實拍 Demo</h1><p>'+(session.mode==='face'?'已導入並核對身分證資訊，只需拍攝人像。':'手機拍攝身分證 → 預覽核對 → 前鏡頭拍攝人像。')+'</p><div class="notice warn">需由你允許相機權限。照片只暫存在此頁，不上傳、不寫入草稿；離開或重新整理會清除。不執行正式身分、人臉比對或活體驗證。</div><label class="check"><input type="checkbox" id="ktc-consent">我了解照片的本機暫存方式，並同意開啟相機進行實拍 Demo</label>'+btn('同意並開始拍照','ktc-mobile-start','primary');
+ else if(ktcMobileStage==='photo'||ktcMobileStage==='face')body=ktcCameraView(ktcMobileStage==='photo'?'id':'face');
+ else if(ktcMobileStage==='review')body='<h1>核對身分證照片</h1><img class="ktc-captured-photo" src="'+ktcCapture.photos.id.url+'" alt="剛拍攝的身分證照片"><p>請確認照片完整、清晰且無反光。本 Demo 沒有辨識或填入證件欄位。</p><label class="check"><input type="checkbox" id="ktc-mobile-confirm">照片完整且清晰，我已核對</label>'+btn('確認並拍攝人像','ktc-mobile-face','primary')+btn('重新拍攝身分證','ktc-mobile-retake');
+ else if(ktcMobileStage==='face-review')body='<h1>核對人像照片</h1><img class="ktc-captured-photo face-photo" src="'+ktcCapture.photos.face.url+'" alt="剛拍攝的人像照片"><p>請確認臉部清晰且未被遮擋。本 Demo 不執行人臉比對或活體驗證。</p><label class="check"><input type="checkbox" id="ktc-face-confirm">人像清晰，我確認使用此照片演示</label>'+btn('確認照片並取得驗證碼','ktc-mobile-success','primary')+btn('重新拍攝人像','ktc-face-retake');
+ else body='<h1>照片已確認（Demo）</h1><p>請返回電腦，輸入以下驗證碼並按「確認驗證碼」，才會顯示識別成功。</p><div class="ktc-check"><h2>手機識別驗證碼（Demo）</h2><strong style="font-size:28px">'+ktcReturnCode(session.token)+'</strong></div><p>照片已從本頁釋放，沒有上傳。這不代表通過正式 KYC 認證。</p>';
+ const logo=AZURE_EXTERNAL?ASSETS['4864c.png']:'azure-logo.png';
+ $('#app').innerHTML='<main class="ktc-mobile"><a class="brand" href="#/login"><img src="'+logo+'" alt="Azure"></a><small>手機實拍 · KTC／KYC Demo</small>'+body+(session.valid&&ktcMobileStage!=='consent'&&ktcMobileStage!=='success'?btn('取消並清除照片','ktc-mobile-cancel'):'')+'<p class="azure-demo-label">僅供拍攝流程演示；正式證件辨識、人臉比對及活體驗證尚未串接。</p></main>';
+}
+async function ktcOpenCamera(){
+ const session=ktcMobileSession();
+ if(!session.valid||!ktcCapture.consented||!['photo','face'].includes(ktcMobileStage))return;
+ ktcStopCamera();ktcCameraError('');
+ if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){ktcCameraError('請使用 HTTPS 網址並在 Safari／Chrome／Brave 開啟，或改用系統相機。');return;}
+ const request=ktcCapture.request,hash=location.hash,stage=ktcMobileStage;
+ $('#ktc-camera-status').textContent='正在請求相機權限…';
+ try{
+  const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:ktcCapture.facing},width:{ideal:1600},height:{ideal:1200}}});
+  if(request!==ktcCapture.request||hash!==location.hash||stage!==ktcMobileStage||!ktcMobileSession().valid){stream.getTracks().forEach(t=>t.stop());return;}
+  ktcCapture.stream=stream;const video=$('#ktc-camera');video.srcObject=stream;video.muted=true;
+  video.classList.toggle('mirrored',ktcCapture.facing==='user');await video.play();
+  if(request!==ktcCapture.request)return;
+  $('#ktc-camera-status').textContent='相機已開啟，只會在你按下拍攝時擷取一張照片。';
+  $('[data-action="ktc-camera-capture"]').disabled=false;
+ }catch(error){
+  if(request!==ktcCapture.request)return;ktcStopCamera();
+  ktcCameraError(error.name==='NotAllowedError'?'相機權限未開啟。請在瀏覽器設定允許相機後重試，或使用系統相機。':error.name==='NotFoundError'?'找不到可用相機，請改用有相機的手機。':'相機暫時無法使用，請關閉其他相機程式後重試，或使用系統相機。');
+  if($('#ktc-camera-status'))$('#ktc-camera-status').textContent='尚未拍攝照片。';
+ }
+}
+function ktcStorePhoto(kind,blob){
+ ktcClearPhoto(kind);ktcCapture.photos[kind]={url:URL.createObjectURL(blob)};
+ ktcStopCamera();ktcCapture.error='';ktcMobileStage=kind==='id'?'review':'face-review';render();
+}
+async function ktcTakePhoto(){
+ const video=$('#ktc-camera'),session=ktcMobileSession();
+ if(!session.valid||!ktcCapture.consented||!ktcCapture.stream||!video||video.readyState<2||!video.videoWidth)return ktcCameraError('相機尚未就緒，請稍候或重新開啟。');
+ const kind=ktcMobileStage==='photo'?'id':'face',request=ktcCapture.request;
+ const canvas=document.createElement('canvas'),scale=Math.min(1,1600/Math.max(video.videoWidth,video.videoHeight));canvas.width=Math.round(video.videoWidth*scale);canvas.height=Math.round(video.videoHeight*scale);canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+ $('[data-action="ktc-camera-capture"]').disabled=true;
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));canvas.width=1;
+ if(request!==ktcCapture.request||!ktcMobileSession().valid)return;
+ if(!blob){ktcCameraError('無法擷取照片，請重試。');$('[data-action="ktc-camera-capture"]').disabled=false;return;}
+ ktcStorePhoto(kind,blob);
+}
+async function ktcReadPhoto(file,kind){
+ if(!ktcMobileSession().valid||!ktcCapture.consented||kind!==(ktcMobileStage==='photo'?'id':ktcMobileStage==='face'?'face':''))return;
+ if(!file||file.size===0||file.size>10*1048576||!/^image\//.test(file.type)){ktcCameraError('請使用 10 MB 以下的照片。');return;}
+ ktcStopCamera();const request=ktcCapture.request,url=URL.createObjectURL(file),img=new Image();
+ try{
+  await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
+  if(request!==ktcCapture.request||!ktcMobileSession().valid)return;
+  if(img.naturalWidth*img.naturalHeight>32000000)throw Error('size');
+  const canvas=document.createElement('canvas'),scale=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));canvas.width=Math.round(img.naturalWidth*scale);canvas.height=Math.round(img.naturalHeight*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));canvas.width=1;
+  if(request!==ktcCapture.request||!ktcMobileSession().valid)return;
+  if(!blob)throw Error('decode');ktcStorePhoto(kind,blob);
+ }catch{if(request===ktcCapture.request)ktcCameraError('照片無法讀取或尺寸過大，請重新拍照或改用 JPG／PNG。');}
+ finally{URL.revokeObjectURL(url);img.src='';}
+}
+Object.assign(actions,{
+ 'ktc-mobile-start':()=>{if(!$('#ktc-consent')?.checked)return toast('請先閱讀並同意相機及照片說明');ktcCapture.consented=true;ktcMobileStage=ktcMobileSession().mode==='face'?'face':'photo';ktcCapture.facing=ktcMobileStage==='face'?'user':'environment';render();void ktcOpenCamera();},
+ 'ktc-camera-open':()=>void ktcOpenCamera(),
+ 'ktc-camera-switch':()=>{ktcCapture.facing=ktcCapture.facing==='user'?'environment':'user';void ktcOpenCamera();},
+ 'ktc-camera-capture':()=>void ktcTakePhoto(),
+ 'ktc-mobile-retake':()=>{ktcClearPhoto('id');ktcMobileStage='photo';ktcCapture.facing='environment';render();void ktcOpenCamera();},
+ 'ktc-mobile-face':()=>{if(!ktcCapture.photos.id||!$('#ktc-mobile-confirm')?.checked)return toast('請先核對身分證照片');ktcClearPhoto('id');ktcMobileStage='face';ktcCapture.facing='user';render();void ktcOpenCamera();},
+ 'ktc-face-retake':()=>{ktcClearPhoto('face');ktcMobileStage='face';ktcCapture.facing='user';render();void ktcOpenCamera();},
+ 'ktc-mobile-success':()=>{const session=ktcMobileSession();if(!session.valid)return render();if(ktcMobileStage!=='face-review'||!ktcCapture.photos.face||!$('#ktc-face-confirm')?.checked)return toast('請先核對人像照片');ktcStopCamera();ktcClearPhoto('id');ktcClearPhoto('face');const data={token:session.token,status:'success'};ktcChannel?.postMessage(data);try{localStorage.setItem('azure-ktc-demo-result',JSON.stringify(data));localStorage.removeItem('azure-ktc-demo-result');}catch{}ktcMobileStage='success';render();},
+ 'ktc-mobile-cancel':()=>{ktcClearCapture();render();}
+});
+document.addEventListener('change',e=>{if(e.target.dataset.ktcPhoto)void ktcReadPhoto(e.target.files[0],e.target.dataset.ktcPhoto);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){ktcStopCamera();if($('#ktc-camera-status'))$('#ktc-camera-status').textContent='相機已暫停，請按「開啟／重試相機」。';}});
+window.addEventListener('pagehide',ktcClearCapture);
+window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash.startsWith('#/ktc-mobile/'))render();});
+window.addEventListener('hashchange',()=>{if(!location.hash.startsWith('#/ktc-mobile/'))ktcClearCapture();});
+setInterval(()=>{if(location.hash.startsWith('#/ktc-mobile/')&&!ktcMobileSession().valid&&(ktcCapture.stream||ktcCapture.photos.id||ktcCapture.photos.face)){ktcStopCamera();ktcClearPhoto('id');ktcClearPhoto('face');render();}},1000);
 
 const azureIsKTC=()=>/^#\/(application|form)\/ktc$/.test(location.hash);
 const azureLanguageSelect=()=>'<select class="azure-language" aria-label="語言" data-azure-language><option value="zh-Hant">繁體中文</option><option value="zh-Hans">简体中文</option><option value="en">English</option></select>';
@@ -3844,7 +3984,8 @@ if(!AZURE_EXTERNAL){
 }
 function azureAfterRender(){
  document.title=AZURE_EXTERNAL?'Azure · 商戶申請 Demo':'Azure · 後台管理 Demo';
- document.documentElement.dataset.release='2026.10.09-azure-otp-ktc';
+ document.documentElement.dataset.release='2026.10.09-ktc-camera-code-v2';
+ const home=$('.tabs a:first-child');if(home&&home.getAttribute('href')==='#/dashboard'){home.classList.add('home-tab');home.setAttribute('aria-label','首頁');home.title='首頁';home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';}
  const ktc=azureIsKTC(),r=route(),form=r.page==='application';
  if(form&&(AZURE_EXTERNAL?state.session:BO.user)){
   const nav=$(AZURE_EXTERNAL?'.external-v2-steps':'.stepper');if(nav)nav.outerHTML=ktcSteps(ktc?'ktc':r.step);
@@ -3862,6 +4003,11 @@ function azureAfterRender(){
  $$('.brand').forEach(n=>{n.setAttribute('aria-label','Azure');n.querySelector('img')?.setAttribute('alt','Azure');});
  const sidebarBottom=$('.sidebar-bottom');if(sidebarBottom&&!sidebarBottom.querySelector('[data-azure-language]')){
   [...sidebarBottom.children].find(c=>c.textContent.trim()==='繁體中文')?.remove();sidebarBottom.insertAdjacentHTML('afterbegin',azureLanguageSelect());
+ }
+ if(sidebarBottom&&!sidebarBottom.querySelector('.sidebar-user')){
+  const name=sidebarBottom.querySelector('.user-name'),role=name?.nextElementSibling;
+  if(name){const profile=document.createElement('div');profile.className='sidebar-user';profile.innerHTML='<span class="sidebar-avatar" role="img" aria-label="帳戶頭像"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 32v-4c0-7 22-7 22 0v4" fill="#85a9ff"/><path d="m12 23 4 4 4-4" fill="#fff"/><path d="M13 19h6v5l-3 2-3-2Z" fill="#f2bc92"/><ellipse cx="16" cy="14" rx="7" ry="8" fill="#ffd4ae"/><path d="M9 14V9c0-7 15-7 15 0l-1 6-3-6c-3 3-6 2-9 2l-1 5Z" fill="#213b70"/></svg></span><div class="sidebar-user-info"></div>';name.before(profile);const info=profile.querySelector('.sidebar-user-info');info.append(name);if(role?.tagName==='DIV')info.append(role);name.title=name.textContent;}
+  const controls=document.createElement('div');controls.className='sidebar-account-actions';sidebarBottom.querySelectorAll(':scope>button').forEach(b=>controls.append(b));sidebarBottom.append(controls);
  }
  const login=$('.login-wrap');if(login&&!login.querySelector('[data-azure-language]'))login.insertAdjacentHTML('afterbegin',azureLanguageSelect());
  $$('.auth-top select,.header-actions>select').forEach(n=>{if(!n.dataset.azureLanguage)n.outerHTML=azureLanguageSelect();});
@@ -3906,7 +4052,7 @@ function azureLocalize(root=document.body){
 document.addEventListener('change',e=>{if(e.target.hasAttribute('data-azure-language')){azureLocale=e.target.value;try{localStorage.setItem('azure-demo-language',azureLocale);}catch{}azureLocalize();}});
 new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length))azureLocalize();}).observe(document.body,{childList:true,subtree:true});
 setInterval(()=>{if(ktcPending&&Date.now()>ktcPending.expires&&!ktcPending.expiredRendered){ktcPending.expiredRendered=true;if(azureIsKTC())render();}},1000);
-Object.assign(window.AllinPayDemo,{version:'2026.10.09-azure-otp-ktc',getRelease:()=>({version:'2026.10.09-azure-otp-ktc',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'simulated',crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});
+Object.assign(window.AllinPayDemo,{version:'2026.10.09-ktc-camera-code-v2',getRelease:()=>({version:'2026.10.09-ktc-camera-code-v2',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});
 
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset.field){state.values[t.dataset.field]=t.value;delete state.errors[t.dataset.field];t.closest('.field')?.classList.remove('invalid');t.closest('.field')?.querySelector('.error')?.remove();}if(t.dataset.otp!==undefined){const digits=t.value.replace(/\D/g,'').slice(-1);if(t.value!==digits)t.value=digits;if(digits)setTimeout(()=>$(`[data-otp="${+t.dataset.otp+1}"]`)?.focus(),0)}});
 document.addEventListener('paste',e=>{if(e.target.dataset.otp===undefined)return;const s=e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);if(s){e.preventDefault();$$('[data-otp]').forEach((i,n)=>i.value=s[n]||'');$(`[data-otp="${Math.min(5,s.length-1)}"]`)?.focus()}});

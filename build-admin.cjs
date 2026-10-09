@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = __dirname;
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
-const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js','azure-i18n.js','azure-auth.js','azure-ktc.js','azure-ui.js'].map(read).join('\n');
+const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js','azure-i18n.js','azure-auth.js','azure-ktc.js','azure-ktc-camera.js','azure-ui.js'].map(read).join('\n');
 const core = read('core.js');
 if (!/render\(\);\s*\}\)\(\);\s*$/.test(core)) throw Error('Missing core entry');
 const libs=['node_modules/qrcode-generator/dist/qrcode.js','node_modules/opencc-js/dist/umd/t2cn.js'].map(read).join('\n');

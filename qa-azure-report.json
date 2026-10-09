@@ -1,11 +1,11 @@
 {
   "passed": true,
-  "date": "2026-10-09T07:08:05.489Z",
+  "date": "2026-10-09T10:33:50.548Z",
   "base": "http://127.0.0.1:4321",
-  "browser": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "browser": "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
   "checks": [
-    "backoffice: OTP errors and success, seven-step navigation, preserved sidebar/brand alignment, full mobile consent/photo/review/face/error/retry/callback, expired QR, identity-change invalidation, real synthetic ID extraction + confirmation enables face-only, responsive layouts and locale switching without data mutation",
-    "external: OTP errors and success, seven-step navigation, preserved sidebar/brand alignment, full mobile consent/photo/review/face/error/retry/callback, expired QR, identity-change invalidation, real synthetic ID extraction + confirmation enables face-only, responsive layouts and locale switching without data mutation",
+    "backoffice: OTP, seven steps, virtual-camera ID/selfie + human review, callbacks cannot bypass code, wrong/partial code blocked, code confirmation succeeds, face-only after imported ID review, 320–1600px layouts, locale preserves data; 20px home icon, select inset, avatar/account alignment, vertical KTC status cards",
+    "external: OTP, seven steps, virtual-camera ID/selfie + human review, callbacks cannot bypass code, wrong/partial code blocked, code confirmation succeeds, face-only after imported ID review, 320–1600px layouts, locale preserves data; preserves customer-facing scope without internal risk cards",
     "Registration email → authenticator setup → backup-code download/confirmation → dashboard; recovery code cannot be reused",
     "External registration and authenticator setup preserve company/contact seed",
     "OTP expiry blocks login; separate-device-context face-only flow and manual demo return code complete successfully"

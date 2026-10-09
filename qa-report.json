@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-10-09T07:05:44.380Z",
+  "date": "2026-10-09T10:32:27.637Z",
   "url": "http://127.0.0.1:4321/backoffice.html",
   "checks": [
     "login/error/OTP",
