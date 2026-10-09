@@ -1,4 +1,3 @@
-const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
@@ -9,7 +8,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  const click=(a,extra='')=>p.locator('[data-action="'+a+'"]'+extra).first().click();
  const go=async step=>{await p.evaluate(s=>location.hash='/application/'+s,step);await p.waitForFunction(s=>document.querySelector('.step.active')?.dataset.step===String(s),step);};
  const status=()=>p.evaluate(()=>AllinPayDemo.getApplicationStatus());
- await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');await completeOTP(p);await go(1);
+ await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');await go(1);
  const initial=await status();assert.equal(initial.score.total,27);assert.equal(initial.policy.label,'中');assert.equal(initial.policy.cycle,'T2');assert.equal(initial.percent,Math.round(initial.completed/initial.required*100));
  for(let step=1;step<=6;step++){
   await go(step);assert.equal(await p.locator('#v2-application-status').count(),1);

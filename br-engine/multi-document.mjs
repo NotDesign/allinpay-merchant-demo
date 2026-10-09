@@ -52,7 +52,7 @@ export function extractCandidates(text,type='AUTO') {
   if(permits('CI'))add('crCode',labelled(/^(?:Company (?:Registration )?Number|Certificate No\.?|公司註冊編號)\s*[:：#]\s*(.*)$/i).replace(/\s/g,''));
   if(permits('NAR1'))add('directors[0].name',labelled(/^(?:Director Name|董事姓名)\s*[:：]\s*(.*)$/i));
   // A plain identity card does not establish a company role. Never infer director.
-  if(permits('ID')&&/Director(?:['’]s)?\s+Identity|董事身[份分]證/i.test(raw)){
+  if(permits('ID')&&/Director(?:'s)?\s+Identity|董事身[份分]證/i.test(raw)){
     add('directors[0].name',labelled(/^(?:Name|姓名)\s*[:：]\s*(.*)$/i));
     const id=labelled(/^(?:Identity Card (?:No\.?|Number)|身份證號碼|身分證號碼)\s*[:：]\s*(.*)$/i);
     if(/^[A-Z]{1,2}\d{6}\([0-9A]\)$/i.test(id.replace(/\s/g,'')))add('directors[0].idcardNo',id.replace(/\s/g,''));

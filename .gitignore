@@ -6,4 +6,5 @@ qa-*.png
 vendor/
 _pages/
 vendor-manifest.json
-azure-merchant-demo-*.zip
+.release-archive/
+*-merchant-demo-*.zip

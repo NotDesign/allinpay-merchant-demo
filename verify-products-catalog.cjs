@@ -1,4 +1,3 @@
-const {completeOTP,completeKTC}=require('./test-azure-helpers.cjs');
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
@@ -9,7 +8,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  const click=(a,extra='')=>p.locator('[data-action="'+a+'"]'+extra).first().click();
  const qa=()=>p.evaluate(()=>AllinPayDemo.getOnboarding());
  const rate=(key,f)=>p.locator('[data-v2-inline-key="'+key+'"][data-v2-inline-field="'+f+'"]');
- await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');await completeOTP(p);
+ await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');
  await p.evaluate(()=>location.hash='/application/5');await p.waitForSelector('.v2-products-page');
  assert.equal(await p.locator('[data-v2-group]').count(),11);assert.equal(await p.locator('[data-v2-group]:checked').count(),3);
  assert.equal(await p.locator('[data-v2-product]').count(),50);assert.equal(await p.locator('[data-v2-field]').count(),24);

@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -42,11 +42,26 @@ jobs:
           npm run test:br
           npm run test:feedback
           npm run test:external
-          npm run test:azure
-          npm run test:camera
-          npm run test:review
+          node verify-internal-review.cjs
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html
+      - name: Check out the immutable October 9 release
+        uses: actions/checkout@v4
+        with:
+          ref: 896fe605744fd0a39a0d06da9b1cd0617255ddcb
+          path: .release-archive
+      - name: Build the frozen release without changing its source
+        working-directory: .release-archive
+        run: |
+          npm ci --ignore-scripts
+          npm run setup
+          npm run build:pages
+        env:
+          GITHUB_SHA: 896fe605744fd0a39a0d06da9b1cd0617255ddcb
+      - name: Add the fixed Demo and ZIP to Pages
+        run: node scripts/append-frozen-release.mjs .release-archive/_pages
+      - name: Verify both pinned versions and their downloadable ZIPs
+        run: node scripts/verify-release.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

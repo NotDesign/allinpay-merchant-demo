@@ -1,0 +1,15 @@
+{
+  "active": {
+    "version": "2026.09.29-excel-freeze-mid-states",
+    "sourceCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
+    "date": "2026-09-29",
+    "zip": "allinpay-merchant-demo-20260929.zip"
+  },
+  "frozen": {
+    "version": "2026.10.09-control-spacing-v3",
+    "sourceCommit": "896fe605744fd0a39a0d06da9b1cd0617255ddcb",
+    "branch": "codex/frozen-20261009-control-spacing-v3",
+    "directory": "versions/20261009-control-spacing-v3",
+    "zip": "azure-merchant-demo-20261009.zip"
+  }
+}

@@ -32,7 +32,6 @@ console.log('PASS synthetic BR suffix, source boundaries, absent Chinese fields,
 for(const [text,id]of [['Business Registration Certificate','140101'],['Certificate of Incorporation','140201'],['Company Search Report','140301'],['Annual Return NAR1','141101'],['Bank Statement','140401'],['Three-month Bank Statements','141301'],['Payment Services Agreement','140701'],['Tenancy Agreement','141401'],['Customer Terms and Conditions','141601'],['PCI DSS Certificate','141201'],['Annual Financial Report','141701']])assert.equal(classifyDocument(text).id,id,text);
 assert.equal(classifyDocument('Identity Card\nName: SAMPLE PERSON').id,'');
 assert.deepEqual(extractCandidates('Identity Card\nName: SAMPLE PERSON\nIdentity Card Number: A123456(7)'),[]);
-for(const quote of ["'",'’'])assert.deepEqual(extractCandidates(`Director${quote}s Identity Card\nName: DEMO USER\nIdentity Card Number: Z123456(0)\nDate of Birth: 1985-06-15`).map(f=>f.key),['directors[0].name','directors[0].idcardNo','directors[0].birthDay']);
 assert.equal(classifyDocument('Business Registration Certificate\nCertificate of Incorporation').ambiguous,true);
 assert.equal(classifyDocument('Unlabelled photo').id,'');
 assert.deepEqual(extractCandidates('Bank Statement\nAccount Number: 001-234567-890\nBank Code: 016','AUTO').map(f=>[f.key,f.value]),[['cardNo','001-234567-890'],['cardBankCode','016']]);

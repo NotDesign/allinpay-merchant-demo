@@ -1,10 +1,8 @@
-# Azure · 商戶申請與後台 Demo
+# ALLINPAY · 商戶申請與後台 Demo
 
-依指定 Figma 設計製作的互動原型。2026-10-09 更新 Azure 原始透明 Logo、品牌藍、56px Logo/Header 對齊、七步申請流程、註冊／登入 OTP、KTC 手機演示與 Step 1 右欄邀請卡（Hug 高度）。保留原本 Sidemenu、110 個欄位、21 類文件、117 項產品費率、240 間假商戶、28 個示例帳號、18 份草稿。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。繁／簡體 UI 可切換；English 為核心介面預覽，部分長說明仍保留原文。客戶資料與識別碼不會因語系改寫。
+> **目前主版本已恢復至 2026/09/29（`391f597`）。** 2026/10/09 Azure 版本另行固定封存，後台、External 及 ZIP 均保留。請從[版本入口](https://notdesign.github.io/allinpay-merchant-demo/versions.html)選擇；技術紀錄見 [RELEASES.md](RELEASES.md)。
 
-最新操作方式、七步流程、模擬功能界線及 ZIP 使用方法見 [DEMO_GUIDE.md](DEMO_GUIDE.md)。下方原有測試與欄位資料仍保留；舊六步的穩定資料編號不變，以相容已儲存草稿。畫面步驟已更新為七步。
-
-2026-10-09 修訂版 `ktc-camera-code-v2`：手機 QR 流程支援允許權限後實拍證件及人像、預覽重拍；完成後仍須在電腦輸入正確驗證碼，才顯示成功。照片只暫存在手機頁面，不上傳，不執行正式 KYC／人臉比對。另修正 KTC 專用右欄垂直卡片、首頁 Icon、下拉箭頭內距及側欄帳戶頭像／對齊；原有主選單不變。
+依指定 Figma 設計製作的繁體中文互動原型。2026-09-29 按文件回饋同步後台與 External 表單，兩者共用欄位及驗證。內含 240 間假商戶、28 個示例帳號、18 份可繼續填寫的草稿。此 Repository 和網站為公開示範，請勿輸入真實密碼、商戶資料或證件。文件語言不會覆蓋介面語系；目前 Demo 提供繁體中文介面。
 
 ## 直接使用
 
@@ -12,7 +10,6 @@
 - [後台登入與系統（單一 HTML）](https://notdesign.github.io/allinpay-merchant-demo/backoffice.html)
 - [下載單一 HTML](https://github.com/NotDesign/allinpay-merchant-demo/raw/refs/heads/main/backoffice.html)
 - [下載完整原始碼 ZIP](https://github.com/NotDesign/allinpay-merchant-demo/archive/refs/heads/main.zip)
-- [下載可執行 Demo ZIP（含 OCR 模型）](https://notdesign.github.io/allinpay-merchant-demo/downloads/azure-merchant-demo-20261009.zip)
 
 下載 ZIP 後可直接開啟 `external.html` 或 `backoffice.html` 演示業務流程；單一 HTML 內嵌畫面、假資料及互動。**實際 BR 辨識請使用線上 Demo，或安裝本機 OCR 資源並用 HTTP 啟動完整原始碼**（下方指令）。`index.html` 是同一後台的多檔案入口。
 
