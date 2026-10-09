@@ -1,5 +1,7 @@
 # Azure HTML Demo — 2026-10-09
 
+修訂版 `control-spacing-v3`：下拉選單文字與箭頭採對稱的視覺內距；後台及 External 七步選單統一全圓角、文字置中及數字圓點內距。窄螢幕可橫向捲動，切換步驟後會顯示目前步驟。
+
 ## 開啟
 
 - 後台：`backoffice.html#/login`

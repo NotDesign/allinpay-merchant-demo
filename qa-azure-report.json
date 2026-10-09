@@ -1,10 +1,12 @@
 {
   "passed": true,
-  "date": "2026-10-09T10:33:50.548Z",
+  "date": "2026-10-09T10:53:41.514Z",
   "base": "http://127.0.0.1:4321",
   "browser": "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
   "checks": [
+    "backoffice: all seven step labels centered in full-round pills, 24px number circles inset at least 12px, dropdown text/arrow optical insets balanced",
     "backoffice: OTP, seven steps, virtual-camera ID/selfie + human review, callbacks cannot bypass code, wrong/partial code blocked, code confirmation succeeds, face-only after imported ID review, 320–1600px layouts, locale preserves data; 20px home icon, select inset, avatar/account alignment, vertical KTC status cards",
+    "external: all seven step labels centered in full-round pills, 24px number circles inset at least 12px, dropdown text/arrow optical insets balanced",
     "external: OTP, seven steps, virtual-camera ID/selfie + human review, callbacks cannot bypass code, wrong/partial code blocked, code confirmation succeeds, face-only after imported ID review, 320–1600px layouts, locale preserves data; preserves customer-facing scope without internal risk cards",
     "Registration email → authenticator setup → backup-code download/confirmation → dashboard; recovery code cannot be reused",
     "External registration and authenticator setup preserve company/contact seed",

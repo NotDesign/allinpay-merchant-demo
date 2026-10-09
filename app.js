@@ -3917,7 +3917,7 @@ const ktcPassed=()=>ktcValues().passed===true&&ktcValues().codeVerified===true&&
 function ktcImported(){return ['directors[0].name','directors[0].idcardNo'].every(key=>v2Model().ocr.some(o=>o.key===key&&o.applied&&String(o.value)===v2Raw(key)))&&Object.keys(state.files).some(id=>V2.documents.find(d=>d.id===id)?.name.match(/身[份分].*證/));}
 const ktcCanSkip=()=>ktcImported()&&ktcValues().confirmed===ktcFingerprint();
 function ktcGo(){go((AZURE_EXTERNAL?'form/':'application/')+'ktc');}
-function ktcSteps(current){return `<nav class="${AZURE_EXTERNAL?'external-v2-steps':'stepper'}" aria-label="申請步驟">${azureStepIds.map((id,i)=>`<button type="button" class="step ${String(current)===id?'active':''}" data-action="${id==='ktc'?'ktc-open':'step'}" data-step="${id}" ${String(current)===id?'aria-current="step"':''}><span class="number">${i+1}</span>${azureStepLabels[i]}</button>`).join('')}</nav>`;}
+function ktcSteps(current){return `<nav class="${AZURE_EXTERNAL?'external-v2-steps':'stepper'}" aria-label="申請步驟">${azureStepIds.map((id,i)=>`<button type="button" class="step ${String(current)===id?'active':''}" data-action="${id==='ktc'?'ktc-open':'step'}" data-step="${id}" ${String(current)===id?'aria-current="step"':''}><span class="number">${i+1}</span><span class="step-label">${azureStepLabels[i]}</span></button>`).join('')}</nav>`;}
 function ktcRenderPanel(){
  const passed=ktcPassed(),skip=ktcCanSkip(),expired=ktcPending&&Date.now()>ktcPending.expires;
  let body='';
@@ -4083,6 +4083,13 @@ window.addEventListener('hashchange',()=>{if(!location.hash.startsWith('#/ktc-mo
 setInterval(()=>{if(location.hash.startsWith('#/ktc-mobile/')&&!ktcMobileSession().valid&&(ktcCapture.stream||ktcCapture.photos.id||ktcCapture.photos.face)){ktcStopCamera();ktcClearPhoto('id');ktcClearPhoto('face');render();}},1000);
 
 const azureIsKTC=()=>/^#\/(application|form)\/ktc$/.test(location.hash);
+function azureRevealActiveStep(){
+ const nav=$('.stepper,.external-v2-steps'),active=nav?.querySelector('.step.active');if(!active)return;
+ const frame=nav.getBoundingClientRect(),item=active.getBoundingClientRect();
+ if(item.right>frame.right)nav.scrollLeft+=item.right-frame.right;
+ else if(item.left<frame.left)nav.scrollLeft+=item.left-frame.left;
+}
+window.addEventListener('resize',azureRevealActiveStep);
 const azureLanguageSelect=()=>'<select class="azure-language" aria-label="語言" data-azure-language><option value="zh-Hant">繁體中文</option><option value="zh-Hans">简体中文</option><option value="en">English</option></select>';
 if(!AZURE_EXTERNAL){
  const baseOverview=v2RiskOverview;
@@ -4090,7 +4097,7 @@ if(!AZURE_EXTERNAL){
 }
 function azureAfterRender(){
  document.title=AZURE_EXTERNAL?'Azure · 商戶申請 Demo':'Azure · 後台管理 Demo';
- document.documentElement.dataset.release='2026.10.09-ktc-camera-code-v2';
+ document.documentElement.dataset.release='2026.10.09-control-spacing-v3';
  const home=$('.tabs a:first-child');if(home&&home.getAttribute('href')==='#/dashboard'){home.classList.add('home-tab');home.setAttribute('aria-label','首頁');home.title='首頁';home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';}
  const ktc=azureIsKTC(),r=route(),form=r.page==='application';
  if(form&&(AZURE_EXTERNAL?state.session:BO.user)){
@@ -4118,6 +4125,7 @@ function azureAfterRender(){
  const login=$('.login-wrap');if(login&&!login.querySelector('[data-azure-language]'))login.insertAdjacentHTML('afterbegin',azureLanguageSelect());
  $$('.auth-top select,.header-actions>select').forEach(n=>{if(!n.dataset.azureLanguage)n.outerHTML=azureLanguageSelect();});
  azureLocalize();
+ azureRevealActiveStep();
 }
 const azureRender=render;
 render=function(){
@@ -4155,10 +4163,10 @@ function azureLocalize(root=document.body){
  }
  root.querySelectorAll?.('input[placeholder],textarea[placeholder]').forEach(el=>{el.dataset.azurePlaceholder??=el.placeholder;el.placeholder=azureTranslate(el.dataset.azurePlaceholder);});
 }
-document.addEventListener('change',e=>{if(e.target.hasAttribute('data-azure-language')){azureLocale=e.target.value;try{localStorage.setItem('azure-demo-language',azureLocale);}catch{}azureLocalize();}});
+document.addEventListener('change',e=>{if(e.target.hasAttribute('data-azure-language')){azureLocale=e.target.value;try{localStorage.setItem('azure-demo-language',azureLocale);}catch{}azureLocalize();azureRevealActiveStep();}});
 new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length))azureLocalize();}).observe(document.body,{childList:true,subtree:true});
 setInterval(()=>{if(ktcPending&&Date.now()>ktcPending.expires&&!ktcPending.expiredRendered){ktcPending.expiredRendered=true;if(azureIsKTC())render();}},1000);
-Object.assign(window.AllinPayDemo,{version:'2026.10.09-ktc-camera-code-v2',getRelease:()=>({version:'2026.10.09-ktc-camera-code-v2',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});
+Object.assign(window.AllinPayDemo,{version:'2026.10.09-control-spacing-v3',getRelease:()=>({version:'2026.10.09-control-spacing-v3',steps:azureStepLabels,locale:azureLocale,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',ocr:'browser-local'})});
 
 render();
 })();

@@ -19,7 +19,7 @@ for(const item of runtime){
 }
 await writeFile(new URL('.nojekyll',out),'');
 await mkdir(new URL('scripts/',out));await cp(new URL('scripts/serve.mjs',root),new URL('scripts/serve.mjs',out));
-const version={version:'2026.10.09-ktc-camera-code-v2',builtAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||'local',brand:'Azure',visibleSteps:7,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',brLocalOCR:true,multiDocumentOCR:true,optionalDocuments:true,fullCertificateNumber:true,unifiedFileDrop:true,batchDocumentAssignment:true,excelColumnFreeze:true,nullableMidStates:true};
+const version={version:'2026.10.09-control-spacing-v3',builtAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||'local',brand:'Azure',visibleSteps:7,otp:'simulated',ktc:'photo-capture-demo',ktcCodeRequired:true,mobileCamera:true,biometricVerification:false,crossDeviceCallback:'manual-demo-code',brLocalOCR:true,multiDocumentOCR:true,optionalDocuments:true,fullCertificateNumber:true,unifiedFileDrop:true,batchDocumentAssignment:true,excelColumnFreeze:true,nullableMidStates:true};
 await writeFile(new URL('version.json',out),JSON.stringify(version,null,2));
 const zipName='azure-merchant-demo-20261009.zip';
 execFileSync('zip',['-X','-q','-r',fileURLToPath(new URL(zipName,root)),'.'],{cwd:fileURLToPath(out)});

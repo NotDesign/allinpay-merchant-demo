@@ -9,7 +9,7 @@ const ktcPassed=()=>ktcValues().passed===true&&ktcValues().codeVerified===true&&
 function ktcImported(){return ['directors[0].name','directors[0].idcardNo'].every(key=>v2Model().ocr.some(o=>o.key===key&&o.applied&&String(o.value)===v2Raw(key)))&&Object.keys(state.files).some(id=>V2.documents.find(d=>d.id===id)?.name.match(/身[份分].*證/));}
 const ktcCanSkip=()=>ktcImported()&&ktcValues().confirmed===ktcFingerprint();
 function ktcGo(){go((AZURE_EXTERNAL?'form/':'application/')+'ktc');}
-function ktcSteps(current){return `<nav class="${AZURE_EXTERNAL?'external-v2-steps':'stepper'}" aria-label="申請步驟">${azureStepIds.map((id,i)=>`<button type="button" class="step ${String(current)===id?'active':''}" data-action="${id==='ktc'?'ktc-open':'step'}" data-step="${id}" ${String(current)===id?'aria-current="step"':''}><span class="number">${i+1}</span>${azureStepLabels[i]}</button>`).join('')}</nav>`;}
+function ktcSteps(current){return `<nav class="${AZURE_EXTERNAL?'external-v2-steps':'stepper'}" aria-label="申請步驟">${azureStepIds.map((id,i)=>`<button type="button" class="step ${String(current)===id?'active':''}" data-action="${id==='ktc'?'ktc-open':'step'}" data-step="${id}" ${String(current)===id?'aria-current="step"':''}><span class="number">${i+1}</span><span class="step-label">${azureStepLabels[i]}</span></button>`).join('')}</nav>`;}
 function ktcRenderPanel(){
  const passed=ktcPassed(),skip=ktcCanSkip(),expired=ktcPending&&Date.now()>ktcPending.expires;
  let body='';
