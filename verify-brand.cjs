@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
 const root=(process.env.DEMO_URL||'http://127.0.0.1:4340/backoffice.html').replace(/\/(backoffice|external|index)\.html.*$/,''),errors=[],checks=[];
-const expectedSha='bd887c2f1b0bf6363308b9994695b7f23a9960414a089030ae6ec2191f595094';
+const expectedSha='41350467a3bbe2326eb386d069547c65d1e6727d1088f07680102978660d5f56';
 async function artwork(p,selector,label){
  const img=p.locator(selector+' img[alt="Mee Pay — Mobility evolution ethics"]');
  assert.equal(await img.count(),1,label+' logo exists');
@@ -14,11 +14,12 @@ async function artwork(p,selector,label){
   return {src:e.src,width:e.naturalWidth,height:e.naturalHeight,ratio:r.width/r.height,
    wrapperBackground:getComputedStyle(e.parentElement).backgroundColor,linkBackground:getComputedStyle(e.parentElement.parentElement).backgroundColor,imageFilter:getComputedStyle(e).filter,
    wrapper:{left:w.left,right:w.right,top:w.top,bottom:w.bottom,width:w.width,height:w.height},
-   background:pixel(100,100),title:pixel(1040,340),tagline:pixel(1030,510),fingerprint:pixel(600,330),shape:pixel(600,390)};
+   background:pixel(100,100),letterCounter:pixel(1185,360),letterCounterP:pixel(1430,320),title:pixel(1040,340),tagline:pixel(1030,510),fingerprint:pixel(600,330),shape:pixel(600,390)};
  });
  assert.equal(result.width,2060);assert.equal(result.height,763);
  assert(Math.abs(result.ratio-2060/763)<.01,label+' original image proportions');
  assert(result.background[3]<=1,label+' real transparent background');
+ assert(result.letterCounter[3]<=1&&result.letterCounterP[3]<=1,label+' letter counters also show the background');
  assert.equal(result.wrapperBackground,'rgba(0, 0, 0, 0)',label+' no white logo wrapper');
  assert.equal(result.linkBackground,'rgba(0, 0, 0, 0)',label+' no white logo link');
  assert.equal(result.imageFilter,'none',label+' no recoloring filter');
