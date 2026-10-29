@@ -29,7 +29,19 @@ function irDocument(r,index=IR.doc){
  const [name,code]=irDocTypes[index]||irDocTypes[0],id=rowKey(r),values=index===0?[['Business name',r['客戶英文名稱']],['BR Number',r.BR],['Valid until',r['BR 有效期']],['Business nature',r['行業類型']]]:index===1?[['公司名稱',r['客戶中文名稱']],['周年申報編號','DEMO-NAR1-'+id],['申報日期','2026/09/01']]:index===2?[['持有人',r['客戶聯繫人']],['證件編號','DEMO（遮蔽）'],['文件性質','示例文件，非真實身份證']]:index===4?[['門店名稱',r['客戶中文名稱']],['營業地區',r['地區']],['門店紀錄','Demo 文件佔位，非真實照片']]:[['帳戶名稱',r['客戶英文名稱']],['銀行名稱',r['銀行名稱']],['帳號',can(5)?r.bank:r['銀行帳號']],['結單期',index===5?'2026/06–2026/08':'2026/08']];
  return `<article class="ir-document"><h3>${esc(name)}</h3><small>DEMO 文件預覽 · ${code}</small><dl>${values.map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v||'未提供')}</dd></div>`).join('')}</dl><p class="hint">合成示例，不是商戶原始文件或真實 OCR。</p></article>`;
 }
-function irDocuments(r){return `<section class="card ir-docs"><h2>上傳文件</h2><div class="ir-document-list">${irDocTypes.map(([label,code],i)=>`<button class="ir-doc ${IR.doc===i?'selected':''}" data-action="ir-document" data-index="${i}" aria-pressed="${IR.doc===i}"><span aria-hidden="true">▤</span><span><strong>${label}</strong><small>${code}</small></span></button>`).join('')}</div><div id="ir-document-preview">${irDocument(r)}</div>${btn('放大預覽','ir-zoom')}</section>`;}
+function irDocIcon(code){
+ const icons={
+  '140101':['certificate','<path d="M14 3H5v18h14V8l-5-5Z"/><path d="M14 3v5h5M8 11h8M8 14h3"/><circle cx="14" cy="17" r="2"/><path d="m12.5 18.5-.5 3 2-1 2 1-.5-3"/>'],
+  '141101':['annual-report','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 17l3-3 3 2 4-3"/>'],
+  '100301':['identity-card','<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M5 16c0-3 6-3 6 0M14 9h4M14 12h4M14 15h3"/>'],
+  '140401':['bank-statement','<path d="m3 8 9-5 9 5H3ZM4 21h16M6 10v8M10 10v8M14 10v8M18 10v8M3 18h18"/>'],
+  '101401':['storefront','<path d="M3 10V5h18v5M2 10h20l-2 4h-3l-2-2-3 2-3-2-2 2H4l-2-4ZM4 14v7h16v-7M9 21v-5h6v5"/>'],
+  '141301':['monthly-statements','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 13h10M7 16h10M7 19h10"/>']
+ };
+ const [kind,paths]=icons[code]||['document','<path d="M14 3H5v18h14V8l-5-5Z"/><path d="M14 3v5h5M8 12h8M8 16h8"/>'];
+ return `<span class="ir-doc-icon" aria-hidden="true" data-document-icon="${kind}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></span>`;
+}
+function irDocuments(r){return `<section class="card ir-docs"><h2>上傳文件</h2><div class="ir-document-list">${irDocTypes.map(([label,code],i)=>`<button class="ir-doc ${IR.doc===i?'selected':''}" data-action="ir-document" data-index="${i}" aria-pressed="${IR.doc===i}">${irDocIcon(code)}<span><strong>${label}</strong><small>${code}</small></span></button>`).join('')}</div><div id="ir-document-preview">${irDocument(r)}</div>${btn('放大預覽','ir-zoom')}</section>`;}
 function irFields(r){const c=irBase(r),diff=c.tier!=='A',addr='Shop '+(100+rows.indexOf(r))+', 700 Nathan Road',bank=can(5)?r.bank:r['銀行帳號'];
  const values=[['中文名稱',r['客戶中文名稱'],r['客戶中文名稱']],['英文名稱',r['客戶英文名稱'],diff?r['客戶英文名稱'].replace(/LIMITED$/,'LTD'):r['客戶英文名稱']],['BR 號碼',r.BR,r.BR],['證書有效期',r['BR 有效期'],r['BR 有效期']],['營業地址（英文）',addr,diff?addr.replace('Road','Rd'):addr],['帳戶名稱',r['客戶英文名稱'],r['客戶英文名稱']],['銀行帳號',bank,bank],['MCC',r['MCC 行業代碼']+' · '+r['行業類型'],'無 OCR 來源']];
  return `<div class="ir-compare-scroll"><table class="ir-compare"><thead><tr><th scope="col">欄位</th><th scope="col">商戶填報</th><th scope="col">OCR / 外部核驗</th></tr></thead><tbody>${values.map(([key,a,b],i)=>`<tr class="${i!==7&&a!==b?'ir-diff':''}"><th scope="row">${key}${i!==7&&a!==b?'<small>資料差異</small>':''}</th><td>${esc(a||'未提供')}</td><td>${esc(b||'未提供')}</td></tr>`).join('')}</tbody></table></div><div class="ir-warning">${diff?'2 項資料不一致，請核實為填寫錯誤或實際不符後再審批。':'本示例未檢出資料差異，仍須核對原始文件及必填資料。'}</div>`;

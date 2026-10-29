@@ -12,7 +12,7 @@ const fields=[[
 let state={email:'',session:false,values:{country:regions[0],bankCountry:regions[0],bankReady:'可以',webReady:'可以'},files:{},people:[],directors:[],shops:[],methods:[],scenes:[],sales:[],errors:{},records:[],id:null,step:1,signature:'',failSave:false,failSubmit:false,otpExpires:0,resendAt:0,readonly:false};
 try{state.records=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(state.records))state.records=[];}catch{state.records=[];}
 const btn=(t,a,cls='',attr='')=>`<button type="button" class="${cls}" data-action="${a}" ${attr}>${t}</button>`,link=(t,p)=>`<a href="#/${p}">${t}</a>`;
-const brand=()=>`<a class="brand" href="#/${state.session?'applications':'login'}" aria-label="ALLINPAY"><img src="${ASSETS['4864c.png']}" alt="ALLINPAY International"><small>Application Agency System</small></a>`;
+const brand=()=>`<a class="brand" href="#/${state.session?'applications':'login'}" aria-label="Mee Pay"><span class="brand-logo"><img src="${ASSETS['mee-pay-logo.png']}" alt="Mee Pay — Mobility evolution ethics"></span></a>`;
 const footer=()=>'<footer class="footer"><span>© AllinPay International</span><span>Application Agency System · 商戶申請</span></footer>';
 const demo=()=>'<div class="demo">DEMO · 僅限測試資料。不會寄信、上傳文件或向正式系統提交申請。</div>';
 function toast(t){$('#toast').textContent=t;$('#toast').classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').classList.remove('visible'),3500)}
