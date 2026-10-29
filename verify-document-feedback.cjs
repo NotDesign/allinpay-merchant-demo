@@ -6,7 +6,7 @@ const base=(process.env.DEMO_URL||'http://127.0.0.1:4321').replace(/\/(?:backoff
   const click=async(a)=>page.locator(`[data-action="${a}"]`).first().click();
   await page.goto(base+'/'+target+'.html#/login');
   if(target==='backoffice'){await click('pick-role');await click('bo-login');await page.evaluate(()=>location.hash='/application/1');}
-  else{await page.locator('#authEmail').fill('feedback@example.com');await click('login');await page.locator('[data-otp="0"]').fill('1');for(let i=1;i<6;i++)await page.locator(`[data-otp="${i}"]`).fill(String(i+1));await click('verify');await page.locator('[data-action="new"]').first().click();}
+  else{await page.locator('#authEmail').fill('feedback@example.com');await click('login');await page.locator('[data-otp="0"]').fill('1');for(let i=1;i<6;i++)await page.locator(`[data-otp="${i}"]`).fill(String(i+1));await click('verify');await page.locator('[data-action="new"]').first().click();await click('ns-blank');}
   await page.waitForSelector('.v2-form');await click('next');await page.waitForSelector('[data-v2-field="parentMerchant"]');
   assert.equal(await page.locator('[data-field="dbaNo"]').count(),0);
   await page.locator('[data-field="parentMerchant"]').fill('PARENT-001');await page.locator('[data-field="inspectionDate"]').fill('2026-09-29');

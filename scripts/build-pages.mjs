@@ -20,7 +20,7 @@ for(const item of runtime){
 await writeFile(new URL('.nojekyll',out),'');
 await mkdir(new URL('scripts/',out));await cp(new URL('scripts/serve.mjs',root),new URL('scripts/serve.mjs',out));
 const releases=JSON.parse(await readFile(new URL('demo-releases.json',root),'utf8'));
-const version={version:releases.active.version,builtAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||'local',baseCommit:releases.active.baseCommit,visibleSteps:6,multiMcc:true,merchantTemplates:true,batchTemplateApply:true,customerCompanyHierarchy:true,combinedMerchantImport:true,fillProgress:true,documentThumbnails:true,zipUpload:false,riskModelVersion:'DEMO-RISK-20261029-v2',brLocalOCR:true,multiDocumentOCR:true,optionalDocuments:true,fullCertificateNumber:true,unifiedFileDrop:true,batchDocumentAssignment:true,excelColumnFreeze:true,nullableMidStates:true};
+const version={version:releases.active.version,builtAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||'local',baseCommit:releases.active.baseCommit,visibleSteps:6,multiMcc:true,merchantTemplates:true,batchTemplateApply:true,customerCompanyHierarchy:true,combinedMerchantImport:true,fillProgress:true,guidedMerchantStart:true,merchantCopy:true,legalRelationshipAutoFill:true,tableRowSelection:true,documentThumbnails:true,zipUpload:false,riskModelVersion:'DEMO-RISK-20261029-v2',brLocalOCR:true,multiDocumentOCR:true,optionalDocuments:true,fullCertificateNumber:true,unifiedFileDrop:true,batchDocumentAssignment:true,excelColumnFreeze:true,nullableMidStates:true};
 await writeFile(new URL('version.json',out),JSON.stringify(version,null,2));
 const zipName=releases.active.zip;
 execFileSync('zip',['-X','-q','-r',fileURLToPath(new URL(zipName,root)),'.'],{cwd:fileURLToPath(out)});
