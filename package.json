@@ -17,7 +17,7 @@
     "serve": "node scripts/serve.mjs",
     "build:pages": "npm run build && npm run build:external && node scripts/build-pages.mjs",
     "test:extra": "node verify-admin-extra.cjs && node verify-merchant-state.cjs",
-    "test:templates": "node verify-template-model.cjs && node verify-merchant-templates.cjs && node verify-onboarding-usability.cjs && node verify-template-ui.cjs && node verify-onboarding-ux.cjs && node verify-customer-flow.cjs && node verify-merchant-workbook.cjs && node verify-relationship-table.cjs && node verify-merchant-start.cjs",
+    "test:templates": "node verify-copy-picker.cjs && node verify-template-model.cjs && node verify-merchant-templates.cjs && node verify-onboarding-usability.cjs && node verify-template-ui.cjs && node verify-onboarding-ux.cjs && node verify-customer-flow.cjs && node verify-merchant-workbook.cjs && node verify-relationship-table.cjs && node verify-merchant-start.cjs",
     "test:notifications": "node verify-notifications.cjs"
   },
   "dependencies": {
