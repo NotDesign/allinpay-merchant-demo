@@ -43,7 +43,7 @@ function v2Ensure() {
   for(const k of ['addrProvinceCode','addrCityCode','cardProvinceCode','cardCityCode'])if(geoAlias[v2Raw(k)])state.values[k]=k==='cardProvinceCode'&&v2Raw('cardCountryCode')==='HKG'?'HKG':geoAlias[v2Raw(k)];
   state.values.__v2={version:2,groups:{},rates:{},combo:{},sme:{},links:{authSigners:{},shareHolders:{}},signals:{},ocr:[],ack:{},manualRisk:false,legacy:hadData};
   if(hadData)for(const [id,g] of [['603:4689','POS'],['603:4745','INQR'],['603:4709','CNP']])if(state.checks[id])v2SetGroup(g,true);
-  if(!hadData)for(const key of ['POS','CNP','INQR'])v2SetGroup(key,true);
+  // A new merchant starts with no categories or products selected.
   state.values.mccName=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc'))?.n||'';
 }
 function v2Reset() {
@@ -52,7 +52,7 @@ function v2Reset() {
 }
 defaults=()=>{Object.assign(state.values,structuredClone(V2.defaults));v2Ensure();};
 v2Ensure();
-function v2SetGroup(k,on) {const m=v2Model(),g=v2Groups.find(g=>g.k===k);m.groups[k]=on;g.rows.forEach((r,i)=>{m.rates[v2RowKey(g,i)]??={on:!r.off,ct:r.ct||null,v:{}};});}
+function v2SetGroup(k,on) {const m=v2Model(),g=v2Groups.find(g=>g.k===k);m.groups[k]=on;g.rows.forEach((r,i)=>{m.rates[v2RowKey(g,i)]??={on:false,ct:r.ct||null,v:{}};});}
 function v2Score() {
   const items=[],add=(label,n)=>items.push({label,n}),m=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc')),s=v2Model().signals;
   if(v2Raw('licencePeriod')==='01')add('經營年限少於 1 年',15);else if(v2Raw('licencePeriod')==='02')add('經營年限 1–3 年',8);
@@ -77,7 +77,7 @@ function v2Score() {
 function v2SyncDerived() {
   for(const group of ['authSigners','shareHolders'])for(const [i,d] of Object.entries(v2Model().links[group])){
     if(d===null||d===undefined||+d>=state.people.directors)continue;
-    for(const k of v2PersonKeys)state.values[`${group}[${i}].${k}`]=state.values[`directors[${d}].${k}`]||'';
+    for(const k of v2PersonKeys)if(!(group==='authSigners'&&k==='birthDay'))state.values[`${group}[${i}].${k}`]=state.values[`directors[${d}].${k}`]||'';
   }
   state.values.mccName=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc'))?.n||(v2Raw('mcc').length===4?'未列入清單，待人工核定':'');
   if(!v2Model().manualRisk)state.values.riskLevel=v2Score().level;
@@ -87,11 +87,11 @@ function v2FileRequired() {
 }
 requiredFiles=()=>Object.entries(v2FileRequired()).filter(([,yes])=>yes).map(([id])=>id);
 function v2Required() {
-  const v=state.values,r=new Set(['legalStatus','merchantType','merchantName','merchantShortName','merchantEnglishName','merchantEnglishShortName','registerCertType','registerCertNo','registerCertName','registerCertPeriod','registerCapital','licencePeriod','workerNumber','addrCountryCode','addrProvinceCode','addrStreet','addrStreetEn','mcc','riskLevel','avgPerAmount','maxAmount','avgMonthAmount','contactName','contactPhone','contactEmail','merchantAgreementPeriod','signType','currency','cardCountryCode','cardProvinceCode','cardBankCode','cardName','cardNo','isCompay']);
+  const v=state.values,r=new Set(['legalStatus','merchantType','merchantName','merchantShortName','merchantEnglishName','merchantEnglishShortName','registerCertType','registerCertNo','registerCertName','registerCertPeriod','registerCapital','licencePeriod','workerNumber','addrCountryCode','addrProvinceCode','addrStreet','addrStreetEn','mcc','riskLevel','contactName','contactPhone','contactEmail','merchantAgreementPeriod','signType','currency','cardCountryCode','cardProvinceCode','cardBankCode','cardName','cardNo','isCompay']);
   if(v.legalStatus==='BODY_CORPORATE')r.add('nar1Period');
   if(v.addrCountryCode==='CHN'){r.add('addrCityCode');if(v.legalStatus!=='PERSON'){r.add('threeCertFlag');if(v.threeCertFlag==='0')for(const k of ['creditCode','organCode','taxCode'])r.add(k);}}
   if(v.cardCountryCode==='CHN'){r.add('cardCityCode');r.add('cardBranchCode');}else r.add('cardBankName');
-  if(v.isCompay==='N')r.add('cardIdcardNo');if(v2Cnp())r.add('webUrl');
+  if(v.isCompay==='N')r.add('cardIdcardNo');
   if(v2Has('AV')&&v.chargeWay==='MONTH_SETTLE')r.add('monthMinPrice');
   if(v2Model().manualRisk&&+v.riskLevel<+v2Score().level)r.add('riskOverrideReason');
   return r;
@@ -115,7 +115,7 @@ function v2Field(f,index=0,linked=false) {
   let control;
   if(f.type==='Select'&&key!=='cardBankCode'){const opts=v2Options(f.id);control=`<select ${attrs} ${ro?'disabled':''}><option value="">請選擇</option>${opts.map(([v1,l])=>`<option value="${esc(v1)}" ${v1===v?'selected':''}>${esc(l)}</option>`).join('')}${v&&!opts.some(o=>o[0]===v)?`<option value="${esc(v)}" selected>${esc(v)}（請重新選擇）</option>`:''}</select>`;}
   else control=`<input ${attrs} type="${type}" value="${esc(v)}" placeholder="${esc(f.placeholder)}" ${key==='mcc'?'list="v2-mcc" inputmode="numeric"':key==='cardBankCode'&&v2Raw('cardCountryCode')==='HKG'?'list="v2-banks" inputmode="numeric"':key==='settlePeriod'?'list="v2-settlement"':''}>`;
-  return `<div class="field ${error?'invalid':''}" data-field-wrap="${esc(key)}"><label for="${id}">${heading}</label>${control}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}${key==='contactEmail'?btn(state.emailVerified?'已驗證（模擬）':'驗證電郵（模擬）','verify-email','mini-action'):''}${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
+  return `<div class="field ${error?'invalid':''}" data-field-wrap="${esc(key)}"><label for="${id}">${heading}</label>${control}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
 }
 function v2Card(title,copy,body) {return `<section class="card" data-section="${esc(title)}"><h2>${esc(title)}</h2>${copy?`<p class="hint">${esc(copy)}</p>`:''}${body}</section>`;}
 function v2PersonSection(s) {
@@ -235,7 +235,7 @@ validateStep=function(step){
   v2Ensure();v2SyncDerived();const e=step===1?{}:step<=5?v2ValidateFields(({2:0,3:1,4:2,5:3})[step]):{};
   if(step===1)for(const d of v2MissingDocs())e['file-'+d.id]='請提供'+d.name.split('\n')[0];
   if(step===2){if(!state.people.directors)e._directors='請至少新增一位董事';if(v2Amex()&&state.people.authSigners!==1)e._auth='香港／新加坡開通 AMEX 時，須有且僅有一位授權簽名人';}
-  if(step===3){if(!state.emailVerified)e.contactEmail=e.contactEmail||'請完成電郵模擬驗證';if(v2Num('avgPerAmount')>v2Num('maxAmount'))e.maxAmount='最高消費金額不可小於平均單筆金額';}
+  if(step===3&&v2Raw('avgPerAmount')&&v2Raw('maxAmount')&&v2Num('avgPerAmount')>v2Num('maxAmount'))e.maxAmount='最高消費金額不可小於平均單筆金額';
   if(step===4&&v2Raw('isCompay')==='N'&&!Array.from({length:state.people.directors},(_,i)=>v2Raw(`directors[${i}].idcardNo`)).includes(v2Raw('cardIdcardNo')))e.cardIdcardNo='對私結算持有人須為已登記董事，證件號碼必須一致';
   if(step===5){
     if(!v2Rows().length)e._products='請至少選擇一項產品';
@@ -321,8 +321,8 @@ document.addEventListener('change',e=>{
   if(t.dataset.v2Group){v2SetGroup(t.dataset.v2Group,t.checked);render();}
   if(t.dataset.v2Product){v2Model().rates[t.dataset.v2Product].on=t.checked;render();}
   if(t.dataset.v2Combo){v2Model().combo[t.dataset.v2Combo]=t.checked;render();}
-  if(t.dataset.v2Link){v2Model().links[t.dataset.v2Link][t.dataset.index]=t.checked?+t.closest('.v2-person-link').querySelector('select').value:null;render();}
-  if(t.dataset.v2Director){v2Model().links[t.dataset.v2Director][t.dataset.index]=+t.value;render();}
+  if(t.dataset.v2Link){const group=t.dataset.v2Link,director=+t.closest('.v2-person-link').querySelector('select').value;v2Model().links[group][t.dataset.index]=t.checked?director:null;if(group==='authSigners'&&t.checked)state.values[`authSigners[${t.dataset.index}].birthDay`]=state.values[`directors[${director}].birthDay`]||'';render();}
+  if(t.dataset.v2Director){const group=t.dataset.v2Director;v2Model().links[group][t.dataset.index]=+t.value;if(group==='authSigners')state.values[`authSigners[${t.dataset.index}].birthDay`]=state.values[`directors[${t.value}].birthDay`]||'';render();}
   if(t.dataset.v2Signal){v2Model().signals[t.dataset.v2Signal]=t.checked;render();}
   if(t.dataset.v2Sme){const b=t.dataset.v2Sme;v2Model().sme[b]={on:t.checked,type:v2Model().sme[b]?.type||v2SmeOptions(b)[0]};render();}
   if(t.dataset.v2SmeType){const b=t.dataset.v2SmeType;v2Model().sme[b]={on:v2Model().sme[b]?.on||false,type:t.value};}

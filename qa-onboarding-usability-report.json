@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "date": "2026-10-29T02:31:00.358Z",
+  "checks": [
+    "backoffice: fresh product page all unchecked; explicit selections retained; linked signer DOB independently editable; website/transaction amounts optional with nonempty validation; contact email has no verification gate; bank name dropdown fills read-only bank code, with other-bank fallback",
+    "external: fresh product page all unchecked; explicit selections retained; linked signer DOB independently editable; website/transaction amounts optional with nonempty validation; contact email has no verification gate; bank name dropdown fills read-only bank code, with other-bank fallback"
+  ],
+  "errors": []
+}

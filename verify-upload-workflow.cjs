@@ -20,7 +20,7 @@ const br=payload('01.pdf',fs.readFileSync(__dirname+'/fixtures/sample-br.pdf')),
   // Picker uses the identical input and acceptance path.
   const picker=p.waitForEvent('filechooser');await p.locator('[data-document-drop="140201"] [data-action="choose-file"]').click();await (await picker).setFiles(ci);assert.match(await p.locator('[data-document-drop="140201"]').innerText(),/02.pdf/);await p.locator('[data-document-drop="140201"] [data-action="'+(target==='external'?'document-remove-file':'remove-file')+'"]').click();
   await click('br-start');assert(await drop('#demo-br-file + .file-drop-status',[br]));await p.waitForSelector('#br-page');assert.equal(await p.locator('#demo-br-file:visible').count(),0);await close();
-  await go(4);await p.locator('[data-field="cardBankCode"]').fill('004');await p.locator('[data-field="cardBankCode"]').blur();await go(1);
+  await go(4);await p.locator('[data-field="cardBankName"]').selectOption('香港上海滙豐銀行');assert.equal(await p.locator('[data-field="cardBankCode"]').inputValue(),'004');await go(1);
   await click('v2-ocr');assert(await drop('#document-batch-files + .file-drop-status',[br,ci,bank,unknown,zip]));assert.equal(await p.locator('.batch-file').count(),5);await p.screenshot({path:'qa-unified-upload-'+target+'.png'});await click('document-recognize');await p.waitForSelector('.batch-assignments',{timeout:130000});
   assert.deepEqual(await p.locator('[data-document-destination]').evaluateAll(es=>es.map(e=>e.value)),['140101','140201','140401','','']);
   assert.deepEqual(await p.locator('[data-document-include]').evaluateAll(es=>es.map(e=>e.checked)),[true,true,true,false,false]);

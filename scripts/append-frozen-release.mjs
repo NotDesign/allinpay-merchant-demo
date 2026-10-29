@@ -4,7 +4,8 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const releases=JSON.parse(await readFile(path.join(root,'demo-releases.json'),'utf8'));
-const frozen=releases.frozen;
+const frozen=releases[process.argv[3]||'frozen'];
+if(!frozen?.directory)throw Error('Unknown frozen release key.');
 if(!process.argv[2])throw Error('Pass the Pages artifact built from the pinned frozen source commit.');
 const source=path.resolve(process.argv[2]);
 async function rejectLinks(directory){
@@ -25,8 +26,9 @@ await cp(source,destination,{recursive:true,filter:entry=>path.relative(source,e
 const base='https://notdesign.github.io/allinpay-merchant-demo/';
 const archiveBase=base+frozen.directory+'/';
 const relocated=[];
-for(const filename of ['app.js','backoffice.html','external.html','DEMO_GUIDE.md']){
+for(const filename of ['app.js','backoffice.html','external.html','DEMO_GUIDE.md','README.md']){
   const target=path.join(destination,filename);
+  if(!await stat(target).catch(()=>null))continue;
   const before=await readFile(target,'utf8');
   const after=before.replaceAll(base,archiveBase);
   if(after!==before){await writeFile(target,after);relocated.push(filename);}
@@ -40,4 +42,5 @@ const zipTemporary=path.join(root,'_pages',frozen.zip);
 execFileSync('zip',['-X','-q','-r',zipTemporary,'.'],{cwd:destination});
 await mkdir(path.join(destination,'downloads'));
 await rename(zipTemporary,path.join(destination,'downloads',frozen.zip));
+if(process.argv[3]==='legacy')await cp(path.join(destination,'downloads',frozen.zip),path.join(root,'_pages','downloads',frozen.zip));
 console.log('Frozen release appended:',frozen.version,frozen.sourceCommit);

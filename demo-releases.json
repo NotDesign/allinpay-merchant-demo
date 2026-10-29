@@ -1,8 +1,15 @@
 {
   "active": {
+    "version": "2026.10.29-mcc-templates-batch",
+    "baseCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
+    "date": "2026-10-29",
+    "zip": "allinpay-merchant-demo-20261029.zip"
+  },
+  "legacy": {
     "version": "2026.09.29-excel-freeze-mid-states",
     "sourceCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
-    "date": "2026-09-29",
+    "buildCommit": "ea5722a95692e8ab4119298f0a77a7d931af00fe",
+    "directory": "versions/20260929",
     "zip": "allinpay-merchant-demo-20260929.zip"
   },
   "frozen": {

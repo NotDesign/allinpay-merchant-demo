@@ -7,4 +7,5 @@ vendor/
 _pages/
 vendor-manifest.json
 .release-archive/
+.release-legacy/
 *-merchant-demo-*.zip

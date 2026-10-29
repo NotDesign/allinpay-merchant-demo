@@ -9,7 +9,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  const go=async step=>{await p.evaluate(s=>location.hash='/application/'+s,step);await p.waitForFunction(s=>document.querySelector('.step.active')?.dataset.step===String(s),step);};
  const status=()=>p.evaluate(()=>AllinPayDemo.getApplicationStatus());
  await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');await go(1);
- const initial=await status();assert.equal(initial.score.total,27);assert.equal(initial.policy.label,'中');assert.equal(initial.policy.cycle,'T2');assert.equal(initial.percent,Math.round(initial.completed/initial.required*100));
+ assert.equal((await status()).score.total,0);await go(5);for(const [group,key]of [['POS','POS|0'],['CNP','CNP|0']]){await p.locator('[data-v2-group="'+group+'"]').check();await p.locator('[data-v2-product="'+key+'"]').check();}await go(1);const initial=await status();assert.equal(initial.score.total,27);assert.equal(initial.policy.label,'中');assert.equal(initial.policy.cycle,'T2');assert.equal(initial.percent,Math.round(initial.completed/initial.required*100));
  for(let step=1;step<=6;step++){
   await go(step);assert.equal(await p.locator('#v2-application-status').count(),1);
   assert.equal(await p.locator('#v2-application-status .v2-status-card').count(),3);
@@ -19,7 +19,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
   await p.evaluate(()=>scrollTo(0,600));await p.waitForTimeout(80);
   const top=await p.locator('#v2-application-status').evaluate(n=>n.getBoundingClientRect().top);assert(top>=0&&top<=57,'Sidebar not pinned on step '+step+': '+top);
  }
- checks.push('All six steps share one right-hand sticky sidebar with risk, missing documents and completion; source rules yield 27 points and medium/T2');
+ checks.push('New merchant starts with zero selected products/zero points; explicit POS/CNP selection yields 27 points/medium/T2; all six steps share one sticky status sidebar');
  await go(5);await p.locator('[data-v2-group="CNP"]').uncheck();assert.equal((await status()).score.total,12);assert.equal((await status()).policy.label,'低');
  await p.locator('[data-v2-group="CNP"]').check();assert.equal((await status()).score.total,27);
  await go(2);const before=await status();await p.locator('[data-field="merchantName"]').fill('DEMO 測試商戶');assert.equal((await status()).completed,before.completed+1);

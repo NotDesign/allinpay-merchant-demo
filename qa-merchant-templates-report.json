@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "date": "2026-10-29T02:30:57.900Z",
+  "root": "http://127.0.0.1:4340",
+  "checks": [
+    "backoffice: MCC search/check/remove retains primary and uses the highest selected industry risk once",
+    "backoffice: imports 27 linked companies and a complete template; one confirmation applies to all selected drafts, preserving IDs/BR/bank/company links and exact rates",
+    "backoffice: draft/template persistence and duplicate BR import guard",
+    "backoffice: first-time CSV import fills company, full BR with leading zero, multi-MCC and exact 0.00 / 1.05 rates in one reviewed operation",
+    "backoffice: create a scoped template from the visible form, update its revision and delete it without changing applied merchants",
+    "backoffice: 1440/768/390/320 form and batch modal fit; every native select has consistent arrow and text insets",
+    "backoffice: one combined JSON import creates all companies with shared template fees and per-company MCC overrides",
+    "backoffice: failed batch storage leaves every draft unchanged",
+    "Backoffice role boundary: another agent cannot access admin templates or imported drafts",
+    "external: MCC search/check/remove retains primary and uses the highest selected industry risk once",
+    "external: imports 3 linked companies and a complete template; one confirmation applies to all selected drafts, preserving IDs/BR/bank/company links and exact rates",
+    "external: draft/template persistence and duplicate BR import guard",
+    "external: first-time CSV import fills company, full BR with leading zero, multi-MCC and exact 0.00 / 1.05 rates in one reviewed operation",
+    "external: create a scoped template from the visible form, update its revision and delete it without changing applied merchants",
+    "external: 1440/768/390/320 form and batch modal fit; every native select has consistent arrow and text insets",
+    "external: one combined JSON import creates all companies with shared template fees and per-company MCC overrides",
+    "external: failed batch storage leaves every draft unchanged",
+    "External account boundary: another email cannot access the first customer templates or drafts"
+  ],
+  "errors": []
+}

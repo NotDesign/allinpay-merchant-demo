@@ -1,3 +1,13 @@
+// Keep explicitly versioned bookmarks on the release they originally named.
+(()=>{
+ const version=new URLSearchParams(location.search).get('v')||'';
+ if(location.pathname.includes('/versions/'))return;
+ const directory=['20260929-restored','391f597'].includes(version)?'versions/20260929/':version==='20261009-control-spacing-v3'?'versions/20261009-control-spacing-v3/':'';
+ if(!directory)return;
+ const filename=location.pathname.endsWith('external.html')?'external.html':'backoffice.html';
+ const target=new URL(directory+filename,location.href);target.search=location.search;target.hash=location.hash||'#/login';location.replace(target.href);
+})();
+
 /* AllinPay interactive prototype. No network requests or production authentication. */
 (() => {
 'use strict';
@@ -432,7 +442,7 @@ function v2Ensure() {
   for(const k of ['addrProvinceCode','addrCityCode','cardProvinceCode','cardCityCode'])if(geoAlias[v2Raw(k)])state.values[k]=k==='cardProvinceCode'&&v2Raw('cardCountryCode')==='HKG'?'HKG':geoAlias[v2Raw(k)];
   state.values.__v2={version:2,groups:{},rates:{},combo:{},sme:{},links:{authSigners:{},shareHolders:{}},signals:{},ocr:[],ack:{},manualRisk:false,legacy:hadData};
   if(hadData)for(const [id,g] of [['603:4689','POS'],['603:4745','INQR'],['603:4709','CNP']])if(state.checks[id])v2SetGroup(g,true);
-  if(!hadData)for(const key of ['POS','CNP','INQR'])v2SetGroup(key,true);
+  // A new merchant starts with no categories or products selected.
   state.values.mccName=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc'))?.n||'';
 }
 function v2Reset() {
@@ -441,7 +451,7 @@ function v2Reset() {
 }
 defaults=()=>{Object.assign(state.values,structuredClone(V2.defaults));v2Ensure();};
 v2Ensure();
-function v2SetGroup(k,on) {const m=v2Model(),g=v2Groups.find(g=>g.k===k);m.groups[k]=on;g.rows.forEach((r,i)=>{m.rates[v2RowKey(g,i)]??={on:!r.off,ct:r.ct||null,v:{}};});}
+function v2SetGroup(k,on) {const m=v2Model(),g=v2Groups.find(g=>g.k===k);m.groups[k]=on;g.rows.forEach((r,i)=>{m.rates[v2RowKey(g,i)]??={on:false,ct:r.ct||null,v:{}};});}
 function v2Score() {
   const items=[],add=(label,n)=>items.push({label,n}),m=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc')),s=v2Model().signals;
   if(v2Raw('licencePeriod')==='01')add('經營年限少於 1 年',15);else if(v2Raw('licencePeriod')==='02')add('經營年限 1–3 年',8);
@@ -466,7 +476,7 @@ function v2Score() {
 function v2SyncDerived() {
   for(const group of ['authSigners','shareHolders'])for(const [i,d] of Object.entries(v2Model().links[group])){
     if(d===null||d===undefined||+d>=state.people.directors)continue;
-    for(const k of v2PersonKeys)state.values[`${group}[${i}].${k}`]=state.values[`directors[${d}].${k}`]||'';
+    for(const k of v2PersonKeys)if(!(group==='authSigners'&&k==='birthDay'))state.values[`${group}[${i}].${k}`]=state.values[`directors[${d}].${k}`]||'';
   }
   state.values.mccName=V2.catalog.MCCS.find(m=>m.c===v2Raw('mcc'))?.n||(v2Raw('mcc').length===4?'未列入清單，待人工核定':'');
   if(!v2Model().manualRisk)state.values.riskLevel=v2Score().level;
@@ -476,11 +486,11 @@ function v2FileRequired() {
 }
 requiredFiles=()=>Object.entries(v2FileRequired()).filter(([,yes])=>yes).map(([id])=>id);
 function v2Required() {
-  const v=state.values,r=new Set(['legalStatus','merchantType','merchantName','merchantShortName','merchantEnglishName','merchantEnglishShortName','registerCertType','registerCertNo','registerCertName','registerCertPeriod','registerCapital','licencePeriod','workerNumber','addrCountryCode','addrProvinceCode','addrStreet','addrStreetEn','mcc','riskLevel','avgPerAmount','maxAmount','avgMonthAmount','contactName','contactPhone','contactEmail','merchantAgreementPeriod','signType','currency','cardCountryCode','cardProvinceCode','cardBankCode','cardName','cardNo','isCompay']);
+  const v=state.values,r=new Set(['legalStatus','merchantType','merchantName','merchantShortName','merchantEnglishName','merchantEnglishShortName','registerCertType','registerCertNo','registerCertName','registerCertPeriod','registerCapital','licencePeriod','workerNumber','addrCountryCode','addrProvinceCode','addrStreet','addrStreetEn','mcc','riskLevel','contactName','contactPhone','contactEmail','merchantAgreementPeriod','signType','currency','cardCountryCode','cardProvinceCode','cardBankCode','cardName','cardNo','isCompay']);
   if(v.legalStatus==='BODY_CORPORATE')r.add('nar1Period');
   if(v.addrCountryCode==='CHN'){r.add('addrCityCode');if(v.legalStatus!=='PERSON'){r.add('threeCertFlag');if(v.threeCertFlag==='0')for(const k of ['creditCode','organCode','taxCode'])r.add(k);}}
   if(v.cardCountryCode==='CHN'){r.add('cardCityCode');r.add('cardBranchCode');}else r.add('cardBankName');
-  if(v.isCompay==='N')r.add('cardIdcardNo');if(v2Cnp())r.add('webUrl');
+  if(v.isCompay==='N')r.add('cardIdcardNo');
   if(v2Has('AV')&&v.chargeWay==='MONTH_SETTLE')r.add('monthMinPrice');
   if(v2Model().manualRisk&&+v.riskLevel<+v2Score().level)r.add('riskOverrideReason');
   return r;
@@ -504,7 +514,7 @@ function v2Field(f,index=0,linked=false) {
   let control;
   if(f.type==='Select'&&key!=='cardBankCode'){const opts=v2Options(f.id);control=`<select ${attrs} ${ro?'disabled':''}><option value="">請選擇</option>${opts.map(([v1,l])=>`<option value="${esc(v1)}" ${v1===v?'selected':''}>${esc(l)}</option>`).join('')}${v&&!opts.some(o=>o[0]===v)?`<option value="${esc(v)}" selected>${esc(v)}（請重新選擇）</option>`:''}</select>`;}
   else control=`<input ${attrs} type="${type}" value="${esc(v)}" placeholder="${esc(f.placeholder)}" ${key==='mcc'?'list="v2-mcc" inputmode="numeric"':key==='cardBankCode'&&v2Raw('cardCountryCode')==='HKG'?'list="v2-banks" inputmode="numeric"':key==='settlePeriod'?'list="v2-settlement"':''}>`;
-  return `<div class="field ${error?'invalid':''}" data-field-wrap="${esc(key)}"><label for="${id}">${heading}</label>${control}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}${key==='contactEmail'?btn(state.emailVerified?'已驗證（模擬）':'驗證電郵（模擬）','verify-email','mini-action'):''}${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
+  return `<div class="field ${error?'invalid':''}" data-field-wrap="${esc(key)}"><label for="${id}">${heading}</label>${control}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
 }
 function v2Card(title,copy,body) {return `<section class="card" data-section="${esc(title)}"><h2>${esc(title)}</h2>${copy?`<p class="hint">${esc(copy)}</p>`:''}${body}</section>`;}
 function v2PersonSection(s) {
@@ -624,7 +634,7 @@ validateStep=function(step){
   v2Ensure();v2SyncDerived();const e=step===1?{}:step<=5?v2ValidateFields(({2:0,3:1,4:2,5:3})[step]):{};
   if(step===1)for(const d of v2MissingDocs())e['file-'+d.id]='請提供'+d.name.split('\n')[0];
   if(step===2){if(!state.people.directors)e._directors='請至少新增一位董事';if(v2Amex()&&state.people.authSigners!==1)e._auth='香港／新加坡開通 AMEX 時，須有且僅有一位授權簽名人';}
-  if(step===3){if(!state.emailVerified)e.contactEmail=e.contactEmail||'請完成電郵模擬驗證';if(v2Num('avgPerAmount')>v2Num('maxAmount'))e.maxAmount='最高消費金額不可小於平均單筆金額';}
+  if(step===3&&v2Raw('avgPerAmount')&&v2Raw('maxAmount')&&v2Num('avgPerAmount')>v2Num('maxAmount'))e.maxAmount='最高消費金額不可小於平均單筆金額';
   if(step===4&&v2Raw('isCompay')==='N'&&!Array.from({length:state.people.directors},(_,i)=>v2Raw(`directors[${i}].idcardNo`)).includes(v2Raw('cardIdcardNo')))e.cardIdcardNo='對私結算持有人須為已登記董事，證件號碼必須一致';
   if(step===5){
     if(!v2Rows().length)e._products='請至少選擇一項產品';
@@ -710,8 +720,8 @@ document.addEventListener('change',e=>{
   if(t.dataset.v2Group){v2SetGroup(t.dataset.v2Group,t.checked);render();}
   if(t.dataset.v2Product){v2Model().rates[t.dataset.v2Product].on=t.checked;render();}
   if(t.dataset.v2Combo){v2Model().combo[t.dataset.v2Combo]=t.checked;render();}
-  if(t.dataset.v2Link){v2Model().links[t.dataset.v2Link][t.dataset.index]=t.checked?+t.closest('.v2-person-link').querySelector('select').value:null;render();}
-  if(t.dataset.v2Director){v2Model().links[t.dataset.v2Director][t.dataset.index]=+t.value;render();}
+  if(t.dataset.v2Link){const group=t.dataset.v2Link,director=+t.closest('.v2-person-link').querySelector('select').value;v2Model().links[group][t.dataset.index]=t.checked?director:null;if(group==='authSigners'&&t.checked)state.values[`authSigners[${t.dataset.index}].birthDay`]=state.values[`directors[${director}].birthDay`]||'';render();}
+  if(t.dataset.v2Director){const group=t.dataset.v2Director;v2Model().links[group][t.dataset.index]=+t.value;if(group==='authSigners')state.values[`authSigners[${t.dataset.index}].birthDay`]=state.values[`directors[${t.value}].birthDay`]||'';render();}
   if(t.dataset.v2Signal){v2Model().signals[t.dataset.v2Signal]=t.checked;render();}
   if(t.dataset.v2Sme){const b=t.dataset.v2Sme;v2Model().sme[b]={on:t.checked,type:v2Model().sme[b]?.type||v2SmeOptions(b)[0]};render();}
   if(t.dataset.v2SmeType){const b=t.dataset.v2SmeType;v2Model().sme[b]={on:v2Model().sme[b]?.on||false,type:t.value};}
@@ -1153,6 +1163,392 @@ document.addEventListener('change',e=>{const t=e.target,b=documentBatch;if(t.id=
 document.addEventListener('input',e=>{if(e.target.dataset.documentValue!==undefined)documentBatch.items[+e.target.dataset.documentValue].value=e.target.value;});
 $('#modal').addEventListener('close',()=>{if(documentBatch){batchDispose();render();}});
 window.addEventListener('pagehide',batchDispose);
+
+// October 29 review: optional business fields, editable signer DOB and bank picker.
+for(const form of V2.forms)for(const section of form.sections){
+ if(section.name==='聯絡人及協議')section.texts[1]='聯絡人姓名、電話及電郵各自獨立；請核對聯絡方式。';
+ if(section.name==='交易規模')section.texts[1]='以下均為選填；填寫時請保留最多 2 位小數。';
+ for(const f of section.fields){
+  if(f.id==='contactEmail')f.hint='用於接收申請及補件通知，無需驗證';
+  if(f.id==='webUrl')f.hint='選填；如提供，請填寫完整 https:// 網址';
+  if(['avgPerAmount','maxAmount','avgMonthAmount'].includes(f.id))f.hint='選填；最多 2 位小數';
+  if(f.id==='cardBankName')f.hint='選擇銀行後，自動帶入右側銀行行號';
+  if(f.id==='cardBankCode')f.hint='由銀行選單自動帶入；其他銀行可手動填寫';
+ }
+}
+const usabilityOriginalField=v2Field;
+const usabilityOriginalBankSync=syncBankName;
+syncBankName=function(changed){if(v2Raw('cardCountryCode')==='HKG'&&v2Model().bankCustom){state.values.cardBankCode=v2Raw('cardBankCode').split(/\s+/)[0];return;}usabilityOriginalBankSync(changed);};
+v2Field=function(f,index=0,linked=false){
+ if(f.id==='authSigners[].birthDay')return usabilityOriginalField(f,index,false);
+ let html=usabilityOriginalField(f,index,linked);
+ if(v2Raw('cardCountryCode')!=='HKG')return html;
+ const name=v2Raw('cardBankName'),code=v2Raw('cardBankCode'),known=Object.entries(ONBOARDING_BANKS),custom=!!v2Model().bankCustom||!!(name&&!known.some(([,n])=>n===name))||!!(code&&!ONBOARDING_BANKS[code]);
+ if(f.id==='cardBankName'){
+  const select=`<select id="field-cardBankName" data-field="cardBankName" data-v2-field="cardBankName" data-bank-picker aria-required="true"><option value="">請選擇銀行</option>${known.map(([c,n])=>`<option value="${esc(n)}" ${name===n&&!custom?'selected':''}>${esc(n)}</option>`).join('')}<option value="__other" ${custom?'selected':''}>其他銀行（手動填寫）</option></select>${custom?`<label for="other-bank-name" class="hint">銀行名稱</label><input id="other-bank-name" data-other-bank-name maxlength="100" value="${esc(name)}" placeholder="請填寫銀行名稱">`:''}`;
+  html=html.replace(/<input[^>]*data-field="cardBankName"[^>]*>/,select);
+ }
+ if(f.id==='cardBankCode'&&!custom)html=html.replace(/<input([^>]*data-field="cardBankCode"[^>]*)>/,'<input$1 readonly aria-readonly="true">');
+ return html;
+};
+function usabilityPickBank(e){
+ const t=e.target;if(!t.hasAttribute('data-bank-picker'))return;e.stopImmediatePropagation();
+ if(t.value==='__other'&&v2Model().bankCustom)return;
+ if(t.value==='__other'){v2Model().bankCustom=true;state.values.cardBankName='';state.values.cardBankCode='';delete v2Model().bankAutoName;}
+ else{v2Model().bankCustom=false;state.values.cardBankName=t.value;state.values.cardBankCode=Object.entries(ONBOARDING_BANKS).find(([,name])=>name===t.value)?.[0]||'';delete v2Model().bankAutoName;}
+ delete state.errors.cardBankName;delete state.errors.cardBankCode;v2SyncDerived();queueMicrotask(()=>render());
+}
+// Update both fields before the shared input/status listeners can restore the old bank.
+document.addEventListener('input',usabilityPickBank,true);
+document.addEventListener('change',usabilityPickBank,true);
+document.addEventListener('input',e=>{if(e.target.hasAttribute('data-other-bank-name')){state.values.cardBankName=e.target.value;delete state.errors.cardBankName;}});
+const usabilityOriginalReview=v2Review;
+v2Review=()=>usabilityOriginalReview().replace('✓ 電郵已驗證（模擬）','✓ 聯絡資料已填寫');
+const usabilityOriginalPeople=v2PersonSection;
+v2PersonSection=section=>usabilityOriginalPeople(section).replace(section.fields[0]?.id.startsWith('authSigners')?'董事修改時同步更新；取消勾選可獨立修改。':'__no_replacement__','身分資料跟隨董事；出生日期可獨立修改。');
+
+/* Shared, versioned merchant-template and import model. No browser/storage APIs. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.MerchantTemplateModel=api;})(globalThis,function(){
+ 'use strict';
+ const clone=value=>structuredClone(value);
+ const text=value=>value==null?'':String(value).trim();
+ const codes=value=>[...new Set((Array.isArray(value)?value:text(value).split(/[;,，；、\s]+/)).map(text).filter(Boolean))];
+ function parseCSV(source){
+  source=source.replace(/^\uFEFF/,'');const rows=[];let row=[],cell='',quoted=false,closed=false;
+  for(let i=0;i<source.length;i++){
+   const ch=source[i];
+   if(quoted){if(ch==='"'){if(source[i+1]==='"'){cell+='"';i++;}else{quoted=false;closed=true;}}else cell+=ch;continue;}
+   if(ch==='"'){if(cell||closed)throw Error('CSV 引號位置不正確');quoted=true;continue;}
+   if(ch===','||ch==='\n'||ch==='\r'){row.push(cell);cell='';closed=false;if(ch!==','){if(ch==='\r'&&source[i+1]==='\n')i++;if(row.some(v=>v.trim()))rows.push(row);row=[];}continue;}
+   if(closed&&!/\s/.test(ch))throw Error('CSV 引號後只能接逗號或換行');if(!closed)cell+=ch;
+  }
+  if(quoted)throw Error('CSV 有未關閉的引號');row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
+  if(!rows.length)throw Error('文件沒有資料');const headers=rows.shift().map(text);
+  if(headers.some(h=>!h)||new Set(headers).size!==headers.length)throw Error('CSV 標題不可留白或重複');
+  return rows.map((r,i)=>{if(r.length!==headers.length)throw Error('CSV 第 '+(i+2)+' 列欄位數與標題不一致');return Object.fromEntries(headers.map((h,j)=>[h,r[j]]));});
+ }
+ function csv(rows){return '\uFEFF'+rows.map(row=>row.map(v=>'"'+text(v).replaceAll('"','""')+'"').join(',')).join('\r\n')+'\r\n';}
+ function create(data){
+  const fields=data.forms.flatMap(f=>f.sections.flatMap(s=>s.fields)),byId=Object.fromEntries(fields.map(f=>[f.id,f]));
+  const identity=['merchantName','merchantShortName','merchantEnglishName','merchantEnglishShortName','merchantType','groupId','parentMerchant','inspectionDate','registerCertNo','registerCertName','registerCertPeriod','crCode','nar1Period','creditCode','creditCodePeriod','organCode','organCodePeriod','taxCode','taxCodePeriod','cardName','cardNo','cardIdcardNo'];
+  const settlement=data.forms[2].sections.flatMap(s=>s.fields.map(f=>f.id)).filter(k=>!identity.includes(k));
+  const productFields=data.forms[3].sections.flatMap(s=>s.fields.map(f=>f.id));
+  const profile=fields.map(f=>f.id).filter(k=>!k.includes('[]')&&!identity.includes(k)&&!settlement.includes(k)&&!productFields.includes(k)&&!['mcc','mccName','riskLevel','riskOverrideReason','merchantAgreementNum','groupId'].includes(k));
+  const scopeFields={profile,mcc:['mcc','mccCodes'],settlement,products:productFields,identity};
+  const labels={profile:'商戶共用資料',mcc:'MCC 行業代碼',settlement:'結算參數',products:'產品與費率',identity:'公司專屬資料（僅單家公司）'};
+  const rateDefs=Object.fromEntries(data.catalog.GROUPS.flatMap(g=>g.rows.map((r,i)=>[g.k+'|'+i,{g,r}])));
+  const groups=new Set(data.catalog.GROUPS.map(g=>g.k));
+  const comboKeys=new Set(data.catalog.GROUPS.flatMap(g=>(g.combo||[]).map(c=>g.k+'|'+c)));
+  function cleanFields(input){
+   const out={};if(!input||typeof input!=='object'||Array.isArray(input))return out;
+   for(const [key,value]of Object.entries(input)){
+    if(key==='mccCodes'){const list=codes(value);if(list.some(c=>!/^\d{4}$/.test(c))||list.length>50)throw Error('MCC 必須是 4 位數字，每家公司最多 50 個');out[key]=list;continue;}
+    const base=key.replace(/\[\d+\]/g,'[]');if(!Object.hasOwn(byId,base)||['riskLevel','riskOverrideReason','merchantAgreementNum'].includes(key))continue;
+    if(value!==null&&!['string','number','boolean'].includes(typeof value))throw Error('欄位 '+key+' 的格式不正確');
+    const val=text(value);if(val.length>2000)throw Error('欄位 '+key+' 過長');if(/\[(\d+)\]/.test(key)&&+RegExp.$1>=20)throw Error('每類人士最多 20 位');out[key]=val;
+   }
+   if(out.mcc&&!/^\d{4}$/.test(out.mcc))throw Error('主要 MCC 必須是 4 位數字');
+   if(out.mccCodes||out.mcc){out.mccCodes=codes(out.mccCodes||out.mcc);if(out.mcc&&!out.mccCodes.includes(out.mcc))out.mccCodes.unshift(out.mcc);out.mcc||=out.mccCodes[0]||'';}
+   for(const [k,v]of Object.entries(out))if(v&&/Email$/.test(k)&&!/^\S+@\S+\.\S+$/.test(v))throw Error(k+' 電郵格式不正確');
+   return out;
+  }
+  function cleanProducts(input){
+   if(input==null)return null;if(typeof input!=='object'||Array.isArray(input))throw Error('產品設定格式不正確');
+   const out={groups:Object.fromEntries([...groups].map(k=>[k,false])),rates:Object.fromEntries(Object.entries(rateDefs).map(([k,d])=>[k,{on:false,ct:d.r.ct||null,v:{}}])),combo:{},sme:{}};
+   for(const [k,v]of Object.entries(input.groups||{})){if(!groups.has(k))throw Error('未知產品類別：'+k);out.groups[k]=!!v;}
+   for(const [k,r]of Object.entries(input.rates||{})){
+    if(!Object.hasOwn(rateDefs,k))throw Error('未知產品項目：'+k);if(!r||typeof r!=='object')throw Error('產品費率格式不正確');
+    if(r.ct!=null&&!['Regional','Blended','Wallet'].includes(r.ct))throw Error('收費類型不正確：'+k);
+    const value={};for(const [field,val]of Object.entries(r.v||{})){
+     if(!/^[a-z][a-z0-9_]{0,30}$/.test(field)||['constructor','prototype','__proto__'].includes(field))throw Error('費率欄位不正確');
+     if(typeof val==='boolean'){value[field]=val;continue;}const str=text(val);
+     if(!/^\d+(\.\d{1,2})?$/.test(str)&&!['Y','N',''].includes(str))throw Error('費率／金額格式不正確：'+field);
+     if(/rate|ratio/.test(field)&&+str>100)throw Error('費率不可超過 100%');value[field]=str;
+    }
+    out.rates[k]={on:!!r.on,ct:r.ct??rateDefs[k].r.ct??null,v:value};
+   }
+   for(const [k,v]of Object.entries(input.combo||{})){if(!comboKeys.has(k))throw Error('未知產品功能：'+k);out.combo[k]=!!v;}
+   for(const [k,v]of Object.entries(input.sme||{})){if(!['VISA','MASTERCARD','AMERICAEXPRESS'].includes(k)||!v||!['SME','SMESMK','SMEB2B'].includes(v.type))throw Error('特計商戶設定不正確');out.sme[k]={on:!!v.on,type:v.type};}
+   return out;
+  }
+  function cleanTemplate(input){
+   if(!input||typeof input!=='object')throw Error('模板格式不正確');const name=text(input.name);if(!name||name.length>80)throw Error('請填寫 80 字以內的模板名稱');
+   const values=cleanFields(input.values),products=cleanProducts(input.products),scopes=Object.keys(labels).filter(s=>(input.scopes||Object.keys(labels)).includes(s));
+   if(!scopes.length)throw Error('模板至少選擇一個範圍');
+   const allowed=new Set(scopes.flatMap(s=>scopeFields[s]));for(const key of Object.keys(values))if(values[key]===''||Array.isArray(values[key])&&!values[key].length||!allowed.has(key)&&!(scopes.includes('identity')&&key.includes('[')))delete values[key];
+   const people={};for(const k of ['directors','authSigners','shareHolders'])people[k]=Math.min(20,Math.max(k==='directors'?1:0,Number(input.people?.[k])||0));
+   return {id:text(input.id).slice(0,100),name,version:Math.max(1,Number(input.version)||1),scopes,values,products:scopes.includes('products')?products:null,people,createdAt:text(input.createdAt),updatedAt:text(input.updatedAt)};
+  }
+  function apply(snapshot,template,selected,mode='replace',allowIdentity=false){
+   const out=clone(snapshot),values=out.values??={},changes=[];out.people||={directors:1,authSigners:0,shareHolders:0};
+   const scopes=selected.filter(s=>template.scopes.includes(s)&&(s!=='identity'||allowIdentity));
+   const allow=new Set(scopes.flatMap(s=>scopeFields[s]));
+   for(const [key,val]of Object.entries(template.values)){
+    if(!allow.has(key)&&!(scopes.includes('identity')&&key.includes('[')))continue;
+    if(mode==='blank'&&(Array.isArray(values[key])?values[key].length:!!text(values[key])))continue;
+    if(JSON.stringify(values[key]??'')!==JSON.stringify(val)){changes.push({key,before:clone(values[key]??''),after:clone(val)});values[key]=clone(val);}
+   }
+   if(scopes.includes('identity'))out.people=clone(template.people);
+   if(values.__v2&&changes.some(c=>['cardBankName','cardBankCode'].includes(c.key))){values.__v2.bankCustom=false;delete values.__v2.bankAutoName;}
+   if(scopes.includes('mcc')){values.mccCodes=codes(values.mccCodes||values.mcc);if(!values.mccCodes.includes(values.mcc))values.mcc=values.mccCodes[0]||'';}
+   if(scopes.includes('products')&&template.products){
+    const m=values.__v2||={version:2,groups:{},rates:{},combo:{},sme:{},links:{authSigners:{},shareHolders:{}},signals:{},ocr:[],ack:{},manualRisk:false};
+    const old=Object.fromEntries(['groups','rates','combo','sme'].map(k=>[k,clone(m[k]||{})]));
+    if(mode==='replace'||!Object.keys(m.rates||{}).some(k=>m.groups?.[k.split('|')[0]]&&m.rates[k]?.on)){
+     for(const key of ['groups','rates','combo','sme'])m[key]=clone(template.products[key]||{});
+     if(JSON.stringify(old)!==JSON.stringify(template.products))changes.push({key:'_products',before:old,after:clone(template.products)});
+    }
+   }
+   if(changes.some(c=>c.key==='contactEmail'))out.emailVerified=false;
+   if(changes.length){out.checks={};out.signature='';values.signer='';values.signerTitle='';if(values.__v2)values.__v2.ack={};}
+   values.__templateApplied={id:template.id,name:template.name,version:template.version,scopes,time:new Date().toISOString()};
+   return {snapshot:out,changes,scopes};
+  }
+  const aliases={'中文名稱':'merchantName','英文名稱':'merchantEnglishName','中文簡稱':'merchantShortName','英文簡稱':'merchantEnglishShortName','BR號碼':'registerCertNo','BR有效期':'registerCertPeriod','MCC代碼':'mccCodes','主要MCC':'mcc','聯絡人':'contactName','聯絡電話':'contactPhone','聯絡電郵':'contactEmail','中文地址':'addrStreet','英文地址':'addrStreetEn','結算週期':'settlePeriod','幣種':'currency','銀行代碼':'cardBankCode','銀行名稱':'cardBankName','銀行帳戶名稱':'cardName','銀行帳號':'cardNo'};
+  const csvHeaders=['客戶編號','客戶名稱','公司代號','公司角色','主公司代號','參數模板',...Object.keys(aliases),'收單VISA本地費率(%)','收單VISA跨境費率(%)','CNPVISA本地費率(%)','CNPVISA跨境費率(%)'];
+  function csvBundle(source){
+   const records=parseCSV(source),unknown=Object.keys(records[0]||{}).filter(key=>!csvHeaders.includes(key)&&!Object.hasOwn(byId,key.replace(/\[\d+\]/g,'[]'))&&key!=='mccCodes');
+   if(unknown.length)throw Error('CSV 含未識別欄位：'+unknown.join('、')+'。請依下載範本或表單欄位 ID 填寫。');
+   return {format:'allinpay.merchant-bundle',version:1,companies:records.map((row,i)=>{
+    const values={};for(const [key,val]of Object.entries(row)){const id=aliases[key]||key;if(Object.hasOwn(byId,id.replace(/\[\d+\]/g,'[]'))||id==='mccCodes')values[id]=val;}
+    const products={groups:{},rates:{},combo:{},sme:{}};
+    for(const [header,group,field]of [['收單VISA本地費率(%)','POS','loc_rate'],['收單VISA跨境費率(%)','POS','crs_rate'],['CNPVISA本地費率(%)','CNP','loc_rate'],['CNPVISA跨境費率(%)','CNP','crs_rate']])if(text(row[header])){products.groups[group]=true;const key=group+'|0';products.rates[key]??={on:true,ct:'Regional',v:{}};products.rates[key].v[field]=text(row[header]);}
+    return {key:row['公司代號']||'ROW-'+(i+1),customerId:row['客戶編號'],customerName:row['客戶名稱'],role:row['公司角色']||'independent',parentKey:row['主公司代號'],templateName:row['參數模板'],values,products:Object.keys(products.rates).length?products:null};
+   })};
+  }
+  function bundle(input,knownTemplates=[]){
+   if(!input||input.format!=='allinpay.merchant-bundle'||input.version!==1)throw Error('請使用版本 1 的商戶資料匯入文件');
+   if(input.companies&&!Array.isArray(input.companies)||(input.companies||[]).length>100||!(input.companies||[]).length&&!input.templates?.length)throw Error('每次可匯入 1–100 家公司，或至少一份模板');
+   if(input.templates&&!Array.isArray(input.templates)||input.templates?.length>50)throw Error('每次最多 50 份模板');
+   const templates=(input.templates||[]).map(cleanTemplate),seen=new Set();if(new Set(templates.map(t=>t.name)).size!==templates.length)throw Error('同一文件不可包含重複模板名稱');
+   const companies=(input.companies||[]).map((entry,index)=>{
+    const key=text(entry.key)||'ROW-'+(index+1);if(seen.has(key))throw Error('公司代號重複：'+key);seen.add(key);
+    const values=cleanFields(entry.values),role=({'主公司':'parent','子公司':'subsidiary','獨立公司':'independent'})[entry.role]||entry.role||'independent';
+    if(!['parent','subsidiary','independent'].includes(role))throw Error(key+' 公司角色不正確');
+    if(!values.merchantName&&!values.merchantEnglishName)throw Error(key+' 請填寫公司中文或英文名稱');
+    const customerId=text(entry.customerId||input.customer?.id),customerName=text(entry.customerName||input.customer?.name);
+    const templateName=text(entry.templateName||input.defaultTemplate);
+    if(templateName&&![...templates,...knownTemplates].some(t=>t.name===templateName))throw Error(key+' 找不到參數模板：'+templateName);
+    return {key,values,products:cleanProducts(entry.products),customerId:customerId||customerName,customerName:customerName||customerId,role,parentKey:text(entry.parentKey),templateName};
+   });
+   const byKey=new Map(companies.map(c=>[c.key,c]));
+   for(const c of companies){
+    if(c.role==='subsidiary'){const parent=byKey.get(c.parentKey);if(!parent||parent===c||parent.role!=='parent'||!c.customerId||c.customerId!==parent.customerId)throw Error(c.key+' 子公司須對應同一客戶內的主公司');}
+    else if(c.parentKey)throw Error(c.key+' 只有子公司可填寫主公司代號');
+   }
+   return {format:input.format,version:1,templates,companies};
+  }
+  return {scopeFields,labels,identity,cleanFields,cleanProducts,cleanTemplate,apply,csvBundle,bundle,csvHeaders,codes,parseCSV,csv};
+ }
+ return {create,codes,parseCSV,csv};
+});
+
+// Shared onboarding tools: MCC, company relationships, templates and batch import.
+const MT=MerchantTemplateModel.create(V2),MT_EXTERNAL=!!window.AllinPayDemo.external;
+const MT_KEY='allinpay-merchant-templates-v1';
+let mtFlow=null,mtImport=null,mtImportSequence=0;
+let mtRenderPending=false;
+function mtRefreshForm(){if(mtRenderPending)return;mtRenderPending=true;queueMicrotask(()=>{mtRenderPending=false;if(route().page==='application')render();});}
+const mtOwner=()=>MT_EXTERNAL?(state.session&&state.email?'external:'+state.email.toLowerCase():''):(BO.user?'backoffice:'+BO.user.id:'');
+const mtAllowed=()=>!!mtOwner()&&!state.readonly&&(MT_EXTERNAL||can(1));
+const mtRoleName=role=>({parent:'主公司',subsidiary:'子公司',independent:'獨立公司'}[role]||'獨立公司');
+const mtNow=()=>new Date().toLocaleString('zh-HK',{hour12:false});
+const mtError=message=>{const node=$('#mt-error');if(node)node.textContent=message;else toast(message);};
+function mtStorage(){try{const value=JSON.parse(localStorage.getItem(MT_KEY)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}}
+function mtTemplates(){return (mtStorage()[mtOwner()]||[]).map(t=>{try{return MT.cleanTemplate(t);}catch{return null;}}).filter(Boolean);}
+function mtSaveTemplates(list){if(!mtAllowed())throw Error('請先登入');const store=mtStorage();store[mtOwner()]=list;localStorage.setItem(MT_KEY,JSON.stringify(store));}
+function mtMccList(values=state.values){return MT.codes(values.mccCodes||values.mcc);}
+function mtSyncMcc(){
+ const primary=v2Raw('mcc');if(!primary){state.values.mccCodes=[];return;}
+ const list=mtMccList();if(/^\d{4}$/.test(primary)&&!list.includes(primary))list.unshift(primary);state.values.mccCodes=list;
+}
+const mtOriginalSync=v2SyncDerived;
+v2SyncDerived=function(){mtSyncMcc();mtOriginalSync();state.values.mccName=mtMccList().map(c=>V2.catalog.MCCS.find(m=>m.c===c)?.n||c+'（待核定）').join('、');};
+const mtOriginalScore=v2Score;
+v2Score=function(){
+ const result=mtOriginalScore(),selected=mtMccList().map(c=>V2.catalog.MCCS.find(m=>m.c===c)).filter(Boolean);
+ const industryItems=result.items.filter(i=>!/^MCC 屬|^平均單筆偏離/.test(i.label));
+ const high=selected.filter(m=>m.lv==='high'),mid=selected.filter(m=>m.lv==='mid');
+ if(high.length)industryItems.push({label:'所選 MCC 含高風險（'+high.map(m=>m.c).join('、')+'）',n:25});
+ else if(mid.length)industryItems.push({label:'所選 MCC 含中風險（'+mid.map(m=>m.c).join('、')+'）',n:12});
+ if(selected.some(m=>v2Num('avgPerAmount')>m.avg*3))industryItems.push({label:'平均單筆偏離所選行業常態超過 3 倍',n:12});
+ const total=Math.min(100,industryItems.reduce((s,i)=>s+i.n,0)),s=v2Model().signals;
+ return {...result,items:industryItems,total,level:total<=20?'1':total<=45?'2':'3',reject:s.sanction?'命中制裁／PEP 名單':s.frozen?'關聯已凍結／關閉商戶':total>70?'風控評分超過 70':null};
+};
+v2SmeOptions=function(brand){const list=mtMccList().map(Number),rules=V2.catalog.SME_RULES[brand];return ['SME','SMESMK','SMEB2B'].filter(type=>{const r=rules[type];return r&&list.length&&list.every(m=>r.only?r.only.includes(m):!r.ex.some(x=>Array.isArray(x)?m>=x[0]&&m<=x[1]:m===x));});};
+const mtOriginalField=v2Field;
+v2Field=function(f,index=0,linked=false){
+ const original=mtOriginalField(f,index,linked);if(f.id!=='mcc'||!original)return original;
+ const list=mtMccList(),extra=`<div class="mt-mcc-chips" aria-label="已選 MCC">${list.map(code=>`<span>${esc(code)}${code===v2Raw('mcc')?' · 主要':''}${btn('×','mt-mcc-remove','',`data-code="${esc(code)}" aria-label="移除 MCC ${esc(code)}"`)}</span>`).join('')}</div><details class="mt-mcc-picker"><summary>複選 MCC <span>已選 ${list.length} 個</span></summary><label for="mt-mcc-search" class="sr-only">搜尋 MCC 代碼或行業名稱</label><input id="mt-mcc-search" placeholder="搜尋代碼或行業名稱" autocomplete="off"><div class="mt-mcc-options">${V2.catalog.MCCS.map(m=>`<label class="check" data-mt-mcc-option="${m.c} ${esc(m.n)}"><input type="checkbox" data-mt-mcc="${m.c}" ${list.includes(m.c)?'checked':''}><span>${m.c} · ${esc(m.n)}</span></label>`).join('')}</div></details><small class="hint">上方為主要 MCC；可複選其他代碼。風控參考採所選代碼中最高風險，特計方案須同時適用所選代碼。</small>`;
+ return original.replace('MCC 行業代碼','MCC 行業代碼（主要）').replace(/(<input[^>]*data-field="mcc"[^>]*>)/,`$1${extra}`);
+};
+function mtSnapshot(){v2Ensure();v2SyncDerived();return {values:structuredClone(state.values),people:structuredClone(state.people),files:structuredClone(state.files),checks:structuredClone(state.checks),emailVerified:state.emailVerified,signature:state.signature||''};}
+function mtBlank(values={}){
+ const saved={values:state.values,people:state.people,files:state.files,checks:state.checks,emailVerified:state.emailVerified};
+ try{state.values=structuredClone(V2.defaults);state.people={directors:1,authSigners:0,shareHolders:0};state.files={};state.checks={};state.emailVerified=false;v2Ensure();Object.assign(state.values,structuredClone(values));v2Model().legacy=false;v2SyncDerived();return mtSnapshot();}finally{Object.assign(state,saved);}
+}
+function mtUpgradeSnapshot(snapshot){
+ if(snapshot.values?.__v2?.version===2)return snapshot;
+ const saved={values:state.values,people:state.people,files:state.files,checks:state.checks,emailVerified:state.emailVerified};
+ try{state.values=structuredClone(snapshot.values||{});state.people=structuredClone(snapshot.people||{directors:1,authSigners:0,shareHolders:0});state.files=structuredClone(snapshot.files||{});state.checks=structuredClone(snapshot.checks||{});state.emailVerified=!!snapshot.emailVerified;v2Ensure();v2SyncDerived();return {...snapshot,values:structuredClone(state.values),people:structuredClone(state.people)};}finally{Object.assign(state,saved);}
+}
+function mtTargets(){
+ if(!mtAllowed())return [];
+ if(MT_EXTERNAL)return state.records.filter(r=>r.email===state.email&&r.status==='草稿').map(r=>({key:'record:'+r.id,id:r.id,kind:'record',record:r,snapshot:r,name:r.values.merchantName||r.values.companyZh||r.values.merchantEnglishName||'未命名商戶'}));
+ const drafts=scopedDrafts().map(d=>({key:'draft:'+d.id,id:d.id,kind:'draft',record:d,snapshot:mtUpgradeSnapshot(d),name:d.values.merchantName||d.values.merchantEnglishName||'未命名商戶'}));
+ const rowTargets=can(2)?scopedRows().filter(r=>r.status==='Draft').map(r=>({key:'row:'+rowKey(r),id:rowKey(r),kind:'row',record:r,snapshot:r.application||mtBlank({merchantName:r['客戶中文名稱'],merchantEnglishName:r['客戶英文名稱'],registerCertNo:r.BR,mcc:r['MCC 行業代碼']?.split(/[、,;]/)[0]||'',contactName:r['客戶聯繫人'],contactPhone:r['聯絡人電話'],contactEmail:r['聯絡人電郵']}),name:r['客戶中文名稱']})):[];
+ return [...drafts,...rowTargets];
+}
+function mtCompanies(){
+ const own=mtTargets();if(MT_EXTERNAL)return [...own,...state.records.filter(r=>r.email===state.email&&r.status!=='草稿').map(r=>({id:r.id,name:r.values.merchantName||r.values.companyZh,snapshot:r}))];
+ return [...own,...scopedRows().filter(r=>r.status!=='Draft').map(r=>({id:rowKey(r),name:r['客戶中文名稱'],snapshot:r.application||{values:{}}}))];
+}
+function mtCustomers(){const map=new Map();for(const c of mtCompanies()){const relation=c.snapshot.values?.__customer;if(relation?.id)map.set(relation.id,relation);}const current=state.values.__customer;if(current?.id)map.set(current.id,current);return [...map.values()];}
+function mtRelationship(){
+ const relation=state.values.__customer||{},current=MT_EXTERNAL?state.id:state.draftId||state.editing;
+ const parents=mtCompanies().filter(c=>{const r=c.snapshot.values?.__customer;return c.id!==current&&r?.role==='parent'&&r.id===relation.id;});
+ return v2Card('客戶及公司關係','同一客戶可包含多家公司；主公司與子公司各自保存申請資料。',`<div class="grid mt-relationship"><div class="field"><label for="mt-customer">選取客戶／集團</label><select id="mt-customer" data-mt-relation="customer"><option value="">尚未分組</option>${mtCustomers().map(c=>`<option value="${esc(c.id)}" ${c.id===relation.id?'selected':''}>${esc(c.name||c.id)}</option>`).join('')}<option value="__new">＋ 建立新客戶／集團</option></select></div><div class="field"><label for="mt-customer-name">客戶／集團名稱</label><input id="mt-customer-name" maxlength="100" data-mt-relation="name" value="${esc(relation.name||'')}" placeholder="例如：海港集團"></div><div class="field"><label for="mt-company-role">公司關係</label><select id="mt-company-role" data-mt-relation="role">${['independent','parent','subsidiary'].map(r=>`<option value="${r}" ${r===(relation.role||'independent')?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div><div class="field"><label for="mt-parent-company">所屬主公司</label><select id="mt-parent-company" data-mt-relation="parentId" ${relation.role!=='subsidiary'?'disabled':''}><option value="">請選擇同一客戶的主公司</option>${parents.map(c=>`<option value="${esc(c.id)}" ${c.id===relation.parentId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>${state.errors._customer?`<p class="error">${esc(state.errors._customer)}</p>`:''}</div></div>`);
+}
+const mtOriginalSections=v2FormSections;
+v2FormSections=index=>(index===0?mtRelationship():'')+mtOriginalSections(index);
+const mtOriginalValidate=validateStep;
+validateStep=function(step){const errors=mtOriginalValidate(step);if(step===3){const list=mtMccList();if(!list.length||list.some(c=>!/^\d{4}$/.test(c)))errors.mcc='請選擇至少一個有效的 4 位 MCC';if(list.length>50)errors.mcc='每家公司最多可選 50 個 MCC';}
+ if(step===2){const relation=state.values.__customer;if(relation?.role==='subsidiary'){const p=mtCompanies().find(c=>c.id===relation.parentId),r=p?.snapshot.values?.__customer;const own=MT_EXTERNAL?state.id:state.draftId||state.editing;if(!relation.name||!p||p.id===own||r?.role!=='parent'||r.id!==relation.id)errors._customer='子公司須選擇同一客戶內的主公司';}}
+ return errors;};
+const mtOriginalReview=v2Review;
+v2Review=function(){const relation=state.values.__customer;return (relation?.id?v2Card('客戶及公司關係','',`<div class="mt-relation-summary"><strong>${esc(relation.name)}</strong><span>${mtRoleName(relation.role)}</span>${relation.parentId?`<span>主公司：${esc(mtCompanies().find(c=>c.id===relation.parentId)?.name||relation.parentId)}</span>`:''}</div>`):'')+v2Card('MCC 複選資料','',`<p>主要 MCC：<b>${esc(v2Raw('mcc')||'尚未選擇')}</b></p><p>全部代碼：${esc(mtMccList().join('、')||'尚未選擇')}</p>`)+mtOriginalReview();};
+function mtToolbar(compact=false){return `<section class="mt-quick-tools ${compact?'compact':''}" aria-label="快速填寫及參數模板"><div><strong>${compact?'模板與批量設定':'快速填寫'}</strong><small>${compact?'先設定一次，再複選新商戶同時套用':'帶入商戶資料、MCC、結算參數及產品費率'}</small></div><div class="mt-tool-actions">${btn('選取模板','mt-library')}${!compact?btn('儲存為模板','mt-save-open'):''}${btn('一次匯入資料','mt-import-open')}${btn('批量套用參數模板','mt-batch-open','primary')}</div></section>`;}
+const mtOriginalApplication=application;
+application=function(step){const html=mtOriginalApplication(step);if(!mtAllowed())return html;return html.replace('<div class="v2-version">OATS V2 · 六步申請流程</div>','<div class="v2-version">OATS V2 · 六步申請流程</div>'+mtToolbar());};
+if(MT_EXTERNAL){const originalApplications=applications;applications=function(){return mtToolbar(true)+originalApplications();};}
+else{const oldMerchants=merchants;merchants=function(){return (mtAllowed()?mtToolbar(true):'')+oldMerchants();};const oldDrafts=draftView;draftView=function(){return (mtAllowed()?mtToolbar(true):'')+oldDrafts();};}
+function mtDialog(title,body,foot){modal(title,body+'<p id="mt-error" class="error" role="alert"></p>',foot);$('#modal').classList.add('mt-dialog');}
+function mtClose(){mtFlow=null;$('#modal').classList.remove('mt-dialog');$('#modal').close();}
+function mtDownload(filename,value,type='application/json'){const blob=new Blob([type==='application/json'?JSON.stringify(value,null,2):value],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+function mtScopeInputs(template,selected,batch=false){return `<fieldset class="mt-scopes"><legend>套用範圍</legend>${template.scopes.map(scope=>`<label class="check"><input type="checkbox" data-mt-scope="${scope}" ${selected.includes(scope)?'checked':''} ${batch&&scope==='identity'?'disabled':''}><span>${MT.labels[scope]}</span></label>`).join('')}${batch&&template.scopes.includes('identity')?'<small>批量套用保留每家公司的名稱、BR、董事及銀行帳號。</small>':''}</fieldset>`;}
+function mtProductCount(products){return Object.entries(products?.rates||{}).filter(([key,r])=>r.on&&products.groups?.[key.split('|')[0]]).length;}
+function mtLibrary(){
+ if(!mtAllowed())return;const list=mtTemplates();
+ mtDialog('商戶資料與參數模板',`<p class="hint">可把共用資料、MCC、結算參數及產品費率記錄為一份設定，套用至一家或多家新商戶。</p><div class="mt-library-actions">${btn('將目前設定儲存為模板','mt-save-open','primary')}${btn('匯入模板／商戶資料','mt-import-open')}</div><div class="mt-template-list">${list.map(t=>`<article><div><h3>${esc(t.name)}</h3><p>${t.scopes.map(s=>esc(MT.labels[s])).join(' · ')}</p><small>v${t.version} · ${Object.keys(t.values).length} 個欄位 · ${mtProductCount(t.products)} 項產品</small></div><div class="mt-template-actions">${btn('套用至目前表單','mt-use','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('複選商戶並批量套用','mt-batch-template','primary',`data-id="${esc(t.id)}"`)}${btn('更新為目前設定','mt-save-open','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('匯出','mt-export','',`data-id="${esc(t.id)}"`)}${btn('刪除','mt-delete','',`data-id="${esc(t.id)}"`)}</div></article>`).join('')||'<div class="mt-empty"><h3>尚未建立模板</h3><p>填寫一次資料及費率後儲存，或匯入已有的 CSV／JSON 設定。</p></div>'}</div>`,btn('關閉','mt-close'));
+}
+function mtOpenSave(id=''){
+ if(!mtAllowed())return;const existing=mtTemplates().find(t=>t.id===id);mtFlow={kind:'save',id:existing?.id||'',scopes:existing?.scopes||['profile','mcc','settlement','products']};
+ mtDialog(existing?'更新參數模板':'儲存為參數模板',`<div class="field"><label for="mt-template-name">模板名稱 <span class="required">*</span></label><input id="mt-template-name" maxlength="80" value="${esc(existing?.name||'')}" placeholder="例如：集團餐飲標準設定"></div>${mtScopeInputs({scopes:Object.keys(MT.labels)},mtFlow.scopes)}<p class="hint">共用模板可同時包含商戶資料與費率。公司專屬資料可另外選存，只能逐家公司套用；文件附件、驗證及簽署狀態不會納入模板。</p>`,btn('取消','mt-library')+btn(existing?'確認更新模板':'儲存模板','mt-save','primary'));
+}
+function mtSave(){
+ try{if(!mtAllowed())return;const list=mtTemplates(),previous=list.find(t=>t.id===mtFlow.id),snapshot=mtSnapshot();const t=MT.cleanTemplate({id:previous?.id||crypto.randomUUID(),name:$('#mt-template-name').value,version:(previous?.version||0)+1,scopes:mtFlow.scopes,values:snapshot.values,products:snapshot.values.__v2,people:snapshot.people,createdAt:previous?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()});if(list.some(x=>x.name===t.name&&x.id!==t.id))throw Error('已有同名模板，請改名或從清單選擇更新');mtSaveTemplates([t,...list.filter(x=>x.id!==t.id)]);mtLibrary();toast('已儲存模板，可一次套用至多家新商戶');}catch(e){mtError(e.message);}
+}
+function mtOpenApply(batch,id=''){
+ if(!mtAllowed())return;const templates=mtTemplates();if(!templates.length)return mtLibrary();const t=templates.find(t=>t.id===id)||templates[0];const preselected=!MT_EXTERNAL?[...state.selected].map(id=>'row:'+id):[];
+ mtFlow={kind:batch?'batch':'form',templateId:t.id,scopes:t.scopes.filter(s=>s!=='identity'),mode:'replace',selected:new Set(preselected),query:'',customer:'',role:'',page:1,size:20,preview:false};if(!batch&&route().step===5&&t.scopes.includes('products'))mtFlow.scopes=['products'];mtApplyModal();
+}
+function mtCurrentTarget(){return {key:'current',id:MT_EXTERNAL?state.id:state.draftId,name:state.values.merchantName||state.values.merchantEnglishName||'目前新商戶',kind:'current',snapshot:mtSnapshot()};}
+function mtFilteredTargets(){return mtTargets().filter(t=>{const c=t.snapshot.values?.__customer||{};return (!mtFlow.customer||c.id===mtFlow.customer)&&(!mtFlow.role||(c.role||'independent')===mtFlow.role)&&(!mtFlow.query||(t.name+' '+t.id+' '+(c.name||'')).toLowerCase().includes(mtFlow.query.toLowerCase()));});}
+function mtRepaint(callback){const active=document.activeElement,id=active?.id,position=active?.selectionStart,scroll=$('#modal .modal-body')?.scrollTop||0;callback();const next=id?document.getElementById(id):null;next?.focus({preventScroll:true});if(position!=null&&typeof next?.setSelectionRange==='function')try{next.setSelectionRange(position,position);}catch{}const body=$('#modal .modal-body');if(body)body.scrollTop=scroll;}
+function mtPrepare(template,targets){
+ return targets.map(target=>{
+  let snapshot=target.snapshot;const currentId=MT_EXTERNAL?state.id:state.draftId||state.editing;if(target.kind!=='current'&&target.id===currentId&&route().page==='application')snapshot=mtSnapshot();
+  const plan=MT.apply(snapshot,template,mtFlow.scopes,mtFlow.mode,mtFlow.kind==='form');
+  return {...target,...plan,fingerprint:JSON.stringify(target.snapshot)};
+ });
+}
+function mtChangeValue(value){if(value&&typeof value==='object'){if(Array.isArray(value))return value.join('、');return Object.entries(value.rates||{}).filter(([key,r])=>r.on&&value.groups?.[key.split('|')[0]]).map(([key,r])=>{const [group,index]=key.split('|'),definition=v2Groups.find(g=>g.k===group)?.rows[+index];return definition?definition.n+'：'+v2FeeSummary(definition,r):key;}).join('；')||'未選產品';}return String(value??'')||'空白';}
+function mtPreviewHTML(plans){return `<div class="notice">即將套用至 <b>${plans.length}</b> 家商戶 · 共 ${plans.reduce((s,p)=>s+p.changes.length,0)} 項變更。${mtFlow.kind==='batch'?'每家公司的名稱、BR、董事、銀行帳號與公司關係保留。':''}</div><div class="mt-preview-list">${plans.map(p=>`<details ${plans.length===1?'open':''}><summary><strong>${esc(p.name)}</strong><span>${p.changes.length} 項變更</span></summary>${p.changes.length?`<div class="mt-diff-list">${p.changes.map(c=>`<div><strong>${esc(c.key==='_products'?'產品與費率':c.key==='mccCodes'?'MCC 複選清單':v2Label(c.key))}</strong><del>${esc(mtChangeValue(c.before))}</del><ins>${esc(mtChangeValue(c.after))}</ins></div>`).join('')}</div>`:'<p>設定相同，無需修改。</p>'}</details>`).join('')}</div>`;}
+function mtApplyModal(){
+ const f=mtFlow,t=mtTemplates().find(t=>t.id===f.templateId);if(!t)return mtLibrary();
+ const available=mtTargets(),selected=f.kind==='form'?[mtCurrentTarget()]:available.filter(a=>f.selected.has(a.key));
+ if(f.preview){mtFlow.plans=mtPrepare(t,selected);return mtDialog('確認'+(f.kind==='batch'?'批量':'')+'套用參數模板',`<p><strong>${esc(t.name)}</strong> · v${t.version} · ${f.scopes.map(s=>MT.labels[s]).join('、')}</p>${mtPreviewHTML(mtFlow.plans)}<p class="hint">套用後仍需逐家公司核對聯絡資料、費率及提交。</p>`,btn('返回選擇','mt-preview-back')+btn('確認套用至 '+selected.length+' 家','mt-apply-confirm','primary',selected.length?'':'disabled'));}
+ const filtered=f.kind==='batch'?mtFilteredTargets():[],pages=Math.max(1,Math.ceil(filtered.length/f.size));f.page=Math.min(f.page,pages);const shown=filtered.slice((f.page-1)*f.size,f.page*f.size);
+ const table=f.kind==='batch'?`<div class="mt-batch-filters"><div class="field"><label for="mt-target-search">搜尋新商戶</label><input id="mt-target-search" placeholder="公司名稱、編號、客戶" value="${esc(f.query)}"></div><div class="field"><label for="mt-target-customer">客戶／集團</label><select id="mt-target-customer"><option value="">全部客戶</option>${mtCustomers().map(c=>`<option value="${esc(c.id)}" ${f.customer===c.id?'selected':''}>${esc(c.name||c.id)}</option>`).join('')}</select></div><div class="field"><label for="mt-target-role">公司關係</label><select id="mt-target-role"><option value="">全部關係</option>${['parent','subsidiary','independent'].map(r=>`<option value="${r}" ${f.role===r?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div></div><div class="mt-select-bar"><label class="check"><input type="checkbox" id="mt-select-filtered" ${filtered.length&&filtered.every(x=>f.selected.has(x.key))?'checked':''} ${!filtered.length?'disabled':''}>全選篩選結果（${filtered.length} 家，包含所有頁面）</label><strong id="mt-selected-count">已選 ${selected.length} 家</strong>${btn('清除選取','mt-clear-selected')}</div><div class="mt-target-list">${shown.map(a=>{const c=a.snapshot.values?.__customer||{};return `<label class="mt-target-row"><input type="checkbox" data-mt-target="${esc(a.key)}" ${f.selected.has(a.key)?'checked':''}><span><strong>${esc(a.name)}</strong><small>${esc(a.id)}</small></span><span>${esc(c.name||'未分組')}<small>${mtRoleName(c.role)}</small></span></label>`;}).join('')||'<div class="mt-empty">沒有符合條件的新商戶草稿。</div>'}</div><div class="mt-pagination"><label>每頁 <select id="mt-page-size">${[20,50,100].map(n=>`<option ${f.size===n?'selected':''}>${n}</option>`).join('')}</select> 家</label><span>共 ${filtered.length} 家 · ${f.page}／${pages} 頁</span>${btn('上一頁','mt-target-page','',`data-page="${f.page-1}" ${f.page<=1?'disabled':''}`)}${btn('下一頁','mt-target-page','',`data-page="${f.page+1}" ${f.page>=pages?'disabled':''}`)}</div><p class="hint">只列出有權限編輯的新商戶草稿，已提交或已開通商戶不在批量套用範圍。</p>`:`<p class="notice">套用對象：${esc(selected[0].name)}</p>`;
+ mtDialog(f.kind==='batch'?'批量套用參數模板':'套用商戶模板',`<div class="mt-apply-header"><div class="field"><label for="mt-template-select">選取一份設定記錄</label><select id="mt-template-select">${mtTemplates().map(x=>`<option value="${esc(x.id)}" ${t.id===x.id?'selected':''}>${esc(x.name)} · v${x.version}</option>`).join('')}</select></div><div class="field"><label for="mt-apply-mode">處理現有值</label><select id="mt-apply-mode"><option value="replace" ${f.mode==='replace'?'selected':''}>套用模板設定（預覽後取代所選範圍）</option><option value="blank" ${f.mode==='blank'?'selected':''}>只補空白，保留已填資料</option></select></div></div>${mtScopeInputs(t,f.scopes,f.kind==='batch')}${table}`,btn('取消','mt-close')+btn('預覽套用至 '+selected.length+' 家','mt-apply-preview','primary',selected.length&&f.scopes.length?'':'disabled'));
+}
+function mtWriteTargets(plans,message){
+ const time=mtNow();if(state.fail||state.failSave)throw Error('模擬儲存失敗：所有商戶設定仍保留原值');
+ if(MT_EXTERNAL){const before=state.records,next=before.map(r=>{const plan=plans.find(p=>p.kind==='record'&&p.id===r.id);if(!plan)return r;if(r.email!==state.email||r.status!=='草稿')throw Error('商戶權限或狀態已變更，請重新選擇');return {...r,...plan.snapshot,updated:time};});localStorage.setItem(KEY,JSON.stringify(next));state.records=next;}
+ else{
+ const beforeDrafts=state.drafts,beforeRows=[...rows],beforeAudit=BO.audit,beforeCount=state.noticeCount;
+  const available=new Set(mtTargets().map(t=>t.key));if(plans.some(p=>!available.has(p.key)))throw Error('商戶權限或狀態已變更，請重新選擇');
+  try{state.drafts=state.drafts.map(d=>{const p=plans.find(p=>p.kind==='draft'&&p.id===d.id);return p?{...d,...p.snapshot,savedAt:time}:d;});
+   rows.splice(0,rows.length,...rows.map(row=>{const p=plans.find(p=>p.kind==='row'&&p.id===rowKey(row));if(!p)return row;const v=p.snapshot.values;return {...row,application:{...p.snapshot,id:p.id,owner:row.owner,step:1,savedAt:time},'MCC 行業代碼':mtMccList(v).join('、'),'行業類型':mtMccList(v).map(c=>V2.catalog.MCCS.find(m=>m.c===c)?.n||c).join('、'),'客戶聯繫人':v.contactName||row['客戶聯繫人'],'聯絡人電話':v.contactPhone||row['聯絡人電話'],'聯絡人電郵':v.contactEmail||row['聯絡人電郵'],'最後更新':time};}));
+   BO.audit=[{time,user:BO.user.name,message},...BO.audit];state.noticeCount+=plans.length;if(!persistDemo())throw Error('瀏覽器儲存空間不足，未套用任何商戶');
+  }catch(e){state.drafts=beforeDrafts;rows.splice(0,rows.length,...beforeRows);BO.audit=beforeAudit;state.noticeCount=beforeCount;throw e;}
+ }
+ const id=MT_EXTERNAL?state.id:state.draftId||state.editing,p=plans.find(p=>p.id===id);if(p&&route().page==='application'){Object.assign(state,{values:structuredClone(p.snapshot.values),people:structuredClone(p.snapshot.people),checks:structuredClone(p.snapshot.checks||{}),emailVerified:!!p.snapshot.emailVerified,errors:{}});if(MT_EXTERNAL)state.signature=p.snapshot.signature||'';}
+}
+function mtConfirmApply(){
+ try{if(!mtAllowed()||!mtFlow?.preview)throw Error('請先預覽套用內容');const plans=mtFlow.plans||[],template=mtTemplates().find(t=>t.id===mtFlow.templateId);if(!plans.length||!template)throw Error('模板或商戶清單已變更');
+  if(mtFlow.kind==='form'){const p=mtPrepare(template,[mtCurrentTarget()])[0];Object.assign(state,{values:p.snapshot.values,people:p.snapshot.people,checks:p.snapshot.checks||{},emailVerified:!!p.snapshot.emailVerified,errors:{}});if(MT_EXTERNAL)state.signature=p.snapshot.signature||'';v2SyncDerived();mtClose();render();toast('已帶入模板，請核對並儲存草稿');return;}
+  const targets=mtTargets();for(const plan of plans){const now=targets.find(t=>t.key===plan.key);if(!now||JSON.stringify(now.snapshot)!==plan.fingerprint)throw Error('商戶資料在預覽後已有變動，請返回重新預覽');}
+  mtWriteTargets(plans,'批量套用模板「'+template.name+'」至 '+plans.length+' 家新商戶');const count=plans.length;mtClose();render();mtDialog('批量套用完成',`<div class="notice">已同時儲存 ${count} 家商戶的設定。</div><p>模板：${esc(template.name)} · v${template.version}</p><p>每家公司可繼續獨立核對、修改及提交。</p>`,btn('完成','mt-close','primary'));
+ }catch(e){mtError(e.message);}
+}
+function mtOpenImport(){if(!mtAllowed())return;mtImport=null;mtImportSequence++;mtDialog('一次匯入商戶資料與費率',`<p>可一次匯入同一客戶的主公司與子公司，同時帶入各公司的基本資料、MCC、結算參數、產品及費率。</p><div class="mt-library-actions">${btn('下載 CSV 空白範本','mt-csv-download')}${btn('下載完整 JSON 範例','mt-json-download')}</div>${fileDropControl({inputId:'mt-import-file',accept:'.csv,.json',title:'拖入商戶資料 CSV／JSON',hint:'每次最多 100 家公司／50 份模板 · 文件上限 2 MB'})}<p class="hint">CSV 可由 Excel 另存為 UTF-8 CSV；多個 MCC 使用分號分隔。JSON 可包含完整產品與費率設定。</p><div id="mt-import-result"></div>`,btn('取消','mt-close'));}
+async function mtReadImport(file){
+ const sequence=++mtImportSequence,owner=mtOwner();try{if(!file||file.size>2*1024*1024||!/\.(csv|json)$/i.test(file.name))throw Error('請選擇 2 MB 以下的 CSV／JSON');const source=await file.text();if(sequence!==mtImportSequence||owner!==mtOwner()||!$('#mt-import-file'))return;const bundle=MT.bundle(/\.csv$/i.test(file.name)?MT.csvBundle(source):JSON.parse(source),mtTemplates());bundle.templates=bundle.templates.map(t=>({...t,id:crypto.randomUUID(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+  const existing=mtCompanies(),brs=new Set(existing.map(c=>c.snapshot.values?.registerCertNo).filter(Boolean)),seen=new Set();
+  const errors=[];for(const c of bundle.companies){const br=c.values.registerCertNo;if(br&&(brs.has(br)||seen.has(br)))errors.push(c.key+'：BR 已存在或於文件中重複');if(br)seen.add(br);}
+  mtImport={...bundle,filename:file.name,errors,selected:new Set(bundle.companies.map(c=>c.key)),single:bundle.companies.length===1&&route().page==='application'};mtImportResult();
+ }catch(e){mtImport=null;mtError(e instanceof SyntaxError?'JSON 格式不正確，請使用下載的範例格式':e.message);}
+}
+function mtImportResult(){const b=mtImport;if(!b)return;const host=$('#mt-import-result');if(!host)return;
+ host.innerHTML=`<h3>匯入預覽</h3><p>${b.companies.length} 家公司 · ${b.templates.length} 份模板 · ${esc(b.filename)}</p>${b.errors.length?`<div class="notice error">${b.errors.map(esc).join('<br>')}</div>`:''}<div class="mt-import-companies">${b.companies.map(c=>`<article><strong>${esc(c.values.merchantName||c.values.merchantEnglishName)}</strong><span>${esc(c.customerName||'未分組')} · ${mtRoleName(c.role)}${c.parentKey?' · 主公司 '+esc(c.parentKey):''}</span><small>BR：${esc(c.values.registerCertNo||'待填寫')} · MCC：${esc(MT.codes(c.values.mccCodes||c.values.mcc).join('、')||'待填寫')} · ${Object.keys(c.values).length} 個欄位 · ${mtProductCount(c.products)} 項產品</small></article>`).join('')}</div>${b.single?'<p class="hint">會帶入目前新商戶表單，匯入前可查看所有欄位差異。</p>':'<p class="hint">確認後一次建立全部公司草稿；公司間的主／子關係會一併建立。</p>'}<div class="mt-library-actions">${btn(b.single?'預覽帶入目前表單':'確認匯入並建立 '+b.companies.length+' 家草稿','mt-import-confirm','primary',b.errors.length?'disabled':'')}</div>`;}
+function mtImportSettings(company){const template=[...(mtImport?.templates||[]),...mtTemplates()].find(t=>t.name===company.templateName);const inherited=template?MT.apply({values:{},people:{}},template,template.scopes.filter(s=>s!=='identity'),'replace',false).snapshot.values:{};return {values:{...inherited,...company.values},products:company.products||template?.products||null};}
+function mtImportedSnapshot(company,ids){const settings=mtImportSettings(company),snapshot=mtBlank(settings.values);if(settings.products)for(const k of ['groups','rates','combo','sme'])snapshot.values.__v2[k]=structuredClone(settings.products[k]);snapshot.values.__customer={id:company.customerId,name:company.customerName,role:company.role,parentId:ids[company.parentKey]||''};snapshot.emailVerified=false;return snapshot;}
+function mtCommitImport(){
+ try{if(!mtAllowed()||!mtImport||mtImport.errors.length)throw Error('請先選擇有效的匯入文件');const b=mtImport;
+  if(b.single&&!b.ready){const c=b.companies[0],before=mtSnapshot(),snap=mtImportedSnapshot(c,{}),settings=mtImportSettings(c);const imported=MT.cleanTemplate({id:'import',name:b.filename,scopes:Object.keys(MT.labels),values:settings.values,products:settings.products,people:snap.people});mtFlow={kind:'form',scopes:imported.scopes};const plan=MT.apply(before,imported,imported.scopes,'replace',true);plan.snapshot.values.__customer=snap.values.__customer;b.ready=true;b.plan=plan;$('#mt-import-result').innerHTML=mtPreviewHTML([{...plan,name:c.values.merchantName||c.values.merchantEnglishName}])+btn('確認帶入目前表單','mt-import-confirm','primary');return;}
+  if(state.fail||state.failSave)throw Error('模擬儲存失敗，沒有建立或修改商戶');
+  const oldTemplates=mtTemplates(),incoming=b.templates;
+  if(incoming.some(t=>oldTemplates.some(old=>old.name===t.name)))throw Error('已有同名模板，請先重新命名，或在模板清單更新設定');
+  const merged=[...incoming,...oldTemplates];if(merged.length>100)throw Error('目前最多可保存 100 份模板，請先整理已有模板');
+  if(b.single){if(incoming.length)mtSaveTemplates(merged);Object.assign(state,{values:b.plan.snapshot.values,people:b.plan.snapshot.people,checks:{},emailVerified:false,errors:{}});if(MT_EXTERNAL)state.signature='';v2SyncDerived();mtClose();render();toast('已一次帶入商戶資料、MCC 及產品費率，請核對並儲存');return;}
+  const ids=Object.fromEntries(b.companies.map(c=>[c.key,'DRAFT-'+crypto.randomUUID()])),time=mtNow();
+  const additions=b.companies.map(c=>{const snap=mtImportedSnapshot(c,ids);return MT_EXTERNAL?{...snap,id:ids[c.key],email:state.email,status:'草稿',schema:2,step:1,created:time,updated:time,directors:[],shops:[],methods:[],scenes:[],sales:[],signature:'',values:{...snap.values,companyZh:snap.values.merchantName,companyEn:snap.values.merchantEnglishName}}:{...snap,id:ids[c.key],owner:BO.user.id,step:1,savedAt:time};});
+  if(incoming.length)mtSaveTemplates(merged);
+  try{if(MT_EXTERNAL){const next=[...additions,...state.records];localStorage.setItem(KEY,JSON.stringify(next));state.records=next;}else{const before=state.drafts;state.drafts=[...additions,...before];if(!persistDemo()){state.drafts=before;throw Error('儲存空間不足，沒有建立任何公司草稿');}}}catch(e){if(incoming.length)mtSaveTemplates(oldTemplates);throw e;}
+  mtClose();render();mtDialog('資料匯入完成',`<div class="notice">已建立 ${additions.length} 家公司草稿，並匯入 ${incoming.length} 份模板。</div><p>主／子公司關係、各自的 MCC、產品與費率均已保留。接下來可複選所有新商戶一次套用同一份參數設定。</p>`,btn('查看全部草稿','mt-open-drafts')+btn('批量套用參數模板','mt-batch-open','primary'));
+ }catch(e){mtError(e.message);}
+}
+function mtJSONExample(){return {
+ format:'allinpay.merchant-bundle',version:1,customer:{id:'CUS-DEMO-GROUP',name:'示例餐飲集團'},defaultTemplate:'餐飲共用參數（示例）',
+ templates:[{name:'餐飲共用參數（示例）',scopes:['profile','mcc','settlement','products'],values:{contactName:'示例聯絡人',contactPhone:'+85260000000',contactEmail:'demo@example.com',mcc:'5812',mccCodes:['5812','5814'],settlePeriod:'T2',currency:'HKD'},products:{groups:{POS:true},rates:{'POS|0':{on:true,ct:'Regional',v:{loc_rate:'1.50',crs_rate:'2.50'}}}}}],
+ companies:[
+  {key:'MAIN',role:'parent',values:{merchantName:'示例餐飲主公司',merchantEnglishName:'DEMO RESTAURANT HOLDINGS LIMITED',registerCertNo:'12345678-000-03-26-7',mcc:'5812',mccCodes:['5812','5814']}},
+  {key:'SUB-A',role:'subsidiary',parentKey:'MAIN',values:{merchantName:'示例餐飲子公司甲',merchantEnglishName:'DEMO RESTAURANT A LIMITED',registerCertNo:'12345679-000-03-26-7',mcc:'5812'}},
+  {key:'SUB-B',role:'subsidiary',parentKey:'MAIN',values:{merchantName:'示例餐飲子公司乙',merchantEnglishName:'DEMO RESTAURANT B LIMITED',registerCertNo:'12345680-000-03-26-7',mcc:'5814'}}
+ ]
+};}
+Object.assign(actions,{
+ 'mt-close':mtClose,'mt-library':mtLibrary,'mt-save-open':el=>mtOpenSave(el?.dataset?.id||''),'mt-save':mtSave,
+ 'mt-use':el=>mtOpenApply(false,el.dataset.id),'mt-batch-open':()=>mtOpenApply(true),'mt-batch-template':el=>mtOpenApply(true,el.dataset.id),
+ 'mt-export':el=>{const t=mtTemplates().find(t=>t.id===el.dataset.id);if(t)mtDownload('merchant-template.json',{format:'allinpay.merchant-bundle',version:1,templates:[t],companies:[]});},
+ 'mt-delete':el=>{const t=mtTemplates().find(t=>t.id===el.dataset.id);if(t)mtDialog('刪除模板',`<p>刪除「${esc(t.name)}」？已套用至商戶的設定仍會保留。</p>`,btn('取消','mt-library')+btn('確認刪除','mt-delete-confirm','danger',`data-id="${esc(t.id)}"`));},
+ 'mt-delete-confirm':el=>{try{mtSaveTemplates(mtTemplates().filter(t=>t.id!==el.dataset.id));mtLibrary();}catch(e){mtError(e.message);}},
+ 'mt-apply-preview':()=>{if(!mtFlow?.scopes.length)return mtError('請至少選擇一個套用範圍');mtFlow.preview=true;mtApplyModal();},'mt-preview-back':()=>{mtFlow.preview=false;mtApplyModal();},'mt-apply-confirm':mtConfirmApply,
+ 'mt-target-page':el=>{mtFlow.page=+el.dataset.page;mtApplyModal();},'mt-clear-selected':()=>{mtFlow.selected.clear();mtApplyModal();},
+ 'mt-mcc-remove':el=>{const list=mtMccList().filter(c=>c!==el.dataset.code);state.values.mccCodes=list;if(v2Raw('mcc')===el.dataset.code)state.values.mcc=list[0]||'';v2SyncDerived();render();},
+ 'mt-import-open':mtOpenImport,'mt-import-confirm':mtCommitImport,'mt-csv-download':()=>mtDownload('merchant-import-template.csv',MT.csv([MT.csvHeaders]),'text/csv;charset=utf-8'),
+ 'mt-json-download':()=>mtDownload('merchant-import-example.json',mtJSONExample()),
+ 'mt-open-drafts':()=>{mtClose();go(MT_EXTERNAL?'applications':'drafts');}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='mt-mcc-search'){$$('[data-mt-mcc-option]').forEach(n=>n.hidden=!n.dataset.mtMccOption.toLowerCase().includes(t.value.toLowerCase()));}if(t.id==='mt-target-search'&&mtFlow){mtFlow.query=t.value;mtFlow.page=1;mtRepaint(mtApplyModal);}if(t.dataset.mtRelation==='name'){state.values.__customer??={role:'independent'};state.values.__customer.name=t.value.trim();if(t.value.trim()&&!state.values.__customer.id)state.values.__customer.id='CUS-'+crypto.randomUUID();}});
+document.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.dataset.mtMcc){const list=mtMccList(),code=t.dataset.mtMcc;state.values.mccCodes=t.checked?[...new Set([...list,code])]:list.filter(c=>c!==code);if(!state.values.mccCodes.includes(v2Raw('mcc')))state.values.mcc=state.values.mccCodes[0]||'';v2SyncDerived();render();$('.mt-mcc-picker')?.setAttribute('open','');}
+ if(t.dataset.field==='mcc'){mtSyncMcc();v2SyncDerived();mtRefreshForm();}
+ if(t.dataset.mtRelation){const relation=state.values.__customer??={role:'independent'};if(t.dataset.mtRelation==='customer'){const existing=mtCustomers().find(c=>c.id===t.value);state.values.__customer={id:t.value==='__new'?'CUS-'+crypto.randomUUID():t.value,name:existing?.name||'',role:relation.role||'independent',parentId:''};}else if(t.dataset.mtRelation==='name')relation.name=t.value.trim();else{relation[t.dataset.mtRelation]=t.value;if(t.dataset.mtRelation==='role'&&t.value!=='subsidiary')relation.parentId='';}mtRefreshForm();}
+ if(t.dataset.mtScope&&mtFlow){mtFlow.scopes=t.checked?[...new Set([...mtFlow.scopes,t.dataset.mtScope])]:mtFlow.scopes.filter(s=>s!==t.dataset.mtScope);if(mtFlow.kind!=='save')mtRepaint(mtApplyModal);}
+ if(t.id==='mt-template-select'&&mtFlow){const template=mtTemplates().find(x=>x.id===t.value);mtFlow.templateId=template.id;mtFlow.scopes=template.scopes.filter(s=>s!=='identity');mtApplyModal();}
+ if(t.id==='mt-apply-mode'&&mtFlow)mtFlow.mode=t.value;
+ if(t.dataset.mtTarget&&mtFlow){t.checked?mtFlow.selected.add(t.dataset.mtTarget):mtFlow.selected.delete(t.dataset.mtTarget);mtRepaint(mtApplyModal);}
+ if(t.id==='mt-select-filtered'&&mtFlow){mtFilteredTargets().forEach(x=>t.checked?mtFlow.selected.add(x.key):mtFlow.selected.delete(x.key));mtRepaint(mtApplyModal);}
+ if(t.id==='mt-target-customer'||t.id==='mt-target-role'||t.id==='mt-page-size'){if(!mtFlow)return;if(t.id==='mt-target-customer')mtFlow.customer=t.value;if(t.id==='mt-target-role')mtFlow.role=t.value;if(t.id==='mt-page-size')mtFlow.size=+t.value;mtFlow.page=1;mtRepaint(mtApplyModal);}
+ if(t.id==='mt-import-file')void mtReadImport(t.files?.[0]);
+});
+if(!MT_EXTERNAL){const originalConfirm=actions['confirm-submit'];actions['confirm-submit']=()=>{const before=new Set(rows);originalConfirm();if($('#modal-title')?.textContent!=='申請提交成功')return;const row=rows.find(r=>!before.has(r))||rows.find(r=>rowKey(r)===state.editing);if(row){row['MCC 行業代碼']=mtMccList().join('、');row['行業類型']=state.values.mccName;row.customer=structuredClone(state.values.__customer||null);persistDemo();}};}
+const mtOriginalClose=actions.close;actions.close=()=>{mtImportSequence++;$('#modal').classList.remove('mt-dialog');mtOriginalClose();};
+$('#modal').addEventListener('close',()=>{if(!$('#modal').open)$('#modal').classList.remove('mt-dialog');});
+Object.assign(window.AllinPayDemo,{templateFeatures:true,getTemplateState:()=>({mccCodes:mtMccList(),primaryMcc:v2Raw('mcc'),customer:structuredClone(state.values.__customer||null),templates:mtTemplates().map(t=>({id:t.id,name:t.name,version:t.version,scopes:t.scopes})),targets:mtTargets().map(t=>({key:t.key,id:t.id,name:t.name,customer:structuredClone(t.snapshot.values?.__customer||null),mccCodes:mtMccList(t.snapshot.values),primaryMcc:t.snapshot.values?.mcc||'',template:t.snapshot.values?.__templateApplied||null}))})});
 
 render();
 })();

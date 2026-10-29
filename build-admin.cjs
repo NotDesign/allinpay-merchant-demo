@@ -3,13 +3,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = __dirname;
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
-const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js'].map(read).join('\n');
+const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js','onboarding-usability.js','merchant-template-model.js','merchant-templates.js'].map(read).join('\n');
 const core = read('core.js');
 if (!/render\(\);\s*\}\)\(\);\s*$/.test(core)) throw Error('Missing core entry');
-const app = core.replace(/render\(\);\s*\}\)\(\);\s*$/, () => extension + '\nrender();\n})();');
+const app = read('version-router.js') + '\n' + core.replace(/render\(\);\s*\}\)\(\);\s*$/, () => extension + '\nrender();\n})();');
 fs.writeFileSync(path.join(root, 'app.js'), app);
 let packed = app;
 for (const name of fs.readdirSync(root).filter(n => /\.(png|svg)$/.test(n))) {
+  if (!packed.includes(name)) continue;
   const uri = 'data:' + (name.endsWith('.png') ? 'image/png' : 'image/svg+xml') + ';base64,' + fs.readFileSync(path.join(root,name)).toString('base64');
   packed = packed.split(name).join(uri);
 }

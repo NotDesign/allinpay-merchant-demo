@@ -43,6 +43,7 @@ jobs:
           npm run test:feedback
           npm run test:external
           node verify-internal-review.cjs
+          npm run test:templates
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html
       - name: Check out the immutable October 9 release
@@ -59,6 +60,19 @@ jobs:
           node -p 'JSON.stringify(require("./_pages/version.json"))'
       - name: Add the fixed Demo and ZIP to Pages
         run: node scripts/append-frozen-release.mjs .release-archive/_pages
+      - name: Check out the immutable September 29 application
+        uses: actions/checkout@v4
+        with:
+          ref: ea5722a95692e8ab4119298f0a77a7d931af00fe
+          path: .release-legacy
+      - name: Build and preserve September 29 separately
+        working-directory: .release-legacy
+        run: |
+          npm ci --ignore-scripts
+          npm run setup
+          GITHUB_SHA=391f597dcdbae4a021932ba4ea3db71b31537784 npm run build:pages
+      - name: Add the September 29 Demo and ZIP to Pages
+        run: node scripts/append-frozen-release.mjs .release-legacy/_pages legacy
       - name: Verify both pinned versions and their downloadable ZIPs
         run: node scripts/verify-release.mjs
       - uses: actions/configure-pages@v5
