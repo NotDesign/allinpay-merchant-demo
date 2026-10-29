@@ -5,15 +5,15 @@ function batchDispose(){const b=documentBatch;if(!b)return;b.cancelled=true;b.co
 function batchOpen(){batchDispose();documentBatch={files:[],items:[],failures:[],phase:'upload'};batchUpload();}
 function batchUpload(){const b=documentBatch;b.phase='upload';modal('多文件辨識',
  '<div class="notice">一次加入所有文件，辨識後預覽附件位置及表單欄位，再確認套用。文件只在本瀏覽器處理，不會上傳。</div>'+
- fileDropControl({inputId:'document-batch-files',accept:'.pdf,.png,.jpg,.jpeg,.zip',multiple:true,title:'拖曳一份或多份文件至此',hint:'最多 30 份／合計 100 MB · 每份 10 MB／PDF 5 頁',selected:b.files.length?'已加入 '+b.files.length+' 份文件':''})+
+ fileDropControl({inputId:'document-batch-files',accept:'.pdf,.png,.jpg,.jpeg',multiple:true,title:'拖曳一份或多份文件至此',hint:'最多 30 份／合計 100 MB · 每份 10 MB／PDF 5 頁',selected:b.files.length?'已加入 '+b.files.length+' 份文件':''})+
  '<div class="batch-files">'+b.files.map((f,i)=>'<div class="batch-file"><span>'+esc(f.file.name)+'</span><select aria-label="'+esc(f.file.name)+' 文件類型" data-document-type="'+i+'">'+documentTypes.map(([v,n])=>'<option value="'+v+'" '+(f.type===v?'selected':'')+'>'+n+'</option>').join('')+'</select>'+btn('移除','document-remove','','data-index="'+i+'"')+'</div>').join('')+'</div>'+
- '<p class="hint">按文件內容判斷 BR、CI、銀行月結單等；身份證持有人角色、照片及 ZIP 可能須手動分配。不確定或重複的位置不會自動覆蓋。</p>',
+ '<p class="hint">按文件內容判斷 BR、CI、銀行月結單等；身份證持有人角色、照片 可能須手動分配。不確定或重複的位置不會自動覆蓋。</p>',
  btn('取消','close')+btn('開始辨識','document-recognize','primary',b.files.length?'':'disabled'));}
 function batchAdd(files){
  const b=documentBatch;if(!b||b.phase!=='upload')return;
  if(b.files.length+files.length>30)return toast('每次最多 30 份文件');
  if([...b.files.map(f=>f.file),...files].reduce((n,f)=>n+f.size,0)>100*1048576)return toast('文件合計不可超過 100 MB');
- if(files.some(f=>!f.size||f.size>10485760||!/\.(pdf|png|jpe?g|zip)$/i.test(f.name)))return toast('請選擇非空白、10 MB 以下 PDF／PNG／JPG／ZIP；原有清單不受影響');
+ if(files.some(f=>!f.size||f.size>10485760||!/\.(pdf|png|jpe?g)$/i.test(f.name)))return toast('請選擇非空白、10 MB 以下 PDF／PNG／JPG；原有清單不受影響');
  for(const file of files)b.files.push({file,type:'AUTO',url:URL.createObjectURL(file),destination:'',include:false,replace:false});batchUpload();
 }
 async function batchRecognize(){
@@ -24,7 +24,6 @@ async function batchRecognize(){
   for(let i=0;i<b.files.length;i++){
    if(b.cancelled)return;const entry=b.files[i];entry.text=[];let doc;const classifications=[];
    try{
-    if(/\.zip$/i.test(entry.file.name)){entry.reason='ZIP 不自動解壓或辨識，請選擇附件位置';continue;}
     doc=await engine.loadDocument(entry.file);
     for(let p=1;p<=doc.pages;p++){
      if(b.cancelled)return;let view;
@@ -86,12 +85,12 @@ function batchApply(){
  try{
   const selected=b.items.filter(o=>o.selected),files=b.files.filter(f=>f.include);
   for(const o of selected){if(o.key.startsWith('directors[0]'))state.people.directors=Math.max(1,state.people.directors);state.values[o.key]=o.value;v2Model().ocr.push({key:o.key,value:o.value,source:o.source,step:o.step,applied:o.value,method:o.method,confidence:o.confidence});}
-  for(const f of files){const id=f.destination,url=URL.createObjectURL(f.file);changed.push({id,url,old:DEMO.fileURLs.get(id)});DEMO.fileURLs.set(id,url);state.files[id]={name:f.file.name,size:f.file.size,type:f.file.type,demo:false,needsReselect:false};}
+  for(const f of files){const id=f.destination,url=URL.createObjectURL(f.file);changed.push({id,url,old:DEMO.fileURLs.get(id),oldSource:DEMO.sourceFiles?.get(id)});DEMO.fileURLs.set(id,url);(DEMO.sourceFiles??=new Map()).set(id,{file:f.file,url});state.files[id]={name:f.file.name,size:f.file.size,type:f.file.type,demo:false,needsReselect:false};}
   v2SyncDerived();const done=[...files.map(f=>batchDocName(f.destination)+'：'+f.file.name),...selected.map(o=>v2Label(o.key)+'：'+v2Display(o.key,o.value))],pending=[...b.files.filter(f=>!f.include).map(f=>f.file.name+'：尚未加入附件位置'),...b.items.filter(o=>!o.selected).map(o=>v2Label(o.key)+'：'+o.value)],failures=[...b.failures];
   render();v2ImportResult(done,pending,failures);$('#modal .v2-import-success h3').textContent='完成匯入 · '+files.length+' 份文件、'+selected.length+' 個欄位';$('#modal .v2-import-pending h3').textContent='仍待核對 · '+pending.length+' 個項目未帶入';for(const x of changed)if(x.old)URL.revokeObjectURL(x.old);batchDispose();
- }catch(error){state.values=before;state.files=beforeFiles;state.people=beforePeople;for(const x of changed){URL.revokeObjectURL(x.url);if(x.old)DEMO.fileURLs.set(x.id,x.old);else DEMO.fileURLs.delete(x.id);}modal('資料寫入失敗','<p>已還原原有資料及附件，請重新核對。</p>',btn('返回核對','document-review','primary'));}
+ }catch(error){state.values=before;state.files=beforeFiles;state.people=beforePeople;for(const x of changed){URL.revokeObjectURL(x.url);if(x.old)DEMO.fileURLs.set(x.id,x.old);else DEMO.fileURLs.delete(x.id);if(x.oldSource)DEMO.sourceFiles.set(x.id,x.oldSource);else DEMO.sourceFiles?.delete(x.id);}modal('資料寫入失敗','<p>已還原原有資料及附件，請重新核對。</p>',btn('返回核對','document-review','primary'));}
 }
-Object.assign(actions,{'v2-ocr':batchOpen,'document-recognize':batchRecognize,'document-ready':batchReady,'document-apply':batchApply,'document-review':()=>batchReview(),'document-remove':el=>{const f=documentBatch.files.splice(+el.dataset.index,1)[0];URL.revokeObjectURL(f.url);batchUpload();},'document-source':el=>{const f=documentBatch.files[+el.dataset.index];modal('原始文件與辨識文字','<p>'+esc(f.file.name)+'</p>'+(/\.pdf$/i.test(f.file.name)?'<iframe class="batch-preview" title="原始 PDF" src="'+f.url+'"></iframe>':/\.(png|jpe?g)$/i.test(f.file.name)?'<img class="batch-preview" alt="原始文件" src="'+f.url+'">':'<p>ZIP 不在瀏覽器解壓，請在本機查看。</p>')+'<details><summary>查看辨識文字（只保留於記憶體）</summary><pre class="batch-text">'+esc((f.text||[]).join('\n\n'))+'</pre></details>',btn('返回核對','document-review','primary'));}});
+Object.assign(actions,{'v2-ocr':batchOpen,'document-recognize':batchRecognize,'document-ready':batchReady,'document-apply':batchApply,'document-review':()=>batchReview(),'document-remove':el=>{const f=documentBatch.files.splice(+el.dataset.index,1)[0];URL.revokeObjectURL(f.url);batchUpload();},'document-source':el=>{const f=documentBatch.files[+el.dataset.index];modal('原始文件與辨識文字','<p>'+esc(f.file.name)+'</p>'+(/\.pdf$/i.test(f.file.name)?'<iframe class="batch-preview" title="原始 PDF" src="'+f.url+'"></iframe>':/\.(png|jpe?g)$/i.test(f.file.name)?'<img class="batch-preview" alt="原始文件" src="'+f.url+'">':'<p>此文件無法預覽。</p>')+'<details><summary>查看辨識文字（只保留於記憶體）</summary><pre class="batch-text">'+esc((f.text||[]).join('\n\n'))+'</pre></details>',btn('返回核對','document-review','primary'));}});
 document.addEventListener('change',e=>{const t=e.target,b=documentBatch;if(t.id==='document-batch-files')batchAdd([...t.files]);if(!b)return;if(t.dataset.documentType!==undefined)b.files[+t.dataset.documentType].type=t.value;if(t.dataset.documentSelect!==undefined)b.items[+t.dataset.documentSelect].selected=t.checked;if(t.dataset.documentReplace!==undefined)b.items[+t.dataset.documentReplace].replace=t.checked;if(t.dataset.documentDestination!==undefined){const f=b.files[+t.dataset.documentDestination];f.destination=t.value;f.include=!!t.value;f.replace=false;batchReview();}if(t.dataset.documentInclude!==undefined)b.files[+t.dataset.documentInclude].include=t.checked;if(t.dataset.documentFileReplace!==undefined)b.files[+t.dataset.documentFileReplace].replace=t.checked;});
 document.addEventListener('input',e=>{if(e.target.dataset.documentValue!==undefined)documentBatch.items[+e.target.dataset.documentValue].value=e.target.value;});
 $('#modal').addEventListener('close',()=>{if(documentBatch){batchDispose();render();}});

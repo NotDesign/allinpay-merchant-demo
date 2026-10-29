@@ -120,7 +120,8 @@
     const customerId=text(entry.customerId||input.customer?.id),customerName=text(entry.customerName||input.customer?.name);
     const templateName=text(entry.templateName||input.defaultTemplate);
     if(templateName&&![...templates,...knownTemplates].some(t=>t.name===templateName))throw Error(key+' 找不到參數模板：'+templateName);
-    return {key,values,products:cleanProducts(entry.products),customerId:customerId||customerName,customerName:customerName||customerId,role,parentKey:text(entry.parentKey),templateName};
+    const people={};for(const group of ['directors','authSigners','shareHolders']){const inferred=Object.keys(values).filter(k=>k.startsWith(group+'[')).map(k=>Number(k.match(/\[(\d+)\]/)[1])+1);people[group]=Math.max(group==='directors'?1:0,Number(entry.people?.[group])||0,...inferred);if(!Number.isInteger(people[group])||people[group]>20)throw Error('每種人員類型最多 20 人');}
+    return {key,values,people,products:cleanProducts(entry.products),customerId:customerId||customerName,customerName:customerName||customerId,role,parentKey:text(entry.parentKey),templateName};
    });
    const byKey=new Map(companies.map(c=>[c.key,c]));
    for(const c of companies){

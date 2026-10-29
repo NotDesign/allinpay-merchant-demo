@@ -24,12 +24,12 @@ v2Documents=function(){return feedbackDocuments()
  .replaceAll(' · 示例信心 ',' · 辨識信心 ');};
 const feedbackReview=v2Review;
 v2Review=function(){return feedbackReview().replace('✓ 文件已備妥','文件為選填').replace('條件文件','選填文件');};
-uploadRow=function(d){const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id];return `<div class="upload-row" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已選取':'選填',f?'green':'gray')}</div><p class="hint">${esc(d.hint)}</p>${fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png,.zip',hint:'PDF／JPG／PNG／ZIP · 每份上限 10 MB',selected:f?f.name+(f.needsReselect?' · 請重新選取':' · 僅本機'):'',attributes:`data-demo-upload="${d.id}"`})}${error?`<p class="error">${esc(error)}</p>`:''}${f?`<div class="upload-actions">${btn('預覽','preview-demo-file','',`data-id="${d.id}"`)+btn('移除',actions['document-remove-file']?'document-remove-file':'remove-file','danger',`data-id="${d.id}"`)}</div>`:''}</div>`;};
+uploadRow=function(d){const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id];return `<div class="upload-row" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已選取':'選填',f?'green':'gray')}</div><p class="hint">${esc(d.hint)}</p>${fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png',hint:'PDF／JPG／PNG · 每份上限 10 MB',selected:f?f.name+(f.needsReselect?' · 請重新選取':' · 僅本機'):'',attributes:`data-demo-upload="${d.id}"`})}${error?`<p class="error">${esc(error)}</p>`:''}${f?`<div class="upload-actions">${btn('預覽','preview-demo-file','',`data-id="${d.id}"`)+btn('移除',actions['document-remove-file']?'document-remove-file':'remove-file','danger',`data-id="${d.id}"`)}</div>`:''}</div>`;};
 function acceptDocumentFile(id,files){
   if(files.length!==1)return toast('每個上傳位置接受一份文件；多頁可合併 PDF，多文件辨識請使用上方按鈕。');
-  const f=files[0];if(!f||!f.size||f.size>10485760||!/\.(pdf|png|jpe?g|zip)$/i.test(f.name))return modal('文件格式不符','<p>請選擇非空白、10 MB 以下的 PDF／JPG／PNG／ZIP。原有文件不受影響。</p>');
+  const f=files[0];if(!f||!f.size||f.size>10485760||!/\.(pdf|png|jpe?g)$/i.test(f.name))return modal('文件格式不符','<p>請選擇非空白、10 MB 以下的 PDF／JPG／PNG。原有文件不受影響。</p>');
   const old=DEMO.fileURLs.get(id);if(old)URL.revokeObjectURL(old);
-  DEMO.fileURLs.set(id,URL.createObjectURL(f));state.files[id]={name:f.name,size:f.size,type:f.type,demo:false,needsReselect:false};delete state.errors['file-'+id];render();toast('已選取文件，沒有上傳至伺服器');
+  const url=URL.createObjectURL(f);DEMO.fileURLs.set(id,url);(DEMO.sourceFiles??=new Map()).set(id,{file:f,url});state.files[id]={name:f.name,size:f.size,type:f.type,demo:false,needsReselect:false};delete state.errors['file-'+id];render();toast('文件已上傳至 Demo，僅保留於本機');
 }
 // Capture makes the picker and drag/drop use exactly the same validation path.
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.demoUpload){e.stopImmediatePropagation();acceptDocumentFile(t.dataset.demoUpload,[...t.files]);}},true);

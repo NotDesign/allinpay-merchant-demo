@@ -869,12 +869,12 @@ async function brReady(){
 function brApply(){
   const b=DEMO.br;if(!brAlive(b)||!b.confirmed||b.phase!=='ready')return;
   if(state.fail)return brModal('資料寫入失敗','<div class="notice error">這次資料尚未寫入，原有申請內容已保留。</div><p>本頁仍保留核對結果。關閉失敗模擬後可重試。</p>',btn('取消','close')+btn('返回核對','br-return')+btn('關閉失敗模擬並重試','br-retry','primary'),'failure');
-  const plans=brPlan(b),before=structuredClone(state.values),files=structuredClone(state.files);let fileURL;
+  const plans=brPlan(b),before=structuredClone(state.values),files=structuredClone(state.files),previousURL=DEMO.fileURLs.get('140101'),previousSource=DEMO.sourceFiles?.get('140101');let fileURL;
   try{
     const apply=plans.filter(p=>p.write);for(const p of apply)state.values[p.target]=p.value;
     const oldLog=v2Model().ocr.filter(o=>!apply.some(p=>p.target===o.key));
     v2Model().ocr=[...oldLog,...apply.map(p=>({key:p.target,value:p.value,applied:p.value,source:b.demo?'BR 虛構示例':'BR · 本機辨識 · 第 '+b.pageNumber+' 頁',step:p.step,confidence:null,selected:true,method:b.result.method}))];
-    if(b.file){fileURL=URL.createObjectURL(b.file);state.files['140101']={name:b.file.name,size:b.file.size,type:b.file.type,demo:false,needsReselect:false,page:b.pageNumber};}
+    if(b.file){fileURL=URL.createObjectURL(b.file);DEMO.fileURLs.set('140101',fileURL);(DEMO.sourceFiles??=new Map()).set('140101',{file:b.file,url:fileURL});state.files['140101']={name:b.file.name,size:b.file.size,type:b.file.type,demo:false,needsReselect:false,page:b.pageNumber};}
     else if(!state.files['140101'])state.files['140101']={name:'SAMPLE-BR.pdf',size:0,demo:true};
     v2SyncDerived();state.errors={};state.savedAt=null;
     b.applied=true;b.phase='result';b.imported=apply.map(p=>p.label+'：'+v2Display(p.target,p.value));
@@ -882,8 +882,8 @@ function brApply(){
     for(const [k,l]of brDefs)if(!b.selected.has(k)&&brValue(k))b.pending.push(l+'：未選取，待核對');
     b.unrecognized=brDefs.filter(([k])=>!brValue(k)).map(([,l])=>l+'：未取得候選值');
     render();v2ImportResult(b.imported,b.pending,b.unrecognized,'close',plans.filter(p=>p.same));$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;
-    if(fileURL){const previous=DEMO.fileURLs.get('140101');DEMO.fileURLs.set('140101',fileURL);if(previous)URL.revokeObjectURL(previous);}
-  }catch(e){b.phase='ready';b.applied=false;state.values=before;state.files=files;if(fileURL)URL.revokeObjectURL(fileURL);brModal('資料寫入失敗','<div class="notice error">未能完成套用，已還原申請資料。請重試或返回核對。</div>',btn('取消','close')+btn('返回核對','br-return')+btn('重試寫入','br-apply','primary'),'failure');}
+    if(fileURL&&previousURL)URL.revokeObjectURL(previousURL);
+  }catch(e){b.phase='ready';b.applied=false;state.values=before;state.files=files;if(fileURL){URL.revokeObjectURL(fileURL);if(previousURL)DEMO.fileURLs.set('140101',previousURL);else DEMO.fileURLs.delete('140101');if(previousSource)DEMO.sourceFiles.set('140101',previousSource);else DEMO.sourceFiles?.delete('140101');}brModal('資料寫入失敗','<div class="notice error">未能完成套用，已還原申請資料。請重試或返回核對。</div>',btn('取消','close')+btn('返回核對','br-return')+btn('重試寫入','br-apply','primary'),'failure');}
 }
 Object.assign(actions,{'br-start':brStart,'br-recognize':()=>void brRecognize(),'br-ready':()=>void brReady(),'br-return':()=>brReview(),'br-apply':brApply,'br-retry':()=>{state.fail=false;brApply();},'br-cancel':()=>DEMO.br?.controller?.abort()});
 document.addEventListener('change',e=>{const el=e.target;
@@ -1051,12 +1051,12 @@ v2Documents=function(){return feedbackDocuments()
  .replaceAll(' · 示例信心 ',' · 辨識信心 ');};
 const feedbackReview=v2Review;
 v2Review=function(){return feedbackReview().replace('✓ 文件已備妥','文件為選填').replace('條件文件','選填文件');};
-uploadRow=function(d){const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id];return `<div class="upload-row" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已選取':'選填',f?'green':'gray')}</div><p class="hint">${esc(d.hint)}</p>${fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png,.zip',hint:'PDF／JPG／PNG／ZIP · 每份上限 10 MB',selected:f?f.name+(f.needsReselect?' · 請重新選取':' · 僅本機'):'',attributes:`data-demo-upload="${d.id}"`})}${error?`<p class="error">${esc(error)}</p>`:''}${f?`<div class="upload-actions">${btn('預覽','preview-demo-file','',`data-id="${d.id}"`)+btn('移除',actions['document-remove-file']?'document-remove-file':'remove-file','danger',`data-id="${d.id}"`)}</div>`:''}</div>`;};
+uploadRow=function(d){const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id];return `<div class="upload-row" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已選取':'選填',f?'green':'gray')}</div><p class="hint">${esc(d.hint)}</p>${fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png',hint:'PDF／JPG／PNG · 每份上限 10 MB',selected:f?f.name+(f.needsReselect?' · 請重新選取':' · 僅本機'):'',attributes:`data-demo-upload="${d.id}"`})}${error?`<p class="error">${esc(error)}</p>`:''}${f?`<div class="upload-actions">${btn('預覽','preview-demo-file','',`data-id="${d.id}"`)+btn('移除',actions['document-remove-file']?'document-remove-file':'remove-file','danger',`data-id="${d.id}"`)}</div>`:''}</div>`;};
 function acceptDocumentFile(id,files){
   if(files.length!==1)return toast('每個上傳位置接受一份文件；多頁可合併 PDF，多文件辨識請使用上方按鈕。');
-  const f=files[0];if(!f||!f.size||f.size>10485760||!/\.(pdf|png|jpe?g|zip)$/i.test(f.name))return modal('文件格式不符','<p>請選擇非空白、10 MB 以下的 PDF／JPG／PNG／ZIP。原有文件不受影響。</p>');
+  const f=files[0];if(!f||!f.size||f.size>10485760||!/\.(pdf|png|jpe?g)$/i.test(f.name))return modal('文件格式不符','<p>請選擇非空白、10 MB 以下的 PDF／JPG／PNG。原有文件不受影響。</p>');
   const old=DEMO.fileURLs.get(id);if(old)URL.revokeObjectURL(old);
-  DEMO.fileURLs.set(id,URL.createObjectURL(f));state.files[id]={name:f.name,size:f.size,type:f.type,demo:false,needsReselect:false};delete state.errors['file-'+id];render();toast('已選取文件，沒有上傳至伺服器');
+  const url=URL.createObjectURL(f);DEMO.fileURLs.set(id,url);(DEMO.sourceFiles??=new Map()).set(id,{file:f,url});state.files[id]={name:f.name,size:f.size,type:f.type,demo:false,needsReselect:false};delete state.errors['file-'+id];render();toast('文件已上傳至 Demo，僅保留於本機');
 }
 // Capture makes the picker and drag/drop use exactly the same validation path.
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.demoUpload){e.stopImmediatePropagation();acceptDocumentFile(t.dataset.demoUpload,[...t.files]);}},true);
@@ -1072,15 +1072,15 @@ function batchDispose(){const b=documentBatch;if(!b)return;b.cancelled=true;b.co
 function batchOpen(){batchDispose();documentBatch={files:[],items:[],failures:[],phase:'upload'};batchUpload();}
 function batchUpload(){const b=documentBatch;b.phase='upload';modal('多文件辨識',
  '<div class="notice">一次加入所有文件，辨識後預覽附件位置及表單欄位，再確認套用。文件只在本瀏覽器處理，不會上傳。</div>'+
- fileDropControl({inputId:'document-batch-files',accept:'.pdf,.png,.jpg,.jpeg,.zip',multiple:true,title:'拖曳一份或多份文件至此',hint:'最多 30 份／合計 100 MB · 每份 10 MB／PDF 5 頁',selected:b.files.length?'已加入 '+b.files.length+' 份文件':''})+
+ fileDropControl({inputId:'document-batch-files',accept:'.pdf,.png,.jpg,.jpeg',multiple:true,title:'拖曳一份或多份文件至此',hint:'最多 30 份／合計 100 MB · 每份 10 MB／PDF 5 頁',selected:b.files.length?'已加入 '+b.files.length+' 份文件':''})+
  '<div class="batch-files">'+b.files.map((f,i)=>'<div class="batch-file"><span>'+esc(f.file.name)+'</span><select aria-label="'+esc(f.file.name)+' 文件類型" data-document-type="'+i+'">'+documentTypes.map(([v,n])=>'<option value="'+v+'" '+(f.type===v?'selected':'')+'>'+n+'</option>').join('')+'</select>'+btn('移除','document-remove','','data-index="'+i+'"')+'</div>').join('')+'</div>'+
- '<p class="hint">按文件內容判斷 BR、CI、銀行月結單等；身份證持有人角色、照片及 ZIP 可能須手動分配。不確定或重複的位置不會自動覆蓋。</p>',
+ '<p class="hint">按文件內容判斷 BR、CI、銀行月結單等；身份證持有人角色、照片 可能須手動分配。不確定或重複的位置不會自動覆蓋。</p>',
  btn('取消','close')+btn('開始辨識','document-recognize','primary',b.files.length?'':'disabled'));}
 function batchAdd(files){
  const b=documentBatch;if(!b||b.phase!=='upload')return;
  if(b.files.length+files.length>30)return toast('每次最多 30 份文件');
  if([...b.files.map(f=>f.file),...files].reduce((n,f)=>n+f.size,0)>100*1048576)return toast('文件合計不可超過 100 MB');
- if(files.some(f=>!f.size||f.size>10485760||!/\.(pdf|png|jpe?g|zip)$/i.test(f.name)))return toast('請選擇非空白、10 MB 以下 PDF／PNG／JPG／ZIP；原有清單不受影響');
+ if(files.some(f=>!f.size||f.size>10485760||!/\.(pdf|png|jpe?g)$/i.test(f.name)))return toast('請選擇非空白、10 MB 以下 PDF／PNG／JPG；原有清單不受影響');
  for(const file of files)b.files.push({file,type:'AUTO',url:URL.createObjectURL(file),destination:'',include:false,replace:false});batchUpload();
 }
 async function batchRecognize(){
@@ -1091,7 +1091,6 @@ async function batchRecognize(){
   for(let i=0;i<b.files.length;i++){
    if(b.cancelled)return;const entry=b.files[i];entry.text=[];let doc;const classifications=[];
    try{
-    if(/\.zip$/i.test(entry.file.name)){entry.reason='ZIP 不自動解壓或辨識，請選擇附件位置';continue;}
     doc=await engine.loadDocument(entry.file);
     for(let p=1;p<=doc.pages;p++){
      if(b.cancelled)return;let view;
@@ -1153,12 +1152,12 @@ function batchApply(){
  try{
   const selected=b.items.filter(o=>o.selected),files=b.files.filter(f=>f.include);
   for(const o of selected){if(o.key.startsWith('directors[0]'))state.people.directors=Math.max(1,state.people.directors);state.values[o.key]=o.value;v2Model().ocr.push({key:o.key,value:o.value,source:o.source,step:o.step,applied:o.value,method:o.method,confidence:o.confidence});}
-  for(const f of files){const id=f.destination,url=URL.createObjectURL(f.file);changed.push({id,url,old:DEMO.fileURLs.get(id)});DEMO.fileURLs.set(id,url);state.files[id]={name:f.file.name,size:f.file.size,type:f.file.type,demo:false,needsReselect:false};}
+  for(const f of files){const id=f.destination,url=URL.createObjectURL(f.file);changed.push({id,url,old:DEMO.fileURLs.get(id),oldSource:DEMO.sourceFiles?.get(id)});DEMO.fileURLs.set(id,url);(DEMO.sourceFiles??=new Map()).set(id,{file:f.file,url});state.files[id]={name:f.file.name,size:f.file.size,type:f.file.type,demo:false,needsReselect:false};}
   v2SyncDerived();const done=[...files.map(f=>batchDocName(f.destination)+'：'+f.file.name),...selected.map(o=>v2Label(o.key)+'：'+v2Display(o.key,o.value))],pending=[...b.files.filter(f=>!f.include).map(f=>f.file.name+'：尚未加入附件位置'),...b.items.filter(o=>!o.selected).map(o=>v2Label(o.key)+'：'+o.value)],failures=[...b.failures];
   render();v2ImportResult(done,pending,failures);$('#modal .v2-import-success h3').textContent='完成匯入 · '+files.length+' 份文件、'+selected.length+' 個欄位';$('#modal .v2-import-pending h3').textContent='仍待核對 · '+pending.length+' 個項目未帶入';for(const x of changed)if(x.old)URL.revokeObjectURL(x.old);batchDispose();
- }catch(error){state.values=before;state.files=beforeFiles;state.people=beforePeople;for(const x of changed){URL.revokeObjectURL(x.url);if(x.old)DEMO.fileURLs.set(x.id,x.old);else DEMO.fileURLs.delete(x.id);}modal('資料寫入失敗','<p>已還原原有資料及附件，請重新核對。</p>',btn('返回核對','document-review','primary'));}
+ }catch(error){state.values=before;state.files=beforeFiles;state.people=beforePeople;for(const x of changed){URL.revokeObjectURL(x.url);if(x.old)DEMO.fileURLs.set(x.id,x.old);else DEMO.fileURLs.delete(x.id);if(x.oldSource)DEMO.sourceFiles.set(x.id,x.oldSource);else DEMO.sourceFiles?.delete(x.id);}modal('資料寫入失敗','<p>已還原原有資料及附件，請重新核對。</p>',btn('返回核對','document-review','primary'));}
 }
-Object.assign(actions,{'v2-ocr':batchOpen,'document-recognize':batchRecognize,'document-ready':batchReady,'document-apply':batchApply,'document-review':()=>batchReview(),'document-remove':el=>{const f=documentBatch.files.splice(+el.dataset.index,1)[0];URL.revokeObjectURL(f.url);batchUpload();},'document-source':el=>{const f=documentBatch.files[+el.dataset.index];modal('原始文件與辨識文字','<p>'+esc(f.file.name)+'</p>'+(/\.pdf$/i.test(f.file.name)?'<iframe class="batch-preview" title="原始 PDF" src="'+f.url+'"></iframe>':/\.(png|jpe?g)$/i.test(f.file.name)?'<img class="batch-preview" alt="原始文件" src="'+f.url+'">':'<p>ZIP 不在瀏覽器解壓，請在本機查看。</p>')+'<details><summary>查看辨識文字（只保留於記憶體）</summary><pre class="batch-text">'+esc((f.text||[]).join('\n\n'))+'</pre></details>',btn('返回核對','document-review','primary'));}});
+Object.assign(actions,{'v2-ocr':batchOpen,'document-recognize':batchRecognize,'document-ready':batchReady,'document-apply':batchApply,'document-review':()=>batchReview(),'document-remove':el=>{const f=documentBatch.files.splice(+el.dataset.index,1)[0];URL.revokeObjectURL(f.url);batchUpload();},'document-source':el=>{const f=documentBatch.files[+el.dataset.index];modal('原始文件與辨識文字','<p>'+esc(f.file.name)+'</p>'+(/\.pdf$/i.test(f.file.name)?'<iframe class="batch-preview" title="原始 PDF" src="'+f.url+'"></iframe>':/\.(png|jpe?g)$/i.test(f.file.name)?'<img class="batch-preview" alt="原始文件" src="'+f.url+'">':'<p>此文件無法預覽。</p>')+'<details><summary>查看辨識文字（只保留於記憶體）</summary><pre class="batch-text">'+esc((f.text||[]).join('\n\n'))+'</pre></details>',btn('返回核對','document-review','primary'));}});
 document.addEventListener('change',e=>{const t=e.target,b=documentBatch;if(t.id==='document-batch-files')batchAdd([...t.files]);if(!b)return;if(t.dataset.documentType!==undefined)b.files[+t.dataset.documentType].type=t.value;if(t.dataset.documentSelect!==undefined)b.items[+t.dataset.documentSelect].selected=t.checked;if(t.dataset.documentReplace!==undefined)b.items[+t.dataset.documentReplace].replace=t.checked;if(t.dataset.documentDestination!==undefined){const f=b.files[+t.dataset.documentDestination];f.destination=t.value;f.include=!!t.value;f.replace=false;batchReview();}if(t.dataset.documentInclude!==undefined)b.files[+t.dataset.documentInclude].include=t.checked;if(t.dataset.documentFileReplace!==undefined)b.files[+t.dataset.documentFileReplace].replace=t.checked;});
 document.addEventListener('input',e=>{if(e.target.dataset.documentValue!==undefined)documentBatch.items[+e.target.dataset.documentValue].value=e.target.value;});
 $('#modal').addEventListener('close',()=>{if(documentBatch){batchDispose();render();}});
@@ -1206,6 +1205,20 @@ const usabilityOriginalReview=v2Review;
 v2Review=()=>usabilityOriginalReview().replace('✓ 電郵已驗證（模擬）','✓ 聯絡資料已填寫');
 const usabilityOriginalPeople=v2PersonSection;
 v2PersonSection=section=>usabilityOriginalPeople(section).replace(section.fields[0]?.id.startsWith('authSigners')?'董事修改時同步更新；取消勾選可獨立修改。':'__no_replacement__','身分資料跟隨董事；出生日期可獨立修改。');
+// Summarize optional document information without repeating full-width empty cards.
+const usabilityOriginalDocuments=v2Documents;
+v2Documents=function(){
+ const template=document.createElement('template');template.innerHTML=usabilityOriginalDocuments().replaceAll('PDF／JPG／PNG／ZIP','PDF／JPG／PNG').replaceAll('PDF／ZIP','PDF');
+ const ocr=template.content.querySelector('[data-section="辨識結果及來源"]'),consistency=template.content.querySelector('[data-section="資料一致性檢查"]'),provided=template.content.querySelector('[data-section="文件提供狀態"],[data-section="必交文件檢查"]');
+ const log=v2Model().ocr,list=v2Consistency(),pending=list.filter(c=>!c.same&&!c.confirmed),selected=Object.keys(state.files).length;
+ const cards=[];
+ function detail(card,title,badge,color,open=false){if(!card)return '';card.querySelector('h2')?.remove();card.querySelector(':scope > p.hint')?.remove();return `<details class="mt-document-detail ${open?'needs-review':''}" ${open?'open':''}><summary><strong>${title}</strong>${pill(badge,color)}</summary><div class="mt-document-detail-body">${card.innerHTML}</div></details>`;}
+ if(log.length)cards.push(detail(ocr,'辨識結果及來源',log.filter(o=>o.applied).length+'／'+log.length+' 已套用','blue'));
+ if(list.length)cards.push(detail(consistency,'資料一致性檢查',pending.length?pending.length+' 項待核對':list.length+' 項已核對',pending.length?'amber':'green',!!pending.length));
+ const notice=`<div class="mt-document-notice" role="status"><strong>文件為選填</strong><span>已選 ${selected} 份 · 未提供不會阻擋下一步</span><small>辨識只在本機處理；核對並勾選後才帶入表單。</small></div>`;
+ const marker=document.createElement('div');marker.className='mt-document-status';marker.innerHTML=notice+(cards.length?'<div class="mt-document-status-grid">'+cards.join('')+'</div>':'');
+ (ocr||consistency||provided)?.before(marker);ocr?.remove();consistency?.remove();provided?.remove();return template.innerHTML;
+};
 
 /* Shared, versioned merchant-template and import model. No browser/storage APIs. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.MerchantTemplateModel=api;})(globalThis,function(){
@@ -1329,7 +1342,8 @@ v2PersonSection=section=>usabilityOriginalPeople(section).replace(section.fields
     const customerId=text(entry.customerId||input.customer?.id),customerName=text(entry.customerName||input.customer?.name);
     const templateName=text(entry.templateName||input.defaultTemplate);
     if(templateName&&![...templates,...knownTemplates].some(t=>t.name===templateName))throw Error(key+' 找不到參數模板：'+templateName);
-    return {key,values,products:cleanProducts(entry.products),customerId:customerId||customerName,customerName:customerName||customerId,role,parentKey:text(entry.parentKey),templateName};
+    const people={};for(const group of ['directors','authSigners','shareHolders']){const inferred=Object.keys(values).filter(k=>k.startsWith(group+'[')).map(k=>Number(k.match(/\[(\d+)\]/)[1])+1);people[group]=Math.max(group==='directors'?1:0,Number(entry.people?.[group])||0,...inferred);if(!Number.isInteger(people[group])||people[group]>20)throw Error('每種人員類型最多 20 人');}
+    return {key,values,people,products:cleanProducts(entry.products),customerId:customerId||customerName,customerName:customerName||customerId,role,parentKey:text(entry.parentKey),templateName};
    });
    const byKey=new Map(companies.map(c=>[c.key,c]));
    for(const c of companies){
@@ -1346,7 +1360,9 @@ v2PersonSection=section=>usabilityOriginalPeople(section).replace(section.fields
 // Shared onboarding tools: MCC, company relationships, templates and batch import.
 const MT=MerchantTemplateModel.create(V2),MT_EXTERNAL=!!window.AllinPayDemo.external;
 const MT_KEY='allinpay-merchant-templates-v1';
+const MT_CUSTOMERS_KEY='allinpay-customer-groups-v1';
 let mtFlow=null,mtImport=null,mtImportSequence=0;
+let mtNewCustomer=false;
 let mtRenderPending=false;
 function mtRefreshForm(){if(mtRenderPending)return;mtRenderPending=true;queueMicrotask(()=>{mtRenderPending=false;if(route().page==='application')render();});}
 const mtOwner=()=>MT_EXTERNAL?(state.session&&state.email?'external:'+state.email.toLowerCase():''):(BO.user?'backoffice:'+BO.user.id:'');
@@ -1379,13 +1395,25 @@ v2SmeOptions=function(brand){const list=mtMccList().map(Number),rules=V2.catalog
 const mtOriginalField=v2Field;
 v2Field=function(f,index=0,linked=false){
  const original=mtOriginalField(f,index,linked);if(f.id!=='mcc'||!original)return original;
- const list=mtMccList(),extra=`<div class="mt-mcc-chips" aria-label="已選 MCC">${list.map(code=>`<span>${esc(code)}${code===v2Raw('mcc')?' · 主要':''}${btn('×','mt-mcc-remove','',`data-code="${esc(code)}" aria-label="移除 MCC ${esc(code)}"`)}</span>`).join('')}</div><details class="mt-mcc-picker"><summary>複選 MCC <span>已選 ${list.length} 個</span></summary><label for="mt-mcc-search" class="sr-only">搜尋 MCC 代碼或行業名稱</label><input id="mt-mcc-search" placeholder="搜尋代碼或行業名稱" autocomplete="off"><div class="mt-mcc-options">${V2.catalog.MCCS.map(m=>`<label class="check" data-mt-mcc-option="${m.c} ${esc(m.n)}"><input type="checkbox" data-mt-mcc="${m.c}" ${list.includes(m.c)?'checked':''}><span>${m.c} · ${esc(m.n)}</span></label>`).join('')}</div></details><small class="hint">上方為主要 MCC；可複選其他代碼。風控參考採所選代碼中最高風險，特計方案須同時適用所選代碼。</small>`;
- return original.replace('MCC 行業代碼','MCC 行業代碼（主要）').replace(/(<input[^>]*data-field="mcc"[^>]*>)/,`$1${extra}`);
+ const list=mtMccList(),error=state.errors.mcc;
+ return `<div class="field mt-mcc-field ${error?'invalid':''}" data-field-wrap="mcc"><label id="mt-mcc-label">MCC 行業代碼 <span class="required">*</span><span class="en">Merchant Category Code</span></label><details class="mt-mcc-picker"><summary id="field-mcc" aria-labelledby="mt-mcc-label mt-mcc-value"><span id="mt-mcc-value">${list.length?'已選 '+list.length+' 個 MCC':'請選擇 MCC（可複選）'}</span><span class="mt-mcc-arrow" aria-hidden="true"></span></summary><div class="mt-mcc-panel"><label for="mt-mcc-search" class="sr-only">搜尋 MCC 代碼或行業名稱</label><input id="mt-mcc-search" placeholder="搜尋代碼或行業名稱" autocomplete="off"><div class="mt-mcc-options" role="group" aria-label="MCC 複選選項">${mtMccOptions()}</div><div class="mt-mcc-panel-foot"><small>可連續勾選，第一個為主要代碼</small>${btn('完成','mt-mcc-done')}</div></div></details><div class="mt-mcc-chips" aria-label="已選 MCC">${list.map(code=>`<span>${code===v2Raw('mcc')?`<strong>${esc(code)} · 主要</strong>`:btn(esc(code),'mt-mcc-primary','',`data-code="${esc(code)}" aria-label="設 ${esc(code)} 為主要 MCC"`)}${btn('×','mt-mcc-remove','',`data-code="${esc(code)}" aria-label="移除 MCC ${esc(code)}"`)}</span>`).join('')}</div><small class="hint">風控參考採最高風險；特計方案須同時適用所有所選代碼。點選標籤代碼可設為主要。</small>${error?`<div class="error" role="alert">${esc(error)}</div>`:''}</div>`;
 };
+function mtMccOptions(query=''){
+ const selected=mtMccList(),known=new Set(V2.catalog.MCCS.map(m=>m.c)),options=[...V2.catalog.MCCS,...selected.filter(c=>!known.has(c)).map(c=>({c,n:'待核定行業'}))],q=query.trim().toLowerCase();
+ if(/^\d{4}$/.test(q)&&!options.some(m=>m.c===q))options.push({c:q,n:'其他行業（待核定）'});
+ return options.filter(m=>(m.c+' '+m.n).toLowerCase().includes(q)).map(m=>`<label class="check" data-mt-mcc-option="${m.c}"><input type="checkbox" data-mt-mcc="${m.c}" ${selected.includes(m.c)?'checked':''}><span>${m.c} · ${esc(m.n)}</span>${m.c===v2Raw('mcc')?'<small>主要</small>':''}</label>`).join('')||'<p class="hint">沒有符合的項目；其他代碼可輸入完整 4 位數字。</p>';
+}
+function mtRenderMcc(){
+ const picker=$('.mt-mcc-picker'),open=picker?.open,query=$('#mt-mcc-search')?.value||'',scroll=$('.mt-mcc-options')?.scrollTop||0,active=document.activeElement,code=active?.dataset.mtMcc,focusSearch=active?.id==='mt-mcc-search';
+ v2SyncDerived();render();const next=$('.mt-mcc-picker');if(!next)return;next.open=!!open;
+ if(query){$('#mt-mcc-search').value=query;$('.mt-mcc-options').innerHTML=mtMccOptions(query);}$('.mt-mcc-options').scrollTop=scroll;
+ if(open){const focus=focusSearch?$('#mt-mcc-search'):code?$(`[data-mt-mcc="${code}"]`):$('#field-mcc');focus?.focus({preventScroll:true});}
+}
+function mtCloseMcc(){const picker=$('.mt-mcc-picker');if(picker?.open){picker.open=false;$('#mt-mcc-search').value='';$('.mt-mcc-options').innerHTML=mtMccOptions();$('#field-mcc')?.focus({preventScroll:true});}}
 function mtSnapshot(){v2Ensure();v2SyncDerived();return {values:structuredClone(state.values),people:structuredClone(state.people),files:structuredClone(state.files),checks:structuredClone(state.checks),emailVerified:state.emailVerified,signature:state.signature||''};}
-function mtBlank(values={}){
+function mtBlank(values={},people={directors:1,authSigners:0,shareHolders:0}){
  const saved={values:state.values,people:state.people,files:state.files,checks:state.checks,emailVerified:state.emailVerified};
- try{state.values=structuredClone(V2.defaults);state.people={directors:1,authSigners:0,shareHolders:0};state.files={};state.checks={};state.emailVerified=false;v2Ensure();Object.assign(state.values,structuredClone(values));v2Model().legacy=false;v2SyncDerived();return mtSnapshot();}finally{Object.assign(state,saved);}
+ try{state.values=structuredClone(V2.defaults);state.people={directors:1,authSigners:0,shareHolders:0};state.files={};state.checks={};state.emailVerified=false;v2Ensure();Object.assign(state.people,structuredClone(people));Object.assign(state.values,structuredClone(values));v2Model().legacy=false;v2SyncDerived();return mtSnapshot();}finally{Object.assign(state,saved);}
 }
 function mtUpgradeSnapshot(snapshot){
  if(snapshot.values?.__v2?.version===2)return snapshot;
@@ -1403,25 +1431,59 @@ function mtCompanies(){
  const own=mtTargets();if(MT_EXTERNAL)return [...own,...state.records.filter(r=>r.email===state.email&&r.status!=='草稿').map(r=>({id:r.id,name:r.values.merchantName||r.values.companyZh,snapshot:r}))];
  return [...own,...scopedRows().filter(r=>r.status!=='Draft').map(r=>({id:rowKey(r),name:r['客戶中文名稱'],snapshot:r.application||{values:{}}}))];
 }
-function mtCustomers(){const map=new Map();for(const c of mtCompanies()){const relation=c.snapshot.values?.__customer;if(relation?.id)map.set(relation.id,relation);}const current=state.values.__customer;if(current?.id)map.set(current.id,current);return [...map.values()];}
+function mtCustomerStore(){try{const store=JSON.parse(localStorage.getItem(MT_CUSTOMERS_KEY)||'{}');return store&&typeof store==='object'&&!Array.isArray(store)?store:{};}catch{return {};}}
+function mtPersistCustomer(){const relation=state.values.__customer;if(!mtAllowed()||!relation?.id||!relation.name?.trim())return;try{const store=mtCustomerStore();store[mtOwner()]={...(store[mtOwner()]||{}),[relation.id]:{id:relation.id,name:relation.name.trim()}};localStorage.setItem(MT_CUSTOMERS_KEY,JSON.stringify(store));const hint=$('#mt-customer-name-status');if(hint)hint.textContent='已記錄，可在其他公司選取。';}catch{toast('客戶名稱暫未儲存，請檢查瀏覽器儲存空間；目前輸入仍保留。');}}
+function mtCustomers(){const map=new Map();for(const c of mtCompanies()){const relation=c.snapshot.values?.__customer;if(relation?.id)map.set(relation.id,{...relation,name:relation.name||'待命名客戶／集團（'+c.name+'）'});}for(const c of Object.values(mtCustomerStore()[mtOwner()]||{}))if(c.id&&c.name)map.set(c.id,c);const current=state.values.__customer;if(current?.id&&current.name)map.set(current.id,current);return [...map.values()];}
+function mtManageCustomers(){if(!mtAllowed())return;const groups=mtCustomers();mtDialog('管理客戶／集團',`<p class="hint">可修改名稱或刪除分組；各公司的資料會保留。</p><div class="mt-customer-list">${groups.map(c=>{const count=mtCompanies().filter(x=>x.snapshot.values?.__customer?.id===c.id).length;return `<article data-mt-group-row="${esc(c.id)}"><div class="field"><label>客戶／集團名稱 <small>· ${count} 家公司</small><input aria-label="${esc(c.name)} 新名稱" data-mt-group-name maxlength="100" value="${esc(c.name)}"></label></div><div class="mt-template-actions">${btn('儲存名稱','mt-group-rename','primary',`data-id="${esc(c.id)}"`)}${btn('刪除分組','mt-group-delete','danger',`data-id="${esc(c.id)}"`)}</div></article>`;}).join('')||'<p>尚未建立客戶／集團。請在表單選擇「建立新客戶／集團」並輸入名稱。</p>'}</div>`,btn('完成','mt-close'));}
+let mtGroupDelete=null;
+function mtDeleteCustomer(id,selected=''){
+ const group=mtCustomers().find(c=>c.id===id);if(!group)return mtManageCustomers();const others=mtCustomers().filter(c=>c.id!==id),companies=mtCompanies().filter(c=>c.snapshot.values?.__customer?.id===id);mtGroupDelete={id,targetId:selected,preview:false};
+ mtDialog('移轉公司並刪除客戶／集團',`<p>即將刪除 <strong>${esc(group.name)}</strong>，目前關聯 ${companies.length} 家公司。</p><div class="field"><label for="mt-group-replacement">選擇替代的客戶／集團</label><select id="mt-group-replacement"><option value="">請選擇處理方式</option>${others.map(c=>`<option value="${esc(c.id)}" ${c.id===selected?'selected':''}>移轉至 ${esc(c.name)}</option>`).join('')}<option value="__ungroup" ${selected==='__ungroup'?'selected':''}>不指定替代集團，解除分組</option></select></div><p class="hint">移轉時保留公司資料與原主／子公司關係；解除分組則改為獨立公司。下一步可先確認影響範圍。</p>`,btn('取消','mt-customer-manage')+btn('預覽移轉與刪除','mt-group-delete-preview','primary'));
+}
+function mtDeleteCustomerPreview(){
+ if(!mtGroupDelete)return;const targetId=$('#mt-group-replacement')?.value,group=mtCustomers().find(c=>c.id===mtGroupDelete.id),target=mtCustomers().find(c=>c.id===targetId);if(!targetId||targetId!=='__ungroup'&&!target)return mtError('請選擇替代的客戶／集團，或明確選擇解除分組');const companies=mtCompanies().filter(c=>c.snapshot.values?.__customer?.id===mtGroupDelete.id);mtGroupDelete={...mtGroupDelete,targetId,preview:true,fingerprint:JSON.stringify(companies.map(c=>[c.id,c.snapshot.values.__customer]))};
+ mtDialog('確認移轉與刪除',`<div class="notice warn">刪除「${esc(group.name)}」後，${companies.length} 家公司將${target?'移轉至「'+esc(target.name)+'」':'解除分組並改為獨立公司'}。公司及申請資料保留。</div><div class="mt-customer-move-preview">${companies.map(c=>`<div><strong>${esc(c.name)}</strong><span>${esc(group.name)} → ${target?esc(target.name):'未分組'} · ${target?mtRoleName(c.snapshot.values.__customer.role):'獨立公司'}</span></div>`).join('')||'<p>沒有已儲存的公司關聯；目前表單的分組也會同步更新。</p>'}</div>`,btn('返回選擇','mt-group-delete-back')+btn('確認移轉並刪除','mt-group-delete-confirm','danger'));
+}
+function mtUpdateCustomerReferences(id,relation){
+ if(mtFailureActive())throw Error('模擬儲存失敗，所有公司與客戶分組保持原值。請關閉失敗模擬後重試。');
+ const patch=record=>record.values?.__customer?.id===id?{...record,values:{...record.values,__customer:relation(record.values.__customer)}}:record;
+ if(MT_EXTERNAL){const next=state.records.map(r=>r.email===state.email?patch(r):r);localStorage.setItem(KEY,JSON.stringify(next));state.records=next;return;}
+ const beforeDrafts=state.drafts,beforeRows=[...rows],beforeAudit=BO.audit,draftIds=new Set(scopedDrafts().map(d=>d.id)),rowIds=new Set(scopedRows().map(rowKey));
+ try{state.drafts=state.drafts.map(d=>draftIds.has(d.id)?patch(d):d);rows.splice(0,rows.length,...rows.map(row=>{if(!rowIds.has(rowKey(row)))return row;const app=row.application?patch(row.application):row.application;return {...row,application:app,customer:row.customer?.id===id?relation(row.customer):row.customer};}));BO.audit=[{time:mtNow(),user:BO.user.name,message:'更新客戶／集團分組關聯'},...BO.audit];if(!persistDemo())throw Error('瀏覽器儲存失敗，所有公司分組仍保留原值');}
+ catch(e){state.drafts=beforeDrafts;rows.splice(0,rows.length,...beforeRows);BO.audit=beforeAudit;throw e;}
+}
+function mtChangeCustomer(id,name,remove=false,targetId=''){
+ try{if(!mtAllowed())return;const store=mtCustomerStore(),before=localStorage.getItem(MT_CUSTOMERS_KEY),target=remove&&targetId!=='__ungroup'?mtCustomers().find(c=>c.id===targetId):null;
+  if(remove&&(!mtGroupDelete?.preview||mtGroupDelete.id!==id||targetId!=='__ungroup'&&(!target||target.id===id)))throw Error('請先預覽並確認有效的替代集團');
+  if(remove){const current=mtCompanies().filter(c=>c.snapshot.values?.__customer?.id===id);if(JSON.stringify(current.map(c=>[c.id,c.snapshot.values.__customer]))!==mtGroupDelete.fingerprint)throw Error('公司關聯已變動，請返回重新預覽');}
+  if(!remove&&(!name.trim()||name.trim().length>100))throw Error('請輸入 1–100 字的客戶／集團名稱');
+  const relation=c=>remove?(target?{...c,id:target.id,name:target.name}:{id:'',name:'',role:'independent',parentId:''}):{...c,name:name.trim()};
+  store[mtOwner()]={...(store[mtOwner()]||{})};if(remove)delete store[mtOwner()][id];else store[mtOwner()][id]={id,name:name.trim()};
+  localStorage.setItem(MT_CUSTOMERS_KEY,JSON.stringify(store));try{mtUpdateCustomerReferences(id,relation);}catch(e){if(before===null)localStorage.removeItem(MT_CUSTOMERS_KEY);else localStorage.setItem(MT_CUSTOMERS_KEY,before);throw e;}
+  if(state.values.__customer?.id===id)state.values.__customer=relation(state.values.__customer);mtNewCustomer=false;mtGroupDelete=null;render();mtManageCustomers();toast(remove?'已完成移轉並刪除分組；公司資料保留':'已更新客戶／集團名稱');
+ }catch(e){mtError(e.message);}
+}
 function mtRelationship(){
  const relation=state.values.__customer||{},current=MT_EXTERNAL?state.id:state.draftId||state.editing;
  const parents=mtCompanies().filter(c=>{const r=c.snapshot.values?.__customer;return c.id!==current&&r?.role==='parent'&&r.id===relation.id;});
- return v2Card('客戶及公司關係','同一客戶可包含多家公司；主公司與子公司各自保存申請資料。',`<div class="grid mt-relationship"><div class="field"><label for="mt-customer">選取客戶／集團</label><select id="mt-customer" data-mt-relation="customer"><option value="">尚未分組</option>${mtCustomers().map(c=>`<option value="${esc(c.id)}" ${c.id===relation.id?'selected':''}>${esc(c.name||c.id)}</option>`).join('')}<option value="__new">＋ 建立新客戶／集團</option></select></div><div class="field"><label for="mt-customer-name">客戶／集團名稱</label><input id="mt-customer-name" maxlength="100" data-mt-relation="name" value="${esc(relation.name||'')}" placeholder="例如：海港集團"></div><div class="field"><label for="mt-company-role">公司關係</label><select id="mt-company-role" data-mt-relation="role">${['independent','parent','subsidiary'].map(r=>`<option value="${r}" ${r===(relation.role||'independent')?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div><div class="field"><label for="mt-parent-company">所屬主公司</label><select id="mt-parent-company" data-mt-relation="parentId" ${relation.role!=='subsidiary'?'disabled':''}><option value="">請選擇同一客戶的主公司</option>${parents.map(c=>`<option value="${esc(c.id)}" ${c.id===relation.parentId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>${state.errors._customer?`<p class="error">${esc(state.errors._customer)}</p>`:''}</div></div>`);
+ const creating=mtNewCustomer||!!(relation.id&&!relation.name);
+ return v2Card('客戶及公司關係','先建立並命名客戶／集團，再把各家公司歸入該客戶；公司名稱仍各自填寫。',`<div class="grid mt-relationship"><div class="field"><label for="mt-customer">選取客戶／集團</label><select id="mt-customer" data-mt-relation="customer"><option value="">尚未分組</option>${mtCustomers().filter(c=>!creating||c.id!==relation.id).map(c=>`<option value="${esc(c.id)}" ${!creating&&c.id===relation.id?'selected':''}>${esc(c.name)}</option>`).join('')}<option value="__new" ${creating?'selected':''}>＋ 建立新客戶／集團</option></select><small class="hint">已有客戶可直接選取；新客戶請在右側輸入名稱。</small>${btn('管理客戶／集團','mt-customer-manage','text-button mt-customer-manage-button')}</div><div class="field"><label for="mt-customer-name">${creating?'新客戶／集團名稱':'客戶／集團名稱'}${relation.id?' <span class="required">*</span>':''}</label><input id="mt-customer-name" maxlength="100" data-mt-relation="name" ${!creating&&relation.name?'readonly aria-readonly="true"':''} value="${esc(relation.name||'')}" placeholder="自行輸入名稱，例如：海港集團"><small class="hint" id="mt-customer-name-status">${!creating&&relation.name?'修改名稱請使用「管理客戶／集團」。':'輸入後自動記錄，可在其他公司選取。'}</small></div><div class="field"><label for="mt-company-role">公司關係</label><select id="mt-company-role" data-mt-relation="role">${['independent','parent','subsidiary'].map(r=>`<option value="${r}" ${r===(relation.role||'independent')?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div><div class="field"><label for="mt-parent-company">所屬主公司</label><select id="mt-parent-company" data-mt-relation="parentId" ${relation.role!=='subsidiary'?'disabled':''}><option value="">請選擇同一客戶的主公司</option>${parents.map(c=>`<option value="${esc(c.id)}" ${c.id===relation.parentId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>${relation.role==='subsidiary'&&!parents.length?'<small class="hint mt-parent-help">此客戶尚未有已儲存的主公司。請先把一家公司設為「主公司」並儲存草稿，再回來選取。</small>':''}</div></div>${state.errors._customer?`<p class="error" role="alert">${esc(state.errors._customer)}</p>`:''}`);
 }
 const mtOriginalSections=v2FormSections;
 v2FormSections=index=>(index===0?mtRelationship():'')+mtOriginalSections(index);
 const mtOriginalValidate=validateStep;
 validateStep=function(step){const errors=mtOriginalValidate(step);if(step===3){const list=mtMccList();if(!list.length||list.some(c=>!/^\d{4}$/.test(c)))errors.mcc='請選擇至少一個有效的 4 位 MCC';if(list.length>50)errors.mcc='每家公司最多可選 50 個 MCC';}
- if(step===2){const relation=state.values.__customer;if(relation?.role==='subsidiary'){const p=mtCompanies().find(c=>c.id===relation.parentId),r=p?.snapshot.values?.__customer;const own=MT_EXTERNAL?state.id:state.draftId||state.editing;if(!relation.name||!p||p.id===own||r?.role!=='parent'||r.id!==relation.id)errors._customer='子公司須選擇同一客戶內的主公司';}}
+ if(step===2){const relation=state.values.__customer;if(relation?.id&&!relation.name?.trim())errors._customer='請輸入新客戶／集團名稱';if(relation?.role==='subsidiary'){const p=mtCompanies().find(c=>c.id===relation.parentId),r=p?.snapshot.values?.__customer;const own=MT_EXTERNAL?state.id:state.draftId||state.editing;if(!relation.name||!p||p.id===own||r?.role!=='parent'||r.id!==relation.id)errors._customer='子公司須選擇同一客戶內的主公司';}}
  return errors;};
 const mtOriginalReview=v2Review;
 v2Review=function(){const relation=state.values.__customer;return (relation?.id?v2Card('客戶及公司關係','',`<div class="mt-relation-summary"><strong>${esc(relation.name)}</strong><span>${mtRoleName(relation.role)}</span>${relation.parentId?`<span>主公司：${esc(mtCompanies().find(c=>c.id===relation.parentId)?.name||relation.parentId)}</span>`:''}</div>`):'')+v2Card('MCC 複選資料','',`<p>主要 MCC：<b>${esc(v2Raw('mcc')||'尚未選擇')}</b></p><p>全部代碼：${esc(mtMccList().join('、')||'尚未選擇')}</p>`)+mtOriginalReview();};
-function mtToolbar(compact=false){return `<section class="mt-quick-tools ${compact?'compact':''}" aria-label="快速填寫及參數模板"><div><strong>${compact?'模板與批量設定':'快速填寫'}</strong><small>${compact?'先設定一次，再複選新商戶同時套用':'帶入商戶資料、MCC、結算參數及產品費率'}</small></div><div class="mt-tool-actions">${btn('選取模板','mt-library')}${!compact?btn('儲存為模板','mt-save-open'):''}${btn('一次匯入資料','mt-import-open')}${btn('批量套用參數模板','mt-batch-open','primary')}</div></section>`;}
+function mtToolActions(compact=false){return `<div class="mt-tool-actions" aria-label="模板與批量設定">${btn('選取模板','mt-library')}${!compact?btn('儲存為模板','mt-save-open'):''}${btn('匯入資料','mt-import-open')}${btn('批量套用參數模板','mt-batch-open','primary')}</div>`;}
+function mtToolbar(){return `<section class="mt-quick-tools" aria-label="快速填寫及參數模板"><div><strong>快速填寫</strong><small>帶入商戶資料、MCC、結算參數及產品費率</small></div>${mtToolActions()}</section>`;}
 const mtOriginalApplication=application;
 application=function(step){const html=mtOriginalApplication(step);if(!mtAllowed())return html;return html.replace('<div class="v2-version">OATS V2 · 六步申請流程</div>','<div class="v2-version">OATS V2 · 六步申請流程</div>'+mtToolbar());};
-if(MT_EXTERNAL){const originalApplications=applications;applications=function(){return mtToolbar(true)+originalApplications();};}
-else{const oldMerchants=merchants;merchants=function(){return (mtAllowed()?mtToolbar(true):'')+oldMerchants();};const oldDrafts=draftView;draftView=function(){return (mtAllowed()?mtToolbar(true):'')+oldDrafts();};}
+if(MT_EXTERNAL){const originalApplications=applications;applications=function(){return originalApplications().replace(btn('載入進度示例','seed'),btn('載入進度示例','seed')+mtToolActions(true));};}
+else{const oldMerchants=merchants;merchants=function(){const html=oldMerchants();return mtAllowed()?html.replace('<span class="grow"></span>','<span class="grow"></span>'+mtToolActions(true)):html;};const oldDrafts=draftView;draftView=function(){const html=oldDrafts();return mtAllowed()?html.replace('<section class="card">','<div class="toolbar mt-list-toolbar">'+mtToolActions(true)+'</div><section class="card">'):html;};}
+const mtOriginalReset=v2Reset;v2Reset=function(){mtNewCustomer=false;mtOriginalReset();};
 function mtDialog(title,body,foot){modal(title,body+'<p id="mt-error" class="error" role="alert"></p>',foot);$('#modal').classList.add('mt-dialog');}
 function mtClose(){mtFlow=null;$('#modal').classList.remove('mt-dialog');$('#modal').close();}
 function mtDownload(filename,value,type='application/json'){const blob=new Blob([type==='application/json'?JSON.stringify(value,null,2):value],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
@@ -1429,7 +1491,7 @@ function mtScopeInputs(template,selected,batch=false){return `<fieldset class="m
 function mtProductCount(products){return Object.entries(products?.rates||{}).filter(([key,r])=>r.on&&products.groups?.[key.split('|')[0]]).length;}
 function mtLibrary(){
  if(!mtAllowed())return;const list=mtTemplates();
- mtDialog('商戶資料與參數模板',`<p class="hint">可把共用資料、MCC、結算參數及產品費率記錄為一份設定，套用至一家或多家新商戶。</p><div class="mt-library-actions">${btn('將目前設定儲存為模板','mt-save-open','primary')}${btn('匯入模板／商戶資料','mt-import-open')}</div><div class="mt-template-list">${list.map(t=>`<article><div><h3>${esc(t.name)}</h3><p>${t.scopes.map(s=>esc(MT.labels[s])).join(' · ')}</p><small>v${t.version} · ${Object.keys(t.values).length} 個欄位 · ${mtProductCount(t.products)} 項產品</small></div><div class="mt-template-actions">${btn('套用至目前表單','mt-use','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('複選商戶並批量套用','mt-batch-template','primary',`data-id="${esc(t.id)}"`)}${btn('更新為目前設定','mt-save-open','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('匯出','mt-export','',`data-id="${esc(t.id)}"`)}${btn('刪除','mt-delete','',`data-id="${esc(t.id)}"`)}</div></article>`).join('')||'<div class="mt-empty"><h3>尚未建立模板</h3><p>填寫一次資料及費率後儲存，或匯入已有的 CSV／JSON 設定。</p></div>'}</div>`,btn('關閉','mt-close'));
+ mtDialog('商戶資料與參數模板',`<p class="hint">可把共用資料、MCC、結算參數及產品費率記錄為一份設定，套用至一家或多家新商戶。</p><div class="mt-library-actions">${btn('將目前設定儲存為模板','mt-save-open','primary')}${btn('匯入模板／商戶資料','mt-import-open')}</div><div class="mt-template-list">${list.map(t=>`<article><div><h3>${esc(t.name)}</h3><p>${t.scopes.map(s=>esc(MT.labels[s])).join(' · ')}</p><small>v${t.version} · ${Object.keys(t.values).length} 個欄位 · ${mtProductCount(t.products)} 項產品</small></div><div class="mt-template-actions">${btn('套用至目前表單','mt-use','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('複選商戶並批量套用','mt-batch-template','primary',`data-id="${esc(t.id)}"`)}${btn('更新為目前設定','mt-save-open','',`data-id="${esc(t.id)}" ${route().page!=='application'?'disabled':''}`)}${btn('匯出','mt-export','',`data-id="${esc(t.id)}"`)}${btn('刪除','mt-delete','',`data-id="${esc(t.id)}"`)}</div></article>`).join('')||'<div class="mt-empty"><h3>尚未建立模板</h3><p>填寫一次資料及費率後儲存，或匯入已有的 Excel／CSV 設定。</p></div>'}</div>`,btn('關閉','mt-close'));
 }
 function mtOpenSave(id=''){
  if(!mtAllowed())return;const existing=mtTemplates().find(t=>t.id===id);mtFlow={kind:'save',id:existing?.id||'',scopes:existing?.scopes||['profile','mcc','settlement','products']};
@@ -1454,13 +1516,16 @@ function mtPrepare(template,targets){
 }
 function mtChangeValue(value){if(value&&typeof value==='object'){if(Array.isArray(value))return value.join('、');return Object.entries(value.rates||{}).filter(([key,r])=>r.on&&value.groups?.[key.split('|')[0]]).map(([key,r])=>{const [group,index]=key.split('|'),definition=v2Groups.find(g=>g.k===group)?.rows[+index];return definition?definition.n+'：'+v2FeeSummary(definition,r):key;}).join('；')||'未選產品';}return String(value??'')||'空白';}
 function mtPreviewHTML(plans){return `<div class="notice">即將套用至 <b>${plans.length}</b> 家商戶 · 共 ${plans.reduce((s,p)=>s+p.changes.length,0)} 項變更。${mtFlow.kind==='batch'?'每家公司的名稱、BR、董事、銀行帳號與公司關係保留。':''}</div><div class="mt-preview-list">${plans.map(p=>`<details ${plans.length===1?'open':''}><summary><strong>${esc(p.name)}</strong><span>${p.changes.length} 項變更</span></summary>${p.changes.length?`<div class="mt-diff-list">${p.changes.map(c=>`<div><strong>${esc(c.key==='_products'?'產品與費率':c.key==='mccCodes'?'MCC 複選清單':v2Label(c.key))}</strong><del>${esc(mtChangeValue(c.before))}</del><ins>${esc(mtChangeValue(c.after))}</ins></div>`).join('')}</div>`:'<p>設定相同，無需修改。</p>'}</details>`).join('')}</div>`;}
+const mtFailureActive=()=>!!(state.fail||state.failSave);
+function mtDisableSimulation(){state.fail=false;state.failSave=false;state.failSubmit=false;const checkbox=$('#simulate-failure');if(checkbox)checkbox.checked=false;}
+function mtFailureNotice(){return mtFlow?.kind==='batch'&&mtFailureActive()?`<div class="notice warn mt-failure-notice"><span>目前已啟用「模擬儲存／提交失敗」，確認套用將保留所有商戶原值。</span>${btn('關閉失敗模擬','mt-disable-simulation')}</div>`:'';}
 function mtApplyModal(){
  const f=mtFlow,t=mtTemplates().find(t=>t.id===f.templateId);if(!t)return mtLibrary();
  const available=mtTargets(),selected=f.kind==='form'?[mtCurrentTarget()]:available.filter(a=>f.selected.has(a.key));
- if(f.preview){mtFlow.plans=mtPrepare(t,selected);return mtDialog('確認'+(f.kind==='batch'?'批量':'')+'套用參數模板',`<p><strong>${esc(t.name)}</strong> · v${t.version} · ${f.scopes.map(s=>MT.labels[s]).join('、')}</p>${mtPreviewHTML(mtFlow.plans)}<p class="hint">套用後仍需逐家公司核對聯絡資料、費率及提交。</p>`,btn('返回選擇','mt-preview-back')+btn('確認套用至 '+selected.length+' 家','mt-apply-confirm','primary',selected.length?'':'disabled'));}
+ if(f.preview){mtFlow.plans=mtPrepare(t,selected);return mtDialog('確認'+(f.kind==='batch'?'批量':'')+'套用參數模板',`${mtFailureNotice()}<p><strong>${esc(t.name)}</strong> · v${t.version} · ${f.scopes.map(s=>MT.labels[s]).join('、')}</p>${mtPreviewHTML(mtFlow.plans)}<p class="hint">套用後仍需逐家公司核對聯絡資料、費率及提交。</p>`,btn('返回選擇','mt-preview-back')+btn('確認套用至 '+selected.length+' 家','mt-apply-confirm','primary',selected.length?'':'disabled'));}
  const filtered=f.kind==='batch'?mtFilteredTargets():[],pages=Math.max(1,Math.ceil(filtered.length/f.size));f.page=Math.min(f.page,pages);const shown=filtered.slice((f.page-1)*f.size,f.page*f.size);
- const table=f.kind==='batch'?`<div class="mt-batch-filters"><div class="field"><label for="mt-target-search">搜尋新商戶</label><input id="mt-target-search" placeholder="公司名稱、編號、客戶" value="${esc(f.query)}"></div><div class="field"><label for="mt-target-customer">客戶／集團</label><select id="mt-target-customer"><option value="">全部客戶</option>${mtCustomers().map(c=>`<option value="${esc(c.id)}" ${f.customer===c.id?'selected':''}>${esc(c.name||c.id)}</option>`).join('')}</select></div><div class="field"><label for="mt-target-role">公司關係</label><select id="mt-target-role"><option value="">全部關係</option>${['parent','subsidiary','independent'].map(r=>`<option value="${r}" ${f.role===r?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div></div><div class="mt-select-bar"><label class="check"><input type="checkbox" id="mt-select-filtered" ${filtered.length&&filtered.every(x=>f.selected.has(x.key))?'checked':''} ${!filtered.length?'disabled':''}>全選篩選結果（${filtered.length} 家，包含所有頁面）</label><strong id="mt-selected-count">已選 ${selected.length} 家</strong>${btn('清除選取','mt-clear-selected')}</div><div class="mt-target-list">${shown.map(a=>{const c=a.snapshot.values?.__customer||{};return `<label class="mt-target-row"><input type="checkbox" data-mt-target="${esc(a.key)}" ${f.selected.has(a.key)?'checked':''}><span><strong>${esc(a.name)}</strong><small>${esc(a.id)}</small></span><span>${esc(c.name||'未分組')}<small>${mtRoleName(c.role)}</small></span></label>`;}).join('')||'<div class="mt-empty">沒有符合條件的新商戶草稿。</div>'}</div><div class="mt-pagination"><label>每頁 <select id="mt-page-size">${[20,50,100].map(n=>`<option ${f.size===n?'selected':''}>${n}</option>`).join('')}</select> 家</label><span>共 ${filtered.length} 家 · ${f.page}／${pages} 頁</span>${btn('上一頁','mt-target-page','',`data-page="${f.page-1}" ${f.page<=1?'disabled':''}`)}${btn('下一頁','mt-target-page','',`data-page="${f.page+1}" ${f.page>=pages?'disabled':''}`)}</div><p class="hint">只列出有權限編輯的新商戶草稿，已提交或已開通商戶不在批量套用範圍。</p>`:`<p class="notice">套用對象：${esc(selected[0].name)}</p>`;
- mtDialog(f.kind==='batch'?'批量套用參數模板':'套用商戶模板',`<div class="mt-apply-header"><div class="field"><label for="mt-template-select">選取一份設定記錄</label><select id="mt-template-select">${mtTemplates().map(x=>`<option value="${esc(x.id)}" ${t.id===x.id?'selected':''}>${esc(x.name)} · v${x.version}</option>`).join('')}</select></div><div class="field"><label for="mt-apply-mode">處理現有值</label><select id="mt-apply-mode"><option value="replace" ${f.mode==='replace'?'selected':''}>套用模板設定（預覽後取代所選範圍）</option><option value="blank" ${f.mode==='blank'?'selected':''}>只補空白，保留已填資料</option></select></div></div>${mtScopeInputs(t,f.scopes,f.kind==='batch')}${table}`,btn('取消','mt-close')+btn('預覽套用至 '+selected.length+' 家','mt-apply-preview','primary',selected.length&&f.scopes.length?'':'disabled'));
+ const table=f.kind==='batch'?`<div class="mt-batch-filters"><div class="field"><label for="mt-target-search">搜尋新商戶</label><input id="mt-target-search" placeholder="公司名稱、編號、客戶" value="${esc(f.query)}"></div><div class="field"><label for="mt-target-customer">客戶／集團</label><select id="mt-target-customer"><option value="">全部客戶</option>${mtCustomers().map(c=>`<option value="${esc(c.id)}" ${f.customer===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label for="mt-target-role">公司關係</label><select id="mt-target-role"><option value="">全部關係</option>${['parent','subsidiary','independent'].map(r=>`<option value="${r}" ${f.role===r?'selected':''}>${mtRoleName(r)}</option>`).join('')}</select></div></div><div class="mt-select-bar"><label class="check"><input type="checkbox" id="mt-select-filtered" ${filtered.length&&filtered.every(x=>f.selected.has(x.key))?'checked':''} ${!filtered.length?'disabled':''}>全選篩選結果（${filtered.length} 家，包含所有頁面）</label><strong id="mt-selected-count">已選 ${selected.length} 家</strong>${btn('清除選取','mt-clear-selected')}</div><div class="mt-target-list">${shown.map(a=>{const c=a.snapshot.values?.__customer||{};return `<label class="mt-target-row"><input type="checkbox" data-mt-target="${esc(a.key)}" ${f.selected.has(a.key)?'checked':''}><span><strong>${esc(a.name)}</strong><small>${esc(a.id)}</small></span><span>${esc(c.name||'未分組')}<small>${mtRoleName(c.role)}</small></span></label>`;}).join('')||'<div class="mt-empty">沒有符合條件的新商戶草稿。</div>'}</div><div class="mt-pagination"><label>每頁 <select id="mt-page-size">${[20,50,100].map(n=>`<option ${f.size===n?'selected':''}>${n}</option>`).join('')}</select> 家</label><span>共 ${filtered.length} 家 · ${f.page}／${pages} 頁</span>${btn('上一頁','mt-target-page','',`data-page="${f.page-1}" ${f.page<=1?'disabled':''}`)}${btn('下一頁','mt-target-page','',`data-page="${f.page+1}" ${f.page>=pages?'disabled':''}`)}</div><p class="hint">只列出有權限編輯的新商戶草稿，已提交或已開通商戶不在批量套用範圍。</p>`:`<p class="notice">套用對象：${esc(selected[0].name)}</p>`;
+ mtDialog(f.kind==='batch'?'批量套用參數模板':'套用商戶模板',`${mtFailureNotice()}<div class="mt-apply-header"><div class="field"><label for="mt-template-select">選取一份設定記錄</label><select id="mt-template-select">${mtTemplates().map(x=>`<option value="${esc(x.id)}" ${t.id===x.id?'selected':''}>${esc(x.name)} · v${x.version}</option>`).join('')}</select></div><div class="field"><label for="mt-apply-mode">處理現有值</label><select id="mt-apply-mode"><option value="replace" ${f.mode==='replace'?'selected':''}>套用模板設定（預覽後取代所選範圍）</option><option value="blank" ${f.mode==='blank'?'selected':''}>只補空白，保留已填資料</option></select></div></div>${mtScopeInputs(t,f.scopes,f.kind==='batch')}${table}`,btn('取消','mt-close')+btn('預覽套用至 '+selected.length+' 家','mt-apply-preview','primary',selected.length&&f.scopes.length?'':'disabled'));
 }
 function mtWriteTargets(plans,message){
  const time=mtNow();if(state.fail||state.failSave)throw Error('模擬儲存失敗：所有商戶設定仍保留原值');
@@ -1480,11 +1545,12 @@ function mtConfirmApply(){
   if(mtFlow.kind==='form'){const p=mtPrepare(template,[mtCurrentTarget()])[0];Object.assign(state,{values:p.snapshot.values,people:p.snapshot.people,checks:p.snapshot.checks||{},emailVerified:!!p.snapshot.emailVerified,errors:{}});if(MT_EXTERNAL)state.signature=p.snapshot.signature||'';v2SyncDerived();mtClose();render();toast('已帶入模板，請核對並儲存草稿');return;}
   const targets=mtTargets();for(const plan of plans){const now=targets.find(t=>t.key===plan.key);if(!now||JSON.stringify(now.snapshot)!==plan.fingerprint)throw Error('商戶資料在預覽後已有變動，請返回重新預覽');}
   mtWriteTargets(plans,'批量套用模板「'+template.name+'」至 '+plans.length+' 家新商戶');const count=plans.length;mtClose();render();mtDialog('批量套用完成',`<div class="notice">已同時儲存 ${count} 家商戶的設定。</div><p>模板：${esc(template.name)} · v${template.version}</p><p>每家公司可繼續獨立核對、修改及提交。</p>`,btn('完成','mt-close','primary'));
- }catch(e){mtError(e.message);}
+ }catch(e){mtError(e.message);if(mtFailureActive()&&mtFlow?.preview&&mtFlow.kind==='batch')$('#mt-error')?.insertAdjacentHTML('beforeend',`<span class="mt-retry-help">已選商戶與預覽仍保留。${btn('關閉失敗模擬並重試','mt-retry-apply','primary')}</span>`);}
 }
-function mtOpenImport(){if(!mtAllowed())return;mtImport=null;mtImportSequence++;mtDialog('一次匯入商戶資料與費率',`<p>可一次匯入同一客戶的主公司與子公司，同時帶入各公司的基本資料、MCC、結算參數、產品及費率。</p><div class="mt-library-actions">${btn('下載 CSV 空白範本','mt-csv-download')}${btn('下載完整 JSON 範例','mt-json-download')}</div>${fileDropControl({inputId:'mt-import-file',accept:'.csv,.json',title:'拖入商戶資料 CSV／JSON',hint:'每次最多 100 家公司／50 份模板 · 文件上限 2 MB'})}<p class="hint">CSV 可由 Excel 另存為 UTF-8 CSV；多個 MCC 使用分號分隔。JSON 可包含完整產品與費率設定。</p><div id="mt-import-result"></div>`,btn('取消','mt-close'));}
+function mtOpenImport(){if(!mtAllowed())return;mtImport=null;mtImportSequence++;mtDialog('匯入商戶資料與費率',`<p>可匯入同一客戶的主公司與子公司，同時帶入各公司的基本資料、MCC、結算參數、產品及費率。</p><div class="mt-library-actions">${btn('下載 CSV 空白範本','mt-csv-download')}${btn('下載 Excel 範本（含下拉選單）','mt-excel-download')}${btn('下載 Excel 填寫範例','mt-excel-example')}</div>${fileDropControl({inputId:'mt-import-file',accept:'.xlsx,.csv',title:'拖入 Excel／CSV 商戶資料',hint:'每次最多 100 家公司／50 份模板 · 文件上限 2 MB'})}<p class="hint">建議使用 Excel 範本，內含下拉選單、商戶關係及產品費率工作表。CSV 請使用 UTF-8 格式；多個 MCC 可使用分號分隔。</p><div id="mt-import-result"></div>`,btn('取消','mt-close'));}
 async function mtReadImport(file){
  const sequence=++mtImportSequence,owner=mtOwner();try{if(!file||file.size>2*1024*1024||!/\.(csv|json)$/i.test(file.name))throw Error('請選擇 2 MB 以下的 CSV／JSON');const source=await file.text();if(sequence!==mtImportSequence||owner!==mtOwner()||!$('#mt-import-file'))return;const bundle=MT.bundle(/\.csv$/i.test(file.name)?MT.csvBundle(source):JSON.parse(source),mtTemplates());bundle.templates=bundle.templates.map(t=>({...t,id:crypto.randomUUID(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+  for(const company of bundle.companies){const customer=mtCustomers().find(c=>c.id===company.customerId||c.name===company.customerName);if(customer){company.customerId=customer.id;company.customerName=customer.name;}}
   const existing=mtCompanies(),brs=new Set(existing.map(c=>c.snapshot.values?.registerCertNo).filter(Boolean)),seen=new Set();
   const errors=[];for(const c of bundle.companies){const br=c.values.registerCertNo;if(br&&(brs.has(br)||seen.has(br)))errors.push(c.key+'：BR 已存在或於文件中重複');if(br)seen.add(br);}
   mtImport={...bundle,filename:file.name,errors,selected:new Set(bundle.companies.map(c=>c.key)),single:bundle.companies.length===1&&route().page==='application'};mtImportResult();
@@ -1493,7 +1559,7 @@ async function mtReadImport(file){
 function mtImportResult(){const b=mtImport;if(!b)return;const host=$('#mt-import-result');if(!host)return;
  host.innerHTML=`<h3>匯入預覽</h3><p>${b.companies.length} 家公司 · ${b.templates.length} 份模板 · ${esc(b.filename)}</p>${b.errors.length?`<div class="notice error">${b.errors.map(esc).join('<br>')}</div>`:''}<div class="mt-import-companies">${b.companies.map(c=>`<article><strong>${esc(c.values.merchantName||c.values.merchantEnglishName)}</strong><span>${esc(c.customerName||'未分組')} · ${mtRoleName(c.role)}${c.parentKey?' · 主公司 '+esc(c.parentKey):''}</span><small>BR：${esc(c.values.registerCertNo||'待填寫')} · MCC：${esc(MT.codes(c.values.mccCodes||c.values.mcc).join('、')||'待填寫')} · ${Object.keys(c.values).length} 個欄位 · ${mtProductCount(c.products)} 項產品</small></article>`).join('')}</div>${b.single?'<p class="hint">會帶入目前新商戶表單，匯入前可查看所有欄位差異。</p>':'<p class="hint">確認後一次建立全部公司草稿；公司間的主／子關係會一併建立。</p>'}<div class="mt-library-actions">${btn(b.single?'預覽帶入目前表單':'確認匯入並建立 '+b.companies.length+' 家草稿','mt-import-confirm','primary',b.errors.length?'disabled':'')}</div>`;}
 function mtImportSettings(company){const template=[...(mtImport?.templates||[]),...mtTemplates()].find(t=>t.name===company.templateName);const inherited=template?MT.apply({values:{},people:{}},template,template.scopes.filter(s=>s!=='identity'),'replace',false).snapshot.values:{};return {values:{...inherited,...company.values},products:company.products||template?.products||null};}
-function mtImportedSnapshot(company,ids){const settings=mtImportSettings(company),snapshot=mtBlank(settings.values);if(settings.products)for(const k of ['groups','rates','combo','sme'])snapshot.values.__v2[k]=structuredClone(settings.products[k]);snapshot.values.__customer={id:company.customerId,name:company.customerName,role:company.role,parentId:ids[company.parentKey]||''};snapshot.emailVerified=false;return snapshot;}
+function mtImportedSnapshot(company,ids){const settings=mtImportSettings(company),snapshot=mtBlank(settings.values,company.people);if(settings.products)for(const k of ['groups','rates','combo','sme'])snapshot.values.__v2[k]=structuredClone(settings.products[k]);snapshot.values.__customer={id:company.customerId,name:company.customerName,role:company.role,parentId:ids[company.parentKey]||''};snapshot.emailVerified=false;return snapshot;}
 function mtCommitImport(){
  try{if(!mtAllowed()||!mtImport||mtImport.errors.length)throw Error('請先選擇有效的匯入文件');const b=mtImport;
   if(b.single&&!b.ready){const c=b.companies[0],before=mtSnapshot(),snap=mtImportedSnapshot(c,{}),settings=mtImportSettings(c);const imported=MT.cleanTemplate({id:'import',name:b.filename,scopes:Object.keys(MT.labels),values:settings.values,products:settings.products,people:snap.people});mtFlow={kind:'form',scopes:imported.scopes};const plan=MT.apply(before,imported,imported.scopes,'replace',true);plan.snapshot.values.__customer=snap.values.__customer;b.ready=true;b.plan=plan;$('#mt-import-result').innerHTML=mtPreviewHTML([{...plan,name:c.values.merchantName||c.values.merchantEnglishName}])+btn('確認帶入目前表單','mt-import-confirm','primary');return;}
@@ -1520,23 +1586,35 @@ function mtJSONExample(){return {
 };}
 Object.assign(actions,{
  'mt-close':mtClose,'mt-library':mtLibrary,'mt-save-open':el=>mtOpenSave(el?.dataset?.id||''),'mt-save':mtSave,
+ 'mt-customer-manage':mtManageCustomers,'mt-group-rename':el=>mtChangeCustomer(el.dataset.id,el.closest('[data-mt-group-row]').querySelector('[data-mt-group-name]').value),
+ 'mt-group-delete':el=>mtDeleteCustomer(el.dataset.id),'mt-group-delete-preview':mtDeleteCustomerPreview,'mt-group-delete-back':()=>mtDeleteCustomer(mtGroupDelete.id,mtGroupDelete.targetId),
+ 'mt-group-delete-confirm':()=>mtGroupDelete&&mtChangeCustomer(mtGroupDelete.id,'',true,mtGroupDelete.targetId),
  'mt-use':el=>mtOpenApply(false,el.dataset.id),'mt-batch-open':()=>mtOpenApply(true),'mt-batch-template':el=>mtOpenApply(true,el.dataset.id),
  'mt-export':el=>{const t=mtTemplates().find(t=>t.id===el.dataset.id);if(t)mtDownload('merchant-template.json',{format:'allinpay.merchant-bundle',version:1,templates:[t],companies:[]});},
  'mt-delete':el=>{const t=mtTemplates().find(t=>t.id===el.dataset.id);if(t)mtDialog('刪除模板',`<p>刪除「${esc(t.name)}」？已套用至商戶的設定仍會保留。</p>`,btn('取消','mt-library')+btn('確認刪除','mt-delete-confirm','danger',`data-id="${esc(t.id)}"`));},
  'mt-delete-confirm':el=>{try{mtSaveTemplates(mtTemplates().filter(t=>t.id!==el.dataset.id));mtLibrary();}catch(e){mtError(e.message);}},
  'mt-apply-preview':()=>{if(!mtFlow?.scopes.length)return mtError('請至少選擇一個套用範圍');mtFlow.preview=true;mtApplyModal();},'mt-preview-back':()=>{mtFlow.preview=false;mtApplyModal();},'mt-apply-confirm':mtConfirmApply,
  'mt-target-page':el=>{mtFlow.page=+el.dataset.page;mtApplyModal();},'mt-clear-selected':()=>{mtFlow.selected.clear();mtApplyModal();},
- 'mt-mcc-remove':el=>{const list=mtMccList().filter(c=>c!==el.dataset.code);state.values.mccCodes=list;if(v2Raw('mcc')===el.dataset.code)state.values.mcc=list[0]||'';v2SyncDerived();render();},
+ 'mt-disable-simulation':()=>{mtDisableSimulation();mtApplyModal();},'mt-retry-apply':()=>{mtDisableSimulation();mtConfirmApply();},
+ 'mt-mcc-done':mtCloseMcc,'mt-mcc-primary':el=>{state.values.mcc=el.dataset.code;state.values.mccCodes=[el.dataset.code,...mtMccList().filter(c=>c!==el.dataset.code)];mtRenderMcc();},
+ 'mt-mcc-remove':el=>{const list=mtMccList().filter(c=>c!==el.dataset.code);state.values.mccCodes=list;if(v2Raw('mcc')===el.dataset.code)state.values.mcc=list[0]||'';mtRenderMcc();},
  'mt-import-open':mtOpenImport,'mt-import-confirm':mtCommitImport,'mt-csv-download':()=>mtDownload('merchant-import-template.csv',MT.csv([MT.csvHeaders]),'text/csv;charset=utf-8'),
  'mt-json-download':()=>mtDownload('merchant-import-example.json',mtJSONExample()),
  'mt-open-drafts':()=>{mtClose();go(MT_EXTERNAL?'applications':'drafts');}
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='mt-mcc-search'){$$('[data-mt-mcc-option]').forEach(n=>n.hidden=!n.dataset.mtMccOption.toLowerCase().includes(t.value.toLowerCase()));}if(t.id==='mt-target-search'&&mtFlow){mtFlow.query=t.value;mtFlow.page=1;mtRepaint(mtApplyModal);}if(t.dataset.mtRelation==='name'){state.values.__customer??={role:'independent'};state.values.__customer.name=t.value.trim();if(t.value.trim()&&!state.values.__customer.id)state.values.__customer.id='CUS-'+crypto.randomUUID();}});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='mt-mcc-search')$('.mt-mcc-options').innerHTML=mtMccOptions(t.value);if(t.id==='mt-target-search'&&mtFlow){mtFlow.query=t.value;mtFlow.page=1;mtRepaint(mtApplyModal);}if(t.dataset.mtRelation==='name'){
+ const relation=state.values.__customer??={role:'independent'};relation.name=t.value.trim();if(relation.name&&!relation.id)relation.id='CUS-'+crypto.randomUUID();
+ // Update the option in place: replacing the form on blur swallows the next button click.
+ const select=$('#mt-customer');if(relation.id&&relation.name&&select){let option=[...select.options].find(o=>o.value===relation.id);if(!option){option=document.createElement('option');option.value=relation.id;select.add(option,select.querySelector('[value="__new"]'));}option.textContent=relation.name;select.value=relation.id;mtNewCustomer=false;}delete state.errors._customer;
+}});
+document.addEventListener('change',e=>{const t=e.target;if(!t.dataset.mtMcc)return;e.stopImmediatePropagation();const list=mtMccList(),code=t.dataset.mtMcc;if(t.checked&&list.length>=50){t.checked=false;return toast('每家公司最多可選 50 個 MCC');}state.values.mccCodes=t.checked?[...new Set([...list,code])]:list.filter(c=>c!==code);if(!state.values.mccCodes.includes(v2Raw('mcc')))state.values.mcc=state.values.mccCodes[0]||'';delete state.errors.mcc;mtRenderMcc();},true);
+document.addEventListener('click',e=>{const picker=$('.mt-mcc-picker');if(picker?.open&&!e.target.closest('.mt-mcc-field'))picker.open=false;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.closest('.mt-mcc-picker')){e.preventDefault();mtCloseMcc();}});
 document.addEventListener('change',e=>{
  const t=e.target;
- if(t.dataset.mtMcc){const list=mtMccList(),code=t.dataset.mtMcc;state.values.mccCodes=t.checked?[...new Set([...list,code])]:list.filter(c=>c!==code);if(!state.values.mccCodes.includes(v2Raw('mcc')))state.values.mcc=state.values.mccCodes[0]||'';v2SyncDerived();render();$('.mt-mcc-picker')?.setAttribute('open','');}
  if(t.dataset.field==='mcc'){mtSyncMcc();v2SyncDerived();mtRefreshForm();}
- if(t.dataset.mtRelation){const relation=state.values.__customer??={role:'independent'};if(t.dataset.mtRelation==='customer'){const existing=mtCustomers().find(c=>c.id===t.value);state.values.__customer={id:t.value==='__new'?'CUS-'+crypto.randomUUID():t.value,name:existing?.name||'',role:relation.role||'independent',parentId:''};}else if(t.dataset.mtRelation==='name')relation.name=t.value.trim();else{relation[t.dataset.mtRelation]=t.value;if(t.dataset.mtRelation==='role'&&t.value!=='subsidiary')relation.parentId='';}mtRefreshForm();}
+ if(t.dataset.mtRelation==='name')mtPersistCustomer();
+ if(t.dataset.mtRelation&&t.dataset.mtRelation!=='name'){const relation=state.values.__customer??={role:'independent'};if(t.dataset.mtRelation==='customer'){const existing=mtCustomers().find(c=>c.id===t.value);mtNewCustomer=t.value==='__new';state.values.__customer={id:mtNewCustomer?'CUS-'+crypto.randomUUID():t.value,name:existing?.name||'',role:relation.role||'independent',parentId:''};}else{relation[t.dataset.mtRelation]=t.value;if(t.dataset.mtRelation==='role'&&t.value!=='subsidiary')relation.parentId='';}mtRefreshForm();}
  if(t.dataset.mtScope&&mtFlow){mtFlow.scopes=t.checked?[...new Set([...mtFlow.scopes,t.dataset.mtScope])]:mtFlow.scopes.filter(s=>s!==t.dataset.mtScope);if(mtFlow.kind!=='save')mtRepaint(mtApplyModal);}
  if(t.id==='mt-template-select'&&mtFlow){const template=mtTemplates().find(x=>x.id===t.value);mtFlow.templateId=template.id;mtFlow.scopes=template.scopes.filter(s=>s!=='identity');mtApplyModal();}
  if(t.id==='mt-apply-mode'&&mtFlow)mtFlow.mode=t.value;
@@ -1549,6 +1627,171 @@ if(!MT_EXTERNAL){const originalConfirm=actions['confirm-submit'];actions['confir
 const mtOriginalClose=actions.close;actions.close=()=>{mtImportSequence++;$('#modal').classList.remove('mt-dialog');mtOriginalClose();};
 $('#modal').addEventListener('close',()=>{if(!$('#modal').open)$('#modal').classList.remove('mt-dialog');});
 Object.assign(window.AllinPayDemo,{templateFeatures:true,getTemplateState:()=>({mccCodes:mtMccList(),primaryMcc:v2Raw('mcc'),customer:structuredClone(state.values.__customer||null),templates:mtTemplates().map(t=>({id:t.id,name:t.name,version:t.version,scopes:t.scopes})),targets:mtTargets().map(t=>({key:t.key,id:t.id,name:t.name,customer:structuredClone(t.snapshot.values?.__customer||null),mccCodes:mtMccList(t.snapshot.values),primaryMcc:t.snapshot.values?.mcc||'',template:t.snapshot.values?.__templateApplied||null}))})});
+
+// Explainable Demo rules. Weights belong to this prototype, not a provider model.
+const onboardingRiskVersion='DEMO-RISK-20261029-v2';
+const onboardingRiskRules=[
+ ['BUS-01','商戶背景','經營年限少於 1 年',15,()=>v2Raw('licencePeriod')==='01'],
+ ['BUS-02','商戶背景','經營年限 1–3 年',8,()=>v2Raw('licencePeriod')==='02'],
+ ['BUS-03','商戶背景','法律地位為個人',10,()=>v2Raw('legalStatus')==='PERSON'],
+ ['BUS-04','商戶背景','註冊資本少於 10 萬',6,()=>v2Raw('registerCapital')==='01'],
+ ['BUS-05','商戶背景','註冊證書距到期少於 90 天',8,()=>!!v2Raw('registerCertPeriod')&&v2DateDays(v2Raw('registerCertPeriod'))<90],
+ ['MCC-01','行業風險','所選 MCC 含高風險',25,()=>mtMccList().some(c=>V2.catalog.MCCS.find(m=>m.c===c)?.lv==='high')],
+ ['MCC-02','行業風險','所選 MCC 含中風險',12,()=>!onboardingRiskRules[5][4]()&&mtMccList().some(c=>V2.catalog.MCCS.find(m=>m.c===c)?.lv==='mid')],
+ ['PAY-01','產品與交易','開通 CNP／PayByLink 卡產品',15,()=>v2Cnp()],
+ ['PAY-02','產品與交易','卡產品採直連',10,()=>v2Cnp()&&v2Raw('connectType')==='0'],
+ ['PAY-03','產品與交易','月銷售超過 500,000',10,()=>v2Num('avgMonthAmount')>500000],
+ ['PAY-04','產品與交易','單筆最高超過 20,000',8,()=>v2Num('maxAmount')>20000],
+ ['PAY-05','產品與交易','平均單筆偏離所選行業常態超過 3 倍',12,()=>mtMccList().some(c=>{const m=V2.catalog.MCCS.find(m=>m.c===c);return m&&v2Num('avgPerAmount')>m.avg*3;})],
+ ['DOC-01','資料與實體核對','OCR 與人工修改差異不少於 2 項',10,()=>v2Model().signals.ocr||v2Model().ocr.filter(o=>o.applied&&v2Raw(o.key)!==String(o.applied)).length>=2],
+ ['DOC-02','資料與實體核對','無門店照／虛擬辦公室',12,()=>v2Model().signals.virtual||v2Offline()&&!state.files['101401']],
+ ['BANK-01','結算與關聯','結算帳戶為對私',8,()=>v2Raw('isCompay')==='N'],
+ ['BANK-02','結算與關聯','對公帳戶名稱與英文商戶名稱不一致',15,()=>v2Raw('isCompay')==='Y'&&!!v2Raw('cardName')&&!!v2Raw('merchantEnglishName')&&v2NormalizeName(v2Raw('cardName'))!==v2NormalizeName(v2Raw('merchantEnglishName'))],
+ ['BANK-03','結算與關聯','帳戶已關聯其他商戶',20,()=>!!v2Model().signals.cardlink],
+ ['PAY-06','產品與交易','涉及預付／儲值／預售',20,()=>!!v2Model().signals.prepaid]
+];
+function onboardingRiskCoverage(){return [
+ {label:'MCC 行業',done:mtMccList().length>0&&mtMccList().every(c=>V2.catalog.MCCS.some(m=>m.c===c))},
+ {label:'開通產品',done:v2Rows().length>0},
+ {label:'結算帳戶',done:!!(v2Raw('cardName')&&v2Raw('cardNo')&&v2Raw('cardBankCode'))}
+];}
+v2Score=function(){const items=onboardingRiskRules.filter(r=>r[4]()).map(([id,category,label,n])=>({id,category,label:label+(id.startsWith('MCC-')?'（'+mtMccList().filter(c=>V2.catalog.MCCS.find(m=>m.c===c)?.lv===(id==='MCC-01'?'high':'mid')).join('、')+'）':''),n})),raw=items.reduce((s,r)=>s+r.n,0),total=Math.min(100,raw),s=v2Model().signals;return {items,total,raw,level:total<=20?'1':total<=45?'2':'3',reject:s.sanction?'命中制裁名單（示例）':s.frozen?'關聯已凍結／關閉商戶':total>70?'風控評分超過 70':null,modelVersion:onboardingRiskVersion,coverage:onboardingRiskCoverage()};};
+const onboardingProgressOpen={};
+function onboardingFillProgress(){
+ const required=v2Required(),pages=[];
+ for(let step=1;step<=6;step++){
+  const errors=validateStep(step),items=[];
+  const add=(key,label,done,message='')=>{if(!items.some(i=>i.key===key))items.push({key,label,done:!!done,message});};
+  if(step>=2&&step<=5)for(const section of V2.forms[step-2].sections)for(const field of section.fields.filter(v2Visible)){
+   const group=field.id.includes('[]')?field.id.split('[')[0]:null;
+   for(let i=0;i<(group?state.people[group]:1);i++){
+    const key=field.id.replace('[]',`[${i}]`),person=key.split('.').pop(),isRequired=required.has(key)||group&&(['name','firstNameEn','lastNameEn','idcardType','idcardNo'].includes(person)||group==='authSigners'&&person==='birthDay');
+    if(isRequired||errors[key])add(key,(group?section.name+' '+(i+1)+' · ':'')+v2Label(key),!!v2Raw(key)&&!errors[key],errors[key]||'尚未填寫');
+   }
+  }
+  if(step===2&&state.values.__customer?.id)add('_customer','客戶及公司關係',!!state.values.__customer.name&&!errors._customer,errors._customer||'請填寫客戶名稱');
+  if(step===5){add('_products','選擇開通產品',v2Rows().length>0,'請至少選擇一項產品');for(const x of v2Rows())add('_fee-'+x.key,x.g.n+' · '+x.r.n+'費率',!v2FeeErrors(x.r,x.st).length,v2FeeErrors(x.r,x.st).join('；'));}
+  if(step===6){add('_review','資料一致性及風控核對',!Object.keys(errors).length,Object.values(errors)[0]||'');add('_declaration','聲明及確認',!!state.checks['613:4956'],'請勾選提交聲明');if(MT_EXTERNAL){add('signer','簽署人姓名',!!v2Raw('signer'),'請填寫簽署人姓名');add('signerTitle','簽署人職位',!!v2Raw('signerTitle'),'請填寫簽署人職位');add('_signature','電子簽名',!!state.signature,'請完成簽名');}}
+  for(const [key,message] of Object.entries(errors))if(!items.some(i=>i.key===key))add(key,v2Fields.some(f=>f.id===key)?v2Label(key):message,false,message);
+  const completed=items.filter(i=>i.done).length,total=items.length;pages.push({step,name:steps[step-1],completed,total,percent:total?Math.round(completed/total*100):100,missing:items.filter(i=>!i.done),optional:step===1,files:step===1?Object.keys(state.files).length:0});
+ }
+ const total=pages.reduce((s,p)=>s+p.total,0),completed=pages.reduce((s,p)=>s+p.completed,0);return {pages,total,completed,percent:total?Math.round(completed/total*100):0};
+}
+function onboardingProgressCard(){const d=onboardingFillProgress(),current=route().step;return `<article class="mt-fill-progress" aria-label="目前填寫進度"><h2>目前填寫進度</h2><div class="mt-progress-total"><strong>${d.percent}%</strong><span>${d.completed}／${d.total} 關鍵資料完成</span></div><progress value="${d.percent}" max="100" aria-label="整體填寫進度"></progress><p class="hint">按頁查看缺漏或格式問題，點選即可返回填寫。</p><div class="mt-progress-pages">${d.pages.map(p=>`<details data-progress-step="${p.step}" ${onboardingProgressOpen[p.step]??(p.step===current)?'open':''}><summary><span class="mt-progress-dot ${p.optional?'optional':p.missing.length?'pending':'done'}">${p.step}</span><strong>${esc(p.name)}</strong><span>${p.optional?'選填':p.completed+'／'+p.total}</span></summary><div class="mt-progress-page-body">${p.optional?`<p>已上傳 ${p.files} 份文件；未提供不阻擋填寫。</p>`:p.missing.length?`<ul>${p.missing.map(i=>`<li>${btn(esc(i.label),'progress-go','text-button',`data-step="${p.step}" data-key="${esc(i.key)}"`)}<small>${esc(i.message)}</small></li>`).join('')}</ul>`:'<p class="mt-progress-done">關鍵資料已完成</p>'}${btn('前往此頁 →','progress-go','text-button',`data-step="${p.step}"`)}</div></details>`).join('')}</div><small class="hint">進度依目前資料與驗證規則計算，並非審批結果。</small></article>`;}
+const onboardingOriginalOverview=v2RiskOverview;
+v2RiskOverview=function(){const score=v2Score(),missing=score.coverage.filter(c=>!c.done),html=onboardingOriginalOverview().replace('aria-label="申請即時狀態">','aria-label="申請即時狀態">'+onboardingProgressCard());const banner=`<div class="mt-risk-live ${missing.length?'incomplete':''}"><span>${missing.length?'初步評估 · 待補 '+missing.map(c=>c.label).join('、'):'已依目前資料計分'}</span>${btn('計分邏輯','risk-logic','text-button')}</div>`;return html.replace('<div class="v2-status-score">',banner+'<div class="v2-status-score">').replace(missing.length?'<small>系統建議</small>':'__no_match__','<small>初步建議</small>');};
+const onboardingOriginalRefresh=v2RefreshStatus;
+let onboardingCurrentEvent=null;
+for(const type of ['input','change','click'])document.addEventListener(type,e=>onboardingCurrentEvent=e,true);
+v2RefreshStatus=function(){const t=onboardingCurrentEvent?.target;if(onboardingCurrentEvent?.type==='input'&&t?.dataset.v2Field)state.values[t.dataset.v2Field]=t.value;v2SyncDerived();const textCommit=onboardingCurrentEvent?.type==='change'&&t?.matches('input:not([type="checkbox"]):not([type="file"]):not([type="radio"])')&&(t.dataset.field||t.dataset.mtRelation);if(!textCommit)onboardingOriginalRefresh();const industry=$('[data-field="mccName"]');if(industry)industry.value=v2Raw('mccName');const level=$('[data-field="riskLevel"]');if(level)level.value=v2Raw('riskLevel');};
+// Preserve an explicit operator choice before input-driven recalculation runs.
+document.addEventListener('input',e=>{if(e.target.dataset.v2Field==='riskLevel')v2Model().manualRisk=true;},true);
+actions['progress-go']=el=>{const key=el.dataset.key;actions.step({dataset:{step:el.dataset.step}});setTimeout(()=>{if(!key)return;const node=$(`[data-field-wrap="${CSS.escape(key)}"]`)||(key==='_declaration'?$('[data-check="613:4956"]'):key==='_signature'?$('#signature'):key.startsWith('_fee-')?$(`[data-v2-product="${CSS.escape(key.slice(5))}"]`):key==='_customer'?$('#mt-customer'):null);node?.scrollIntoView({behavior:'smooth',block:'center'});(node?.matches('input,select,textarea,button,canvas')?node:node?.querySelector('input,select,textarea,button,summary'))?.focus({preventScroll:true});},0);};
+actions['risk-logic']=()=>{const score=v2Score(),active=new Set(score.items.map(i=>i.id));modal('風控計分邏輯',`<div class="notice">規則版本：${onboardingRiskVersion}<br>總分＝命中規則加分總和（上限 100）。目前 ${score.raw} 分，顯示 ${score.total}／100。</div><p>0–20 低、21–45 中、46–70 高；超過 70 分或命中制裁／凍結示例會阻擋 Demo 提交。MCC 取最高風險一次計分，同一規則不重複加分。</p><div class="mt-risk-rule-list">${onboardingRiskRules.map(([id,category,label,n])=>`<div class="${active.has(id)?'matched':''}"><span><small>${category} · ${id}</small><strong>${label}</strong></span><b>+${n}</b>${pill(active.has(id)?'已命中':'未命中',active.has(id)?'amber':'gray')}</div>`).join('')}</div><p class="hint">以上分值、門檻、MCC 常態金額及處置均為本 Demo 規則，未經真實交易資料校準。未上傳文件不阻擋填寫；線下產品未有門店照僅保留原型的風險提示。沒有實際接入名單、退款或拒付數據。</p><p>設計參考：<a href="https://support.stripe.com/questions/stripe-credit-underwriting-process" target="_blank" rel="noopener">Stripe 商戶審查因素</a>、<a href="https://docs.adyen.com/platforms/manage-account-holder-risk" target="_blank" rel="noopener">Adyen 帳戶規則及處置</a>。參考評估維度與可追溯方式，非其專有演算法。</p>`,btn('返回填寫','close','primary'));};
+document.addEventListener('click',e=>{const summary=e.target.closest('details[data-progress-step]>summary');if(summary)requestAnimationFrame(()=>onboardingProgressOpen[summary.parentElement.dataset.progressStep]=summary.parentElement.open);});
+document.addEventListener('input',e=>{if(e.target.dataset.mtRelation||e.target.dataset.check)v2RefreshStatus();});
+for(const key of ['demo-signature','clear-signature']){const action=actions[key];if(action)actions[key]=el=>{action(el);v2RefreshStatus();};}
+for(const event of ['mouseup','touchend'])document.addEventListener(event,e=>{if(e.target.id==='signature')requestAnimationFrame(()=>v2RefreshStatus());});
+const onboardingOriginalReview=v2Review;v2Review=()=>onboardingOriginalReview().replace('制裁／PEP 命中','制裁名單命中（示例）');
+Object.assign(window.AllinPayDemo,{getFillProgress:()=>onboardingFillProgress(),getRiskRules:()=>({version:onboardingRiskVersion,score:v2Score(),rules:onboardingRiskRules.map(([id,category,label,points,test])=>({id,category,label,points,matched:!!test()}))})});
+
+// Preview bytes stay in memory; persisted drafts contain metadata only.
+const documentThumbnails=new Map();
+DEMO.sourceFiles??=new Map();
+uploadRow=function(d){
+ const f=state.files[d.id],id='document-file-'+d.id,error=state.errors['file-'+d.id],url=f&&!f.needsReselect?DEMO.fileURLs.get(d.id):'',image=f&&/\.(png|jpe?g)$/i.test(f.name),pdf=f&&/\.pdf$/i.test(f.name);
+ const hint=d.hint&&!/選填|不會阻擋|上限|稍後補/.test(d.hint)?`<p class="hint">${esc(d.hint)}</p>`:'';
+ const preview=f?`<div class="mt-upload-preview"><button type="button" class="mt-preview-button" data-action="preview-demo-file" data-id="${d.id}" aria-label="預覽 ${esc(f.name)}" ${!url&&!f.demo?'disabled':''}>${url&&image?`<img src="${esc(url)}" alt="${esc(f.name)} 縮圖">`:url&&pdf?`<img data-preview-source="${esc(url)}" alt="${esc(f.name)} 第一頁預覽" hidden><span class="mt-thumb-state">正在產生 PDF 預覽…</span>`:`<span class="mt-preview-placeholder">${pdf?'PDF':'圖片'}<small>${f.demo?'示例文件':f.needsReselect?'請重新上傳以預覽':'文件預覽'}</small></span>`}</button><div class="mt-preview-info"><strong>${esc(f.name)}</strong><small>${f.size?(f.size/1048576).toFixed(2)+' MB · ':''}${f.demo?'示例附件':f.needsReselect?'原文件未保留，請重新上傳':'僅保留於本機'}</small><div class="upload-actions">${btn('查看文件','preview-demo-file','',`data-id="${d.id}" ${!url&&!f.demo?'disabled':''}`)}${btn('重新上傳','choose-file','',`data-input-id="${id}"`)}${btn('刪除','document-remove-file','danger',`data-id="${d.id}"`)}</div><small>也可拖入新文件取代</small></div><input hidden type="file" id="${id}" data-demo-upload="${d.id}" accept=".pdf,.jpg,.jpeg,.png"></div>`:fileDropControl({inputId:id,accept:'.pdf,.jpg,.jpeg,.png',hint:'PDF／JPG／PNG · 每份上限 10 MB',attributes:`data-demo-upload="${d.id}"`});
+ return `<div class="upload-row ${f?'has-document':''}" data-upload-row="${d.id}" data-document-drop="${d.id}" data-file-drop data-file-input="${id}"><div class="upload-heading"><strong>${labelHTML(d.name)}</strong>${pill(f?'已上傳':'選填',f?'green':'gray')}</div>${hint}${preview}${error?`<p class="error">${esc(error)}</p>`:''}</div>`;
+};
+async function makeDocumentThumbnail(url){
+ let task;try{
+  const pdfjs=await import('./vendor/pdfjs/build/pdf.mjs');pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdfjs/build/pdf.worker.mjs',location.href).href;
+  const source=[...DEMO.sourceFiles.values()].find(s=>s.url===url)?.file;if(!source)throw Error('請重新上傳文件');const bytes=new Uint8Array(await source.arrayBuffer());
+  task=pdfjs.getDocument({data:bytes,isEvalSupported:false,cMapUrl:new URL('./vendor/pdfjs/cmaps/',location.href).href,cMapPacked:true,standardFontDataUrl:new URL('./vendor/pdfjs/standard_fonts/',location.href).href,wasmUrl:new URL('./vendor/pdfjs/wasm/',location.href).href});
+  const doc=await task.promise,page=await doc.getPage(1),base=page.getViewport({scale:1}),view=page.getViewport({scale:Math.min(1,320/base.width)}),canvas=document.createElement('canvas');canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);
+  await page.render({canvasContext:canvas.getContext('2d'),viewport:view}).promise;const src=canvas.toDataURL('image/png');canvas.width=canvas.height=1;return {src,pages:doc.numPages};
+ }catch{return {error:'無法產生縮圖，可按「查看文件」開啟原件。'};}finally{try{await task?.destroy();}catch{}}
+}
+function showDocumentThumbnail(url,result){
+ for(const image of $$('[data-preview-source]').filter(n=>n.dataset.previewSource===url)){
+  const caption=image.parentElement.querySelector('.mt-thumb-state');
+  if(result.src){image.src=result.src;image.hidden=false;if(caption)caption.textContent='第 1／'+result.pages+' 頁';}
+  else if(caption)caption.textContent=result.error;
+ }
+}
+let documentThumbnailQueue=Promise.resolve();
+function refreshDocumentThumbnails(){
+ const active=new Set(DEMO.fileURLs.values());for(const url of documentThumbnails.keys())if(!active.has(url))documentThumbnails.delete(url);
+ for(const image of $$('[data-preview-source]')){const url=image.dataset.previewSource,entry=documentThumbnails.get(url);if(entry?.result){showDocumentThumbnail(url,entry.result);continue;}if(entry)continue;
+  const record={result:null};documentThumbnails.set(url,record);documentThumbnailQueue=documentThumbnailQueue.then(async()=>{if(![...DEMO.fileURLs.values()].includes(url))return;record.result=await makeDocumentThumbnail(url);if(documentThumbnails.get(url)===record)showDocumentThumbnail(url,record.result);});
+ }
+}
+const documentPreviewRender=render;render=function(){documentPreviewRender();queueMicrotask(refreshDocumentThumbnails);};
+actions['preview-demo-file']=el=>{
+ const f=state.files[el.dataset.id],url=f&&!f.needsReselect?DEMO.fileURLs.get(el.dataset.id):'';if(!f)return;
+ const body=url?/\.pdf$/i.test(f.name)?`<iframe class="br-pdf-preview" src="${esc(url)}" title="${esc(f.name)} 原文件"></iframe>`:`<img class="batch-preview" alt="${esc(f.name)}" src="${esc(url)}">`:`<div class="notice">${f.demo?'這是完整示例中的附件記錄，沒有真實文件。可用「重新上傳」加入自己的文件。':'請重新上傳文件以查看原件。'}</div>`;
+ modal('文件預覽',`<p><strong>${esc(f.name)}</strong></p>${body}`,btn('關閉','close')+(url?btn('開啟原文件','document-open-original','',`data-id="${el.dataset.id}"`):'')+btn('重新上傳','document-replace','primary',`data-id="${el.dataset.id}"`));
+};
+actions['document-open-original']=el=>{const f=state.files[el.dataset.id],url=f&&!f.needsReselect?DEMO.fileURLs.get(el.dataset.id):'';if(url)window.open(url,'_blank','noopener');};
+actions['document-replace']=el=>{$('#modal').close();document.getElementById('document-file-'+el.dataset.id)?.click();};
+const documentDeleteAction=actions['document-remove-file']||actions['remove-file'];
+actions['document-remove-file']=el=>{const url=DEMO.fileURLs.get(el.dataset.id);if(url)URL.revokeObjectURL(url);DEMO.fileURLs.delete(el.dataset.id);DEMO.sourceFiles.delete(el.dataset.id);documentDeleteAction(el);};
+
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.MerchantWorkbookModel=factory();})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ function create(V2,MT){
+  const fields=V2.forms.flatMap(f=>f.sections.flatMap(s=>s.fields)).filter(f=>!f.id.includes('[]')),byId=Object.fromEntries(fields.map(f=>[f.id,f])),title=k=>byId[k]?.label.split(/\s{2,}/)[0].replace(/\s*\*/g,'').trim()||k;
+  const common=['merchantName','merchantEnglishName','registerCertNo','mcc','contactName','contactPhone','contactEmail','settlePeriod','currency','cardBankName','cardBankCode','cardName','cardNo','addrStreet','addrStreetEn'];
+  const templateFields=[...new Set(['mcc',...MT.scopeFields.profile,...MT.scopeFields.settlement,...MT.scopeFields.products,...MT.scopeFields.identity])].filter(k=>byId[k]&&!['mccName','merchantAgreementNum'].includes(k));
+  const banks={'003':'渣打銀行（香港）','004':'香港上海滙豐銀行','012':'中國銀行（香港）','015':'東亞銀行','016':'星展銀行（香港）','024':'恒生銀行'};
+  const products=V2.catalog.GROUPS.flatMap(g=>g.rows.map((r,i)=>({key:g.k+'|'+i,label:g.n+'／'+r.n,g,r})));
+  const segment={loc:'本地卡',crs:'跨境卡',pref:'優惠費率',std:'統一費率',cn:'國內錢包',hk:'香港錢包',dcc:'DCC',per:'每筆費用'};for(const t of V2.catalog.TENORS)segment['t'+t]=t+' 期分期';
+  const companyHeaders=['公司代號','客戶／集團名稱','公司關係','主公司代號','參數模板',...common.map(title),'其他 MCC 1','其他 MCC 2','其他 MCC 3','其他 MCC（以分號分隔）'];
+  const templateHeaders=['模板名稱','套用範圍',...templateFields.map(title),'其他 MCC（以分號分隔）'];
+  const feeHeaders=['公司代號','模板名稱','產品項目','開通類別','開通項目','收費類型','適用範圍','費率（%）','每筆費用（HKD）','保底（HKD）','封頂（HKD）','Markup（%）','啟用該範圍','優計劃'];
+  const featureHeaders=['公司代號','模板名稱','產品類別','功能項目','開通','特計類型'];
+  const personFields=[['name','姓名'],['firstNameEn','英文名'],['lastNameEn','英文姓'],['idcardType','證件類型'],['idcardNo','證件號碼'],['idcardNoPeriod','證件有效期'],['birthDay','出生日期']],personGroups={directors:'董事',authSigners:'授權簽名人',shareHolders:'股東'};
+  const specs=[{name:'商戶資料',headers:companyHeaders,fields:common},{name:'參數模板',headers:templateHeaders,fields:templateFields},{name:'產品費率',headers:feeHeaders},{name:'產品功能',headers:featureHeaders},{name:'人員資料',headers:['公司代號','模板名稱','人員類型','序號',...personFields.map(([,label])=>label)]}];
+  const value=(k,v)=>V2.options[k]?.find(o=>o[0]===String(v))?.[1]||String(v??'');
+  function canonical(k,v){if(v instanceof Date)return v.toISOString().slice(0,10);let s=String(v??'').trim();if((/Period$|birthDay$/.test(k))&&!['settlePeriod','licencePeriod'].includes(k)&&s.includes('/')){const [y,m,d]=s.split('/');if(y?.length===4&&m&&d)s=y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');}if(k==='mcc')return s.match(/^\d{4}/)?.[0]||s;if(k==='cardBankCode'&&/^\d{1,3}$/.test(s))return s.padStart(3,'0');return V2.options[k]?.find(o=>o[1]===s)?.[0]||s;}
+  const yes=v=>['是','Y','true','1'].includes(String(v));
+  function toSheets(bundle){const sheets=Object.fromEntries(specs.map(s=>[s.name,[]]));
+   const addPeople=(owner,company='',template='')=>{for(const [group,label] of Object.entries(personGroups)){const keys=Object.keys(owner.values||{}).filter(k=>k.startsWith(group+'[')),count=Math.max(Number(owner.people?.[group])||0,...keys.map(k=>Number(k.match(/\[(\d+)\]/)[1])+1));for(let i=0;i<count;i++)sheets['人員資料'].push([company,template,label,i+1,...personFields.map(([k])=>value(k,owner.values?.[group+'['+i+'].'+k]))]);}};
+   const addProducts=(p,company='',template='')=>{if(!p)return;for(const [key,st] of Object.entries(p.rates||{})){const def=products.find(x=>x.key===key);if(!def)continue;const prefixes=Object.keys(segment).filter(prefix=>Object.keys(st.v||{}).some(k=>k.startsWith(prefix+'_')));if(!prefixes.length&&st.on)prefixes.push(st.ct==='Regional'?'loc':st.ct==='Wallet'?'cn':def.r.mode==='PER'?'per':'std');for(const prefix of prefixes){const v=st.v||{},enabled=prefix==='pref'?v.pref_on:prefix.startsWith('t')?v[prefix+'_on']:true;sheets['產品費率'].push([company,template,def.label,p.groups?.[def.g.k]?'是':'否',st.on?'是':'否',st.ct||'',segment[prefix],v[prefix+'_rate']??'',v[prefix+'_fix']??'',v[prefix+'_min']??'',v[prefix+'_max']??'',v[prefix+'_markup']??'',enabled?'是':'否',v.upi==='Y'?'是':'否']);}}
+    for(const [key,on] of Object.entries(p.groups||{}))sheets['產品功能'].push([company,template,V2.catalog.GROUPS.find(x=>x.k===key)?.n||key,'產品類別開通',on?'是':'否','']);
+    for(const [key,on] of Object.entries(p.combo||{})){const [g,feature]=key.split('|');sheets['產品功能'].push([company,template,V2.catalog.GROUPS.find(x=>x.k===g)?.n||g,feature,on?'是':'否','']);}for(const [brand,s] of Object.entries(p.sme||{}))sheets['產品功能'].push([company,template,'收單','特計商戶 '+brand,s.on?'是':'否',s.type]);
+   };
+   for(const t of bundle.templates||[]){sheets['參數模板'].push([t.name,(t.scopes||['profile','mcc','settlement','products']).map(s=>MT.labels[s]).join(';'),...templateFields.map(k=>value(k,t.values?.[k])),MT.codes(t.values?.mccCodes||t.values?.mcc).filter(c=>c!==t.values?.mcc).join(';')]);addProducts(t.products,'',t.name);if(t.scopes?.includes('identity'))addPeople(t,'',t.name);}
+   for(const c of bundle.companies||[]){const v=c.values||{},mcc=MT.codes(v.mccCodes||v.mcc).filter(x=>x!==v.mcc);sheets['商戶資料'].push([c.key,c.customerName||bundle.customer?.name||'',({parent:'主公司',subsidiary:'子公司',independent:'獨立公司'}[c.role]||'獨立公司'),c.parentKey||'',c.templateName||bundle.defaultTemplate||'',...common.map(k=>value(k,v[k])),...Array.from({length:3},(_,i)=>mcc[i]||''),mcc.slice(3).join(';')]);addProducts(c.products,c.key);addPeople(c,c.key);}
+   return sheets;
+  }
+  function fromSheets(sheets){const templates=[],companies=[],targets=new Map(),unpack=(row,keys)=>Object.fromEntries(keys.map(k=>[k,canonical(k,row[title(k)])]).filter(([,v])=>v!==''));
+   for(const row of sheets['參數模板']||[]){const name=String(row['模板名稱']||'').trim();if(!name)continue;if(targets.has('T:'+name))throw Error('模板名稱重複：'+name);const values=unpack(row,templateFields);values.mccCodes=MT.codes([values.mcc,...MT.codes(row['其他 MCC（以分號分隔）'])].filter(Boolean));const t={name,scopes:row['套用範圍']?String(row['套用範圍']).split(/[;；]/).map(s=>Object.keys(MT.labels).find(k=>MT.labels[k]===s.trim())||s.trim()):['profile','mcc','settlement','products'],values,products:{groups:{},rates:{},combo:{},sme:{}}};templates.push(t);targets.set('T:'+name,t);}
+   for(const row of sheets['商戶資料']||[]){const key=String(row['公司代號']||'').trim();if(!key){if(Object.values(row).some(v=>String(v||'').trim()))throw Error('商戶資料有已填內容，但缺少公司代號');continue;}if(targets.has('C:'+key))throw Error('公司代號重複：'+key);const values=unpack(row,common),bank=Object.entries(banks).find(([,n])=>n===values.cardBankName);if(bank)values.cardBankCode=bank[0];values.mccCodes=MT.codes([values.mcc,...[row['其他 MCC 1'],row['其他 MCC 2'],row['其他 MCC 3']].map(v=>canonical('mcc',v)),...MT.codes(row['其他 MCC（以分號分隔）'])].filter(Boolean));const c={key,customerName:String(row['客戶／集團名稱']||''),role:({'主公司':'parent','子公司':'subsidiary','獨立公司':'independent'}[row['公司關係']]||row['公司關係']||'independent'),parentKey:row['主公司代號']||'',templateName:row['參數模板']||'',values,products:{groups:{},rates:{},combo:{},sme:{}}};companies.push(c);targets.set('C:'+key,c);}
+   const get=row=>{const company=String(row['公司代號']||'').trim(),template=String(row['模板名稱']||'').trim();if(!!company===!!template)throw Error('產品設定須填寫公司代號或模板名稱，二者擇一');const t=targets.get(company?'C:'+company:'T:'+template);if(!t)throw Error('產品設定找不到對象：'+(company||template));return t;};
+   const seen=new Set();for(const row of sheets['產品費率']||[]){if(!Object.values(row).some(v=>String(v||'').trim()))continue;const t=get(row),def=products.find(p=>p.label===row['產品項目']),prefix=Object.entries(segment).find(([,n])=>n===row['適用範圍'])?.[0];if(!def||!prefix)throw Error('請從下拉選單選擇產品項目及適用範圍');const unique=(row['公司代號']||row['模板名稱'])+'|'+def.key+'|'+prefix;if(seen.has(unique))throw Error('產品適用範圍重複：'+def.label+' '+row['適用範圍']);seen.add(unique);const p=t.products,ct=row['收費類型']||def.r.ct||null,groupOn=yes(row['開通類別']),on=yes(row['開通項目']);if(p.groups[def.g.k]!==undefined&&p.groups[def.g.k]!==groupOn)throw Error('同一產品類別的開通設定不一致');p.groups[def.g.k]=groupOn;p.rates[def.key]??={on,ct,v:{}};const st=p.rates[def.key];if(st.on!==on||st.ct!==ct)throw Error('同一產品的開通或收費類型不一致');for(const [head,suffix] of [['費率（%）','rate'],['每筆費用（HKD）','fix'],['保底（HKD）','min'],['封頂（HKD）','max'],['Markup（%）','markup']])if(String(row[head]??'').trim()!=='')st.v[prefix+'_'+suffix]=typeof row[head]==='number'&&['rate','fix','markup'].includes(suffix)?row[head].toFixed(2):String(row[head]);if(prefix==='pref'||prefix.startsWith('t'))st.v[prefix+'_on']=yes(row['啟用該範圍']);if(def.r.upi)st.v.upi=yes(row['優計劃'])?'Y':'N';}
+   for(const row of sheets['產品功能']||[]){if(!Object.values(row).some(v=>String(v||'').trim()))continue;const t=get(row),feature=String(row['功能項目']||'');if(feature.startsWith('特計商戶 ')){const brand=feature.slice(5);t.products.sme[brand]={on:yes(row['開通']),type:row['特計類型']};}else if(feature==='產品類別開通'){const g=V2.catalog.GROUPS.find(x=>x.n===row['產品類別']);if(!g)throw Error('產品類別不正確');const enabled=yes(row['開通']);if(t.products.groups[g.k]!==undefined&&t.products.groups[g.k]!==enabled)throw Error('產品類別開通與費率列設定不一致');t.products.groups[g.k]=enabled;}else{const group=V2.catalog.GROUPS.find(g=>g.n===row['產品類別']);if(!group||!group.combo?.includes(feature))throw Error('產品功能與類別不符');t.products.combo[group.k+'|'+feature]=yes(row['開通']);}}
+   const peopleSeen=new Set();for(const row of sheets['人員資料']||[]){if(!Object.values(row).some(v=>String(v||'').trim()))continue;const t=get(row),group=Object.keys(personGroups).find(k=>personGroups[k]===row['人員類型']),number=Number(row['序號']);if(!group||!Number.isInteger(number)||number<1||number>20)throw Error('人員資料須選擇類型，序號為 1–20');const unique=(row['公司代號']?'C:':'T:')+(row['公司代號']||row['模板名稱'])+'|'+group+'|'+number;if(peopleSeen.has(unique))throw Error('人員類型與序號重複');peopleSeen.add(unique);t.people??={directors:1,authSigners:0,shareHolders:0};t.people[group]=Math.max(t.people[group],number);for(const [k,label] of personFields){const v=canonical(k,row[label]);if(v)t.values[group+'['+(number-1)+'].'+k]=v;}}
+   for(const c of companies){if(!c.values.mccCodes?.length)delete c.values.mccCodes;const p=c.products;if(!Object.keys(p.groups).length&&!Object.keys(p.rates).length&&!Object.keys(p.combo).length&&!Object.keys(p.sme).length)c.products=null;}
+   return {format:'allinpay.merchant-bundle',version:1,templates,companies};
+  }
+  return {specs,common,templateFields,title,banks,products,segment,toSheets,fromSheets};
+ }
+ return {create};
+});
+
+const MW=MerchantWorkbookModel.create(V2,MT);
+let workbookLibrary=null;
+function loadWorkbookLibrary(){return workbookLibrary??=new Promise((resolve,reject)=>{if(window.ExcelJS)return resolve(window.ExcelJS);const script=document.createElement('script');script.src='./vendor/exceljs/exceljs.min.js';script.onload=()=>resolve(window.ExcelJS);script.onerror=()=>{workbookLibrary=null;reject(Error('Excel 讀取元件未能載入，請重試或使用 CSV'));};document.head.append(script);});}
+async function readWorkbook(file){const library=await loadWorkbookLibrary(),workbook=new library.Workbook();await workbook.xlsx.load(validateWorkbookArchive(await file.arrayBuffer()));const sheets={};for(const spec of MW.specs){const sheet=workbook.getWorksheet(spec.name);if(!sheet)continue;if(sheet.rowCount>1005)throw Error('每個工作表最多 1,000 列資料');const heads=sheet.getRow(4).values.slice(1).map(v=>String(v||''));if(new Set(heads).size!==heads.length)throw Error(spec.name+' 有重複的標題');const rows=[];for(let row=5;row<=sheet.rowCount;row++){const object={};heads.forEach((h,i)=>{const cell=sheet.getCell(row,i+1),value=cell.value;if(value&&typeof value==='object'&&value.formula&&!('result' in value)){object[h]='';return;}const raw=value&&typeof value==='object'&&value.formula?value.result:value;object[h]=raw instanceof Date?raw.toISOString().slice(0,10):raw?.richText?raw.richText.map(t=>t.text).join(''):(raw?.text||(raw??''));});if(Object.values(object).some(v=>String(v).trim()))rows.push(object);}sheets[spec.name]=rows;}if(!sheets['商戶資料']&&!sheets['參數模板'])throw Error('請使用下載的 Excel 範本，保留工作表及第 4 列標題');return MW.fromSheets(sheets);}
+const readMerchantImport=mtReadImport;
+function validateWorkbookArchive(bytes){const view=new DataView(bytes);let end=-1;for(let i=view.byteLength-22;i>=Math.max(0,view.byteLength-65557);i--)if(view.getUint32(i,true)===0x06054b50){end=i;break;}if(end<0)throw Error('Excel 文件格式不正確');const count=view.getUint16(end+10,true);let position=view.getUint32(end+16,true),total=0;if(count>2000)throw Error('Excel 文件項目過多');for(let i=0;i<count;i++){if(position+46>view.byteLength||view.getUint32(position,true)!==0x02014b50)throw Error('Excel 文件已損毀');total+=view.getUint32(position+24,true);if(total>32*1048576)throw Error('Excel 解壓後資料超過上限，請分批匯入');position+=46+view.getUint16(position+28,true)+view.getUint16(position+30,true)+view.getUint16(position+32,true);}return bytes;}
+mtReadImport=async function(file){if(!file)return;if(!/\.xlsx$/i.test(file.name))return readMerchantImport(file);const sequence=++mtImportSequence,owner=mtOwner();try{if(file.size>2*1048576)throw Error('請選擇 2 MB 以下的 Excel 檔案');mtError('正在讀取 Excel 工作表…');const bundle=await readWorkbook(file);if(sequence!==mtImportSequence||owner!==mtOwner()||!$('#mt-import-file'))return;await readMerchantImport(new File([JSON.stringify(bundle)],'workbook.json',{type:'application/json'}));if(mtImport){mtImport.filename=file.name;mtImportResult();mtError('');}}catch(e){mtError(e.message||'Excel 文件無法開啟，請使用下載的範本');}};
+function downloadWorkbook(name){const a=document.createElement('a');a.href='./import-templates/'+name;a.download=name;a.click();}
+async function exportMerchantWorkbook(template){try{const library=await loadWorkbookLibrary(),book=new library.Workbook();await book.xlsx.load(await (await fetch('./import-templates/merchant-import-template.xlsx')).arrayBuffer());const rows=MW.toSheets({templates:[template],companies:[]});for(const spec of MW.specs){const sheet=book.getWorksheet(spec.name);for(let i=5;i<=sheet.rowCount;i++)sheet.getRow(i).eachCell(c=>{c.value=null;});(rows[spec.name]||[]).forEach((values,i)=>sheet.getRow(5+i).values=values);}const buffer=await book.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='merchant-template.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}catch(e){mtError(e.message||'模板匯出失敗，請重試');}}
+actions['mt-excel-download']=()=>downloadWorkbook('merchant-import-template.xlsx');
+actions['mt-excel-example']=()=>downloadWorkbook('merchant-import-example.xlsx');
+actions['mt-export']=el=>{const template=mtTemplates().find(t=>t.id===el.dataset.id);if(template)void exportMerchantWorkbook(template);};
 
 render();
 })();

@@ -100,12 +100,12 @@ async function brReady(){
 function brApply(){
   const b=DEMO.br;if(!brAlive(b)||!b.confirmed||b.phase!=='ready')return;
   if(state.fail)return brModal('資料寫入失敗','<div class="notice error">這次資料尚未寫入，原有申請內容已保留。</div><p>本頁仍保留核對結果。關閉失敗模擬後可重試。</p>',btn('取消','close')+btn('返回核對','br-return')+btn('關閉失敗模擬並重試','br-retry','primary'),'failure');
-  const plans=brPlan(b),before=structuredClone(state.values),files=structuredClone(state.files);let fileURL;
+  const plans=brPlan(b),before=structuredClone(state.values),files=structuredClone(state.files),previousURL=DEMO.fileURLs.get('140101'),previousSource=DEMO.sourceFiles?.get('140101');let fileURL;
   try{
     const apply=plans.filter(p=>p.write);for(const p of apply)state.values[p.target]=p.value;
     const oldLog=v2Model().ocr.filter(o=>!apply.some(p=>p.target===o.key));
     v2Model().ocr=[...oldLog,...apply.map(p=>({key:p.target,value:p.value,applied:p.value,source:b.demo?'BR 虛構示例':'BR · 本機辨識 · 第 '+b.pageNumber+' 頁',step:p.step,confidence:null,selected:true,method:b.result.method}))];
-    if(b.file){fileURL=URL.createObjectURL(b.file);state.files['140101']={name:b.file.name,size:b.file.size,type:b.file.type,demo:false,needsReselect:false,page:b.pageNumber};}
+    if(b.file){fileURL=URL.createObjectURL(b.file);DEMO.fileURLs.set('140101',fileURL);(DEMO.sourceFiles??=new Map()).set('140101',{file:b.file,url:fileURL});state.files['140101']={name:b.file.name,size:b.file.size,type:b.file.type,demo:false,needsReselect:false,page:b.pageNumber};}
     else if(!state.files['140101'])state.files['140101']={name:'SAMPLE-BR.pdf',size:0,demo:true};
     v2SyncDerived();state.errors={};state.savedAt=null;
     b.applied=true;b.phase='result';b.imported=apply.map(p=>p.label+'：'+v2Display(p.target,p.value));
@@ -113,8 +113,8 @@ function brApply(){
     for(const [k,l]of brDefs)if(!b.selected.has(k)&&brValue(k))b.pending.push(l+'：未選取，待核對');
     b.unrecognized=brDefs.filter(([k])=>!brValue(k)).map(([,l])=>l+'：未取得候選值');
     render();v2ImportResult(b.imported,b.pending,b.unrecognized,'close',plans.filter(p=>p.same));$('#modal').classList.remove('br-dialog');delete $('#modal').dataset.br;
-    if(fileURL){const previous=DEMO.fileURLs.get('140101');DEMO.fileURLs.set('140101',fileURL);if(previous)URL.revokeObjectURL(previous);}
-  }catch(e){b.phase='ready';b.applied=false;state.values=before;state.files=files;if(fileURL)URL.revokeObjectURL(fileURL);brModal('資料寫入失敗','<div class="notice error">未能完成套用，已還原申請資料。請重試或返回核對。</div>',btn('取消','close')+btn('返回核對','br-return')+btn('重試寫入','br-apply','primary'),'failure');}
+    if(fileURL&&previousURL)URL.revokeObjectURL(previousURL);
+  }catch(e){b.phase='ready';b.applied=false;state.values=before;state.files=files;if(fileURL){URL.revokeObjectURL(fileURL);if(previousURL)DEMO.fileURLs.set('140101',previousURL);else DEMO.fileURLs.delete('140101');if(previousSource)DEMO.sourceFiles.set('140101',previousSource);else DEMO.sourceFiles?.delete('140101');}brModal('資料寫入失敗','<div class="notice error">未能完成套用，已還原申請資料。請重試或返回核對。</div>',btn('取消','close')+btn('返回核對','br-return')+btn('重試寫入','br-apply','primary'),'failure');}
 }
 Object.assign(actions,{'br-start':brStart,'br-recognize':()=>void brRecognize(),'br-ready':()=>void brReady(),'br-return':()=>brReview(),'br-apply':brApply,'br-retry':()=>{state.fail=false;brApply();},'br-cancel':()=>DEMO.br?.controller?.abort()});
 document.addEventListener('change',e=>{const el=e.target;

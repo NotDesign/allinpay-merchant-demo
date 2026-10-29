@@ -40,3 +40,17 @@ const usabilityOriginalReview=v2Review;
 v2Review=()=>usabilityOriginalReview().replace('✓ 電郵已驗證（模擬）','✓ 聯絡資料已填寫');
 const usabilityOriginalPeople=v2PersonSection;
 v2PersonSection=section=>usabilityOriginalPeople(section).replace(section.fields[0]?.id.startsWith('authSigners')?'董事修改時同步更新；取消勾選可獨立修改。':'__no_replacement__','身分資料跟隨董事；出生日期可獨立修改。');
+// Summarize optional document information without repeating full-width empty cards.
+const usabilityOriginalDocuments=v2Documents;
+v2Documents=function(){
+ const template=document.createElement('template');template.innerHTML=usabilityOriginalDocuments().replaceAll('PDF／JPG／PNG／ZIP','PDF／JPG／PNG').replaceAll('PDF／ZIP','PDF');
+ const ocr=template.content.querySelector('[data-section="辨識結果及來源"]'),consistency=template.content.querySelector('[data-section="資料一致性檢查"]'),provided=template.content.querySelector('[data-section="文件提供狀態"],[data-section="必交文件檢查"]');
+ const log=v2Model().ocr,list=v2Consistency(),pending=list.filter(c=>!c.same&&!c.confirmed),selected=Object.keys(state.files).length;
+ const cards=[];
+ function detail(card,title,badge,color,open=false){if(!card)return '';card.querySelector('h2')?.remove();card.querySelector(':scope > p.hint')?.remove();return `<details class="mt-document-detail ${open?'needs-review':''}" ${open?'open':''}><summary><strong>${title}</strong>${pill(badge,color)}</summary><div class="mt-document-detail-body">${card.innerHTML}</div></details>`;}
+ if(log.length)cards.push(detail(ocr,'辨識結果及來源',log.filter(o=>o.applied).length+'／'+log.length+' 已套用','blue'));
+ if(list.length)cards.push(detail(consistency,'資料一致性檢查',pending.length?pending.length+' 項待核對':list.length+' 項已核對',pending.length?'amber':'green',!!pending.length));
+ const notice=`<div class="mt-document-notice" role="status"><strong>文件為選填</strong><span>已選 ${selected} 份 · 未提供不會阻擋下一步</span><small>辨識只在本機處理；核對並勾選後才帶入表單。</small></div>`;
+ const marker=document.createElement('div');marker.className='mt-document-status';marker.innerHTML=notice+(cards.length?'<div class="mt-document-status-grid">'+cards.join('')+'</div>':'');
+ (ocr||consistency||provided)?.before(marker);ocr?.remove();consistency?.remove();provided?.remove();return template.innerHTML;
+};

@@ -31,7 +31,7 @@ const base=process.env.DEMO_URL||'http://127.0.0.1:4321/backoffice.html';
  await p.locator('[data-v2-product="POS|0"]').uncheck();assert(await rate('POS|0','loc_rate').isDisabled());await p.locator('[data-v2-product="POS|0"]').check();
  checks.push('Direct editing preserves focus and pricing-type values; preference, DCC, 36-month instalment, min/max validation and retained deselected fees work');
  assert.equal(await p.locator('.v2-sme-table tbody tr').count(),3);assert.equal(await p.getByText('請先在第 3 步填寫 MCC',{exact:true}).count(),3);assert.equal(await p.locator('[data-v2-sme]:enabled').count(),0);
- await p.evaluate(()=>location.hash='/application/3');await p.waitForSelector('[data-field="mcc"]');await p.locator('[data-field="mcc"]').fill('5411');await p.locator('[data-field="mcc"]').blur();
+ await p.evaluate(()=>location.hash='/application/3');await p.locator('.mt-mcc-picker summary').click();await p.locator('[data-mt-mcc="5411"]').check();await p.locator('[data-action="mt-mcc-done"]').click();
  await p.evaluate(()=>location.hash='/application/5');await p.waitForSelector('.v2-sme-table');assert(await p.locator('[data-v2-sme="VISA"]').isEnabled());await p.locator('[data-v2-sme-type="VISA"]').selectOption('SMESMK');
  checks.push('SME table has three card organizations; blank MCC locks controls; eligible types depend on MCC');
  for(const width of [1600,1024,768,390,320]){
