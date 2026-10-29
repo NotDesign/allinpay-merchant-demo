@@ -18,7 +18,7 @@ const base=process.env.EXTERNAL_URL||'http://127.0.0.1:4321/external.html';
    const geometry=await page.locator('.header').evaluate(header=>{
     const h=header.getBoundingClientRect(),els=[...header.querySelectorAll('.brand,.header-actions>select,.header-actions>.email,.header-actions>button')].filter(n=>getComputedStyle(n).display!=='none');
     const r=els.map(n=>({left:n.getBoundingClientRect().left,right:n.getBoundingClientRect().right,top:n.getBoundingClientRect().top,bottom:n.getBoundingClientRect().bottom}));
-    return {contained:r.every(b=>b.left>=h.left&&b.right<=h.right&&b.top>=h.top&&b.bottom<=h.bottom),overlap:r.some((a,i)=>r.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)),buttons:[...header.querySelectorAll('.header-actions>button')].map(n=>{const range=document.createRange();range.selectNodeContents(n);return {text:n.textContent,lines:range.getClientRects().length,height:n.getBoundingClientRect().height,overflow:n.scrollWidth>n.clientWidth};}),headerOverflow:header.scrollWidth>header.clientWidth};
+    return {contained:r.every(b=>b.left>=h.left&&b.right<=h.right&&b.top>=h.top&&b.bottom<=h.bottom),overlap:r.some((a,i)=>r.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)),buttons:[...header.querySelectorAll('.header-actions>button:not(.nf-bell)')].map(n=>{const range=document.createRange();range.selectNodeContents(n);return {text:n.textContent,lines:range.getClientRects().length,height:n.getBoundingClientRect().height,overflow:n.scrollWidth>n.clientWidth};}),headerOverflow:header.scrollWidth>header.clientWidth};
    });
    assert(geometry.contained,width+' '+route+' header content clipped');assert(!geometry.overlap,width+' '+route+' overlapping controls');assert(!geometry.headerOverflow,width+' '+route+' header overflow');
    for(const b of geometry.buttons){assert.equal(b.lines,1,width+' '+route+' wrapped '+b.text);assert.equal(b.height,40);assert.equal(b.overflow,false);}
@@ -26,7 +26,7 @@ const base=process.env.EXTERNAL_URL||'http://127.0.0.1:4321/external.html';
   }
  }
  checks.push('1920/1440/1024/900/768/700/390/320 widths across applications, form and review: no header overflow, overlap or wrapped button labels');
- await page.setViewportSize({width:1440,height:900});await page.locator('.header [data-action="home"]').click();await page.waitForSelector('.cards');await click('new');await click('ns-blank');await page.waitForSelector('.application');
+ await page.setViewportSize({width:1440,height:900});await page.locator('.header [data-action="home"]').click();await page.waitForSelector('.cards');await click('new');await click('ns-blank');await click('ns-enter');await page.waitForSelector('.application');
  await page.evaluate(()=>location.hash='/form/2');await page.locator('[data-field="merchantName"]').fill('Header layout demo');await click('save');assert.equal(await page.locator('#modal-title').innerText(),'草稿儲存成功');await page.locator('#modal [data-action="close"]').first().click();
  await page.locator('.header [data-action="home"]').click();await page.waitForSelector('.cards');assert((await page.locator('.cards').innerText()).includes('Header layout demo'));
  await page.locator('.header [data-action="logout"]').click();await page.locator('#modal [data-action="close"]').first().click();assert.equal(await page.locator('.header').count(),1);

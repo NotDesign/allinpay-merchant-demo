@@ -30,3 +30,11 @@ button,input,select,textarea,.card,.notice,.readonly-banner,dialog,.column-popov
 .column-freeze button.active{background:#e3f2fa;color:#087fb5}
 .column-freeze button.active:after{content:'✓';float:right}
 .merchant-table-new td .website{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+
+/* Header home target and account controls retain the existing sidebar structure. */
+.tabs a.home-tab{display:flex;align-items:center;justify-content:center;flex:none;width:48px;min-width:48px;padding:0}
+.tabs .home-tab svg{display:block;width:24px;height:24px;flex:none}
+.sidebar-bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:18px 14px;line-height:1.5}
+.sidebar-bottom>div{grid-column:1/-1;line-height:1.5}
+.sidebar-bottom .user-name{margin:0;font-size:13px;line-height:1.5}
+.sidebar-bottom>button{width:100%;min-width:0;min-height:36px;margin:2px 0 0;padding:7px 10px;line-height:20px;text-align:center}

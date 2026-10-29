@@ -51,8 +51,8 @@ function merchantColumnWidths(cols){
   if(h==='選取')return 44;
   if(h==='操作')return Math.ceil([...(can(2)?['編輯']:[]),'公司詳情',...(can(6)?['BR轉換']:[]),...(can(7)?['審核']:[]),...(can(8)?['同步至 All-In Pay']:[])].reduce((n,v)=>n+measure(v)+18,0)+46);
   const header=measure(h,true)+54;
-  const value=Math.max(0,...data.map(r=>measure(cellValue(r,h))));
-  const extra=h==='銀行帳號'&&can(5)?56:['商戶狀態','公司 MID'].includes(h)?46:28;
+  const value=Math.max(0,...data.flatMap(r=>h==='銀行帳號'&&can(5)?[measure(cellValue(r,h)),measure(r.bank||'')]:[measure(cellValue(r,h))]));
+  const extra=h==='銀行帳號'&&can(5)?80:['商戶狀態','公司 MID'].includes(h)?46:28;
   return Math.ceil(Math.max(header,caps[h]?Math.min(value+extra,caps[h]):value+extra));
  });
 }
