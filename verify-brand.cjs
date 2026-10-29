@@ -17,11 +17,13 @@ async function artwork(p,selector,label){
  });
  assert.equal(result.width,2060);assert.equal(result.height,763);
  assert(Math.abs(result.ratio-2060/763)<.01,label+' original image proportions');
- assert.deepEqual(result.background,[0,0,0,0],label+' real transparent background');
- assert.deepEqual(result.title,[46,35,53,255],label+' original title color');
- assert.deepEqual(result.tagline,[49,39,56,255],label+' original tagline color');
- assert.deepEqual(result.fingerprint,[247,240,249,255],label+' fingerprint remains opaque');
- assert.deepEqual(result.shape,[140,116,216,255],label+' original artwork color');
+ assert(result.background[3]<=1,label+' real transparent background');
+ // Brave may add one-bit canvas noise; the independent SHA check below still requires exact original asset bytes.
+ const pixel=(actual,expected,name)=>assert(actual.every((v,i)=>Math.abs(v-expected[i])<=(i===3?1:2)),label+' '+name+': '+JSON.stringify(actual));
+ pixel(result.title,[46,35,53,255],'original title color');
+ pixel(result.tagline,[49,39,56,255],'original tagline color');
+ pixel(result.fingerprint,[247,240,249,255],'fingerprint remains opaque');
+ pixel(result.shape,[140,116,216,255],'original artwork color');
  assert(Math.abs(result.wrapper.width/result.wrapper.height-1384/458)<.015,label+' complete artwork frame');
  const bytes=result.src.startsWith('data:')?Buffer.from(result.src.split(',')[1],'base64'):await (await p.request.get(result.src)).body();
  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),expectedSha,label+' correct logo bytes');
@@ -39,8 +41,8 @@ async function artwork(p,selector,label){
   }
   await p.locator('[data-action="pick-role"]').first().click();await p.locator('[data-action="bo-login"]').click();await p.waitForSelector('.metrics');
   for(const width of [1440,1024,768,390,320]){
-   await p.setViewportSize({width,height:1000});if(width<=720&&!await p.locator('.sidebar').evaluate(e=>e.classList.contains('open')))await p.locator('[data-action="mobile-menu"]').click();
-   await p.waitForFunction(()=>document.querySelector('.sidebar').getBoundingClientRect().left>=-1);
+   await p.setViewportSize({width,height:1000});if(await p.locator('.mobile-menu').isVisible()&&!await p.locator('.sidebar').evaluate(e=>e.classList.contains('open')))await p.locator('[data-action="mobile-menu"]').click();
+   await p.waitForFunction(()=>{const t=getComputedStyle(document.querySelector('.sidebar')).transform;return t==='none'||Math.abs(new DOMMatrixReadOnly(t).m41)<.01;});
    const r=await artwork(p,'.sidebar .brand','Backend sidebar '+width);assert(r.wrapper.left>=0&&r.wrapper.right<=width,JSON.stringify({width,rect:r.wrapper}));
    for(const text of ['儀表板','商戶入網','新增商戶','商戶管理','內審控制台'])assert((await p.locator('.sidebar').innerText()).includes(text),'Side menu retains '+text);
    if(width===1440||width===390)await p.locator('.sidebar').screenshot({path:'qa-mee-pay-sidebar-'+width+'.png'});
