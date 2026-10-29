@@ -12,12 +12,16 @@ async function artwork(p,selector,label){
   const pixel=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data);
   const r=e.getBoundingClientRect(),w=e.parentElement.getBoundingClientRect();
   return {src:e.src,width:e.naturalWidth,height:e.naturalHeight,ratio:r.width/r.height,
+   wrapperBackground:getComputedStyle(e.parentElement).backgroundColor,linkBackground:getComputedStyle(e.parentElement.parentElement).backgroundColor,imageFilter:getComputedStyle(e).filter,
    wrapper:{left:w.left,right:w.right,top:w.top,bottom:w.bottom,width:w.width,height:w.height},
    background:pixel(100,100),title:pixel(1040,340),tagline:pixel(1030,510),fingerprint:pixel(600,330),shape:pixel(600,390)};
  });
  assert.equal(result.width,2060);assert.equal(result.height,763);
  assert(Math.abs(result.ratio-2060/763)<.01,label+' original image proportions');
  assert(result.background[3]<=1,label+' real transparent background');
+ assert.equal(result.wrapperBackground,'rgba(0, 0, 0, 0)',label+' no white logo wrapper');
+ assert.equal(result.linkBackground,'rgba(0, 0, 0, 0)',label+' no white logo link');
+ assert.equal(result.imageFilter,'none',label+' no recoloring filter');
  // Brave may add one-bit canvas noise; the independent SHA check below still requires exact original asset bytes.
  const pixel=(actual,expected,name)=>assert(actual.every((v,i)=>Math.abs(v-expected[i])<=(i===3?1:2)),label+' '+name+': '+JSON.stringify(actual));
  pixel(result.title,[46,35,53,255],'original title color');
@@ -54,7 +58,7 @@ async function artwork(p,selector,label){
   }
   await p.locator('#authEmail').fill('brand.qa@example.com');await p.locator('[data-action="login"]').click();for(let i=0;i<6;i++)await p.locator('[data-otp="'+i+'"]').fill(''+(i+1));await p.locator('[data-action="verify"]').click();await p.waitForSelector('.header');
   for(const width of [1440,1024,768,390,320]){await p.setViewportSize({width,height:1000});const r=await artwork(p,'.header .brand','External header '+width);assert(r.wrapper.left>=0&&r.wrapper.right<=width);}
-  checks.push('Backend login/sidebar and External login/header at 1440/1024/768/390/320: original artwork proportions, transparent alpha, exact title/tagline/fingerprint/artwork colors, expected asset hash and preserved side menu');
+  checks.push('Backend login/sidebar and External login/header at 1440/1024/768/390/320: original artwork proportions, transparent alpha and CSS containers without white backgrounds, exact title/tagline/fingerprint/artwork colors, expected asset hash and preserved side menu');
   assert.deepEqual(errors,[]);fs.writeFileSync('qa-brand-report.json',JSON.stringify({passed:true,root,date:new Date().toISOString(),assetSha256:expectedSha,checks,errors},null,2));console.log('PASS Mee Pay brand:',checks.join('\n'));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
