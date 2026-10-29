@@ -96,15 +96,15 @@
    return {snapshot:out,changes,scopes};
   }
   const aliases={'中文名稱':'merchantName','英文名稱':'merchantEnglishName','中文簡稱':'merchantShortName','英文簡稱':'merchantEnglishShortName','BR號碼':'registerCertNo','BR有效期':'registerCertPeriod','MCC代碼':'mccCodes','主要MCC':'mcc','聯絡人':'contactName','聯絡電話':'contactPhone','聯絡電郵':'contactEmail','中文地址':'addrStreet','英文地址':'addrStreetEn','結算週期':'settlePeriod','幣種':'currency','銀行代碼':'cardBankCode','銀行名稱':'cardBankName','銀行帳戶名稱':'cardName','銀行帳號':'cardNo'};
-  const csvHeaders=['客戶編號','客戶名稱','公司代號','公司角色','主公司代號','參數模板',...Object.keys(aliases),'收單VISA本地費率(%)','收單VISA跨境費率(%)','CNPVISA本地費率(%)','CNPVISA跨境費率(%)'];
+  const csvHeaders=['客戶編號','客戶名稱','公司代號','公司角色','母公司代號','參數模板',...Object.keys(aliases),'收單VISA本地費率(%)','收單VISA跨境費率(%)','CNPVISA本地費率(%)','CNPVISA跨境費率(%)'];
   function csvBundle(source){
-   const records=parseCSV(source),unknown=Object.keys(records[0]||{}).filter(key=>!csvHeaders.includes(key)&&!Object.hasOwn(byId,key.replace(/\[\d+\]/g,'[]'))&&key!=='mccCodes');
+   const records=parseCSV(source),unknown=Object.keys(records[0]||{}).filter(key=>!csvHeaders.includes(key)&&key!=='主公司代號'&&!Object.hasOwn(byId,key.replace(/\[\d+\]/g,'[]'))&&key!=='mccCodes');
    if(unknown.length)throw Error('CSV 含未識別欄位：'+unknown.join('、')+'。請依下載範本或表單欄位 ID 填寫。');
    return {format:'allinpay.merchant-bundle',version:1,companies:records.map((row,i)=>{
     const values={};for(const [key,val]of Object.entries(row)){const id=aliases[key]||key;if(Object.hasOwn(byId,id.replace(/\[\d+\]/g,'[]'))||id==='mccCodes')values[id]=val;}
     const products={groups:{},rates:{},combo:{},sme:{}};
     for(const [header,group,field]of [['收單VISA本地費率(%)','POS','loc_rate'],['收單VISA跨境費率(%)','POS','crs_rate'],['CNPVISA本地費率(%)','CNP','loc_rate'],['CNPVISA跨境費率(%)','CNP','crs_rate']])if(text(row[header])){products.groups[group]=true;const key=group+'|0';products.rates[key]??={on:true,ct:'Regional',v:{}};products.rates[key].v[field]=text(row[header]);}
-    return {key:row['公司代號']||'ROW-'+(i+1),customerId:row['客戶編號'],customerName:row['客戶名稱'],role:row['公司角色']||'independent',parentKey:row['主公司代號'],templateName:row['參數模板'],values,products:Object.keys(products.rates).length?products:null};
+    return {key:row['公司代號']||'ROW-'+(i+1),customerId:row['客戶編號'],customerName:row['客戶名稱'],role:row['公司角色']||'independent',parentKey:row['母公司代號']||row['主公司代號'],templateName:row['參數模板'],values,products:Object.keys(products.rates).length?products:null};
    })};
   }
   function bundle(input,knownTemplates=[]){
@@ -114,7 +114,7 @@
    const templates=(input.templates||[]).map(cleanTemplate),seen=new Set();if(new Set(templates.map(t=>t.name)).size!==templates.length)throw Error('同一文件不可包含重複模板名稱');
    const companies=(input.companies||[]).map((entry,index)=>{
     const key=text(entry.key)||'ROW-'+(index+1);if(seen.has(key))throw Error('公司代號重複：'+key);seen.add(key);
-    const values=cleanFields(entry.values),role=({'主公司':'parent','子公司':'subsidiary','獨立公司':'independent'})[entry.role]||entry.role||'independent';
+    const values=cleanFields(entry.values),role=({'母公司':'parent','主公司':'parent','子公司':'subsidiary','獨立公司':'independent'})[entry.role]||entry.role||'independent';
     if(!['parent','subsidiary','independent'].includes(role))throw Error(key+' 公司角色不正確');
     if(!values.merchantName&&!values.merchantEnglishName)throw Error(key+' 請填寫公司中文或英文名稱');
     const customerId=text(entry.customerId||input.customer?.id),customerName=text(entry.customerName||input.customer?.name);
@@ -125,8 +125,8 @@
    });
    const byKey=new Map(companies.map(c=>[c.key,c]));
    for(const c of companies){
-    if(c.role==='subsidiary'){const parent=byKey.get(c.parentKey);if(!parent||parent===c||parent.role!=='parent'||!c.customerId||c.customerId!==parent.customerId)throw Error(c.key+' 子公司須對應同一客戶內的主公司');}
-    else if(c.parentKey)throw Error(c.key+' 只有子公司可填寫主公司代號');
+    if(c.role==='subsidiary'){const parent=byKey.get(c.parentKey);if(!parent||parent===c||parent.role!=='parent'||!c.customerId||c.customerId!==parent.customerId)throw Error(c.key+' 子公司須對應同一客戶內的母公司');}
+    else if(c.parentKey)throw Error(c.key+' 只有子公司可填寫母公司代號');
    }
    return {format:input.format,version:1,templates,companies};
   }
