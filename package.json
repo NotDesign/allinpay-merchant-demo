@@ -19,7 +19,7 @@
     "test:extra": "node verify-admin-extra.cjs && node verify-merchant-state.cjs",
     "test:templates": "node verify-brand.cjs && node verify-copy-picker.cjs && node verify-template-model.cjs && node verify-merchant-templates.cjs && node verify-onboarding-usability.cjs && node verify-template-ui.cjs && node verify-onboarding-ux.cjs && node verify-customer-flow.cjs && node verify-merchant-workbook.cjs && node verify-relationship-table.cjs && node verify-merchant-start.cjs",
     "test:notifications": "node verify-notifications.cjs",
-    "test:client-review": "node verify-client-review.cjs"
+    "test:client-review": "node verify-client-review.cjs && node verify-account-access.cjs"
   },
   "dependencies": {
     "exceljs": "4.4.0",

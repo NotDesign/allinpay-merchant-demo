@@ -23,3 +23,20 @@
 @media(max-width:800px){.ir-console{padding:60px 16px 24px}.ir-workspace{display:flex;flex-direction:column}.ir-workspace>section{width:100%}.ir-queue-list{max-height:320px}.ir-search{grid-template-columns:1fr 1fr}.ir-overview{grid-template-columns:repeat(2,minmax(0,1fr));padding:16px}.ir-overview>label{display:block}.ir-overview select{width:100%;margin:8px 0}.ir-compare th,.ir-compare td{padding:8px;font-size:12px}.ir-compare tbody th{font-size:12px}.ir-compare th:first-child{width:24%}.ir-tabs button{min-width:90px;font-size:12px}.ir-actions button{flex:1 1 40%}.ir-treatment{grid-template-columns:80px 1fr}.ir-document-list{grid-template-columns:1fr 1fr}}
 
 .ir-doc>.ir-doc-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px}.ir-doc-icon svg{display:block;width:24px;height:24px}
+
+/* Keep queue navigation anchored while company results scroll independently. */
+.ir-queue{display:flex;flex-direction:column;position:sticky;top:88px;height:calc(100dvh - 104px);min-height:460px;min-width:0}
+.ir-queue>h2,.ir-queue>#ir-count{flex:none}
+.ir-queue .ir-queue-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+.ir-queue-footer{flex:none;padding-top:12px;border-top:1px solid var(--line)}
+.ir-queue-footer .ir-pages{margin-top:0}
+.ir-queue-footer>.hint{margin:12px 0 0;font-size:12px;line-height:1.6}
+.ir-case-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.ir-case-identity{flex:1;min-width:0}
+.ir-case-identity h2{margin:0}
+.ir-case-identity>.hint{margin:8px 0 0;overflow-wrap:anywhere}
+.ir-case-download{display:flex;flex:0 0 190px;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;min-width:0}
+.ir-case-download>button{min-height:40px;padding:8px 18px}
+.ir-case-download>small{font-size:11px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:1100px){.ir-case-header{flex-direction:column;gap:12px}.ir-case-download{flex-basis:auto;align-items:flex-start;text-align:left;width:100%}}
+@media(max-width:800px){.ir-queue{position:static;height:min(680px,calc(100dvh - 96px));min-height:440px}.ir-case-download>button{width:100%}}

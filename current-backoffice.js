@@ -26,7 +26,7 @@ for(let i=0;i<18;i++){
 }
 Object.assign(state,{values:{},checks:{},files:{},people:{directors:1,authSigners:1,shareHolders:1},emailVerified:false,errors:{},selected:new Set(),noticeCount:12});defaults();
 try {const stored=JSON.parse(localStorage.getItem(DBKEY)||'null');if(stored?.version===1&&Array.isArray(stored.rows)&&Array.isArray(stored.accounts)&&Array.isArray(stored.drafts)){rows.splice(0,rows.length,...stored.rows);accounts=stored.accounts;state.drafts=stored.drafts;BO.audit=stored.audit||[];state.noticeCount=stored.noticeCount??12;}}catch{}
-function persistDemo(){try{localStorage.setItem(DBKEY,JSON.stringify({version:1,rows,accounts,drafts:state.drafts,audit:BO.audit.slice(0,300),noticeCount:state.noticeCount}));return true;}catch{return false;}}
+function persistDemo(){try{localStorage.setItem(DBKEY,JSON.stringify({version:1,rows,accounts,drafts:state.drafts,audit:BO.audit.slice(0,300),noticeCount:state.noticeCount,rolePolicies:BO.rolePolicies||{}}));return true;}catch{return false;}}
 saveAccounts=persistDemo;
 try{const uid=sessionStorage.getItem(SESSIONKEY);BO.user=accounts.find(a=>a.id===uid&&a.status==='已啟用')||null;}catch{}
 const oldLoginAs=loginAs;

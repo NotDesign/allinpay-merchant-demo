@@ -38,3 +38,11 @@ button,input,select,textarea,.card,.notice,.readonly-banner,dialog,.column-popov
 .sidebar-bottom>div{grid-column:1/-1;line-height:1.5}
 .sidebar-bottom .user-name{margin:0;font-size:13px;line-height:1.5}
 .sidebar-bottom>button{width:100%;min-width:0;min-height:36px;margin:2px 0 0;padding:7px 10px;line-height:20px;text-align:center}
+
+.ac-account-form .required,.ac-password-form .required{color:var(--error);font-weight:600}
+.ac-password-input{display:flex;align-items:stretch;gap:8px;min-width:0}.ac-password-input input{flex:1;min-width:0}.ac-password-input button{flex:none;min-width:56px}
+.ac-role-table{min-width:800px}.ac-role-table th:not(:first-child),.ac-role-table td{text-align:center}.ac-role-table small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:6px}.ac-role-table input{width:18px;height:18px}.ac-role-save{justify-content:flex-end;margin-top:20px}
+
+.ac-account-toolbar{justify-content:flex-start;flex-wrap:wrap;gap:12px}.ac-account-toolbar>div:first-child{flex:1 1 240px}.ac-account-toolbar>button{flex:none}
+
+.ac-account-form>.field:has(#acc-password){grid-column:1}
