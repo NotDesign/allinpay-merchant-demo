@@ -1,9 +1,9 @@
 {
   "active": {
-    "version": "2026.10.29-white-wordmark-v7.3",
+    "version": "2026.10.30-client-review-v1",
     "baseCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
-    "date": "2026-10-29",
-    "zip": "allinpay-merchant-demo-20261029.zip"
+    "date": "2026-10-30",
+    "zip": "allinpay-merchant-demo-20261030.zip"
   },
   "legacy": {
     "version": "2026.09.29-excel-freeze-mid-states",

@@ -34,6 +34,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4321/backoffice.html > /dev/null; then break; fi
             sleep 1
           done
+          npm run test:client-review
           npm run test:notifications
           npm test
           npm run test:extra

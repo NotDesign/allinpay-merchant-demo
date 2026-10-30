@@ -149,7 +149,7 @@ validateStep=function(step){const errors=mtOriginalValidate(step);if(step===3){c
  return errors;};
 const mtOriginalReview=v2Review;
 v2Review=function(){const relation=state.values.__customer;return (relation?.id?v2Card('客戶及公司關係','',`<div class="mt-relation-summary"><strong>${esc(relation.name)}</strong><span>${mtRoleName(relation.role)}</span>${relation.parentId?`<span>母公司：${esc(relation.parentType==='group'?relation.name+'（集團主體）':mtCompanies().find(c=>c.id===relation.parentId)?.name||relation.parentId)}</span>`:''}</div>`):'')+v2Card('MCC 複選資料','',`<p>主要 MCC：<b>${esc(v2Raw('mcc')||'尚未選擇')}</b></p><p>全部代碼：${esc(mtMccList().join('、')||'尚未選擇')}</p>`)+mtOriginalReview();};
-function mtToolActions(compact=false){return `<div class="mt-tool-actions" aria-label="模板與批量設定">${btn('選取模板','mt-library')}${!compact?btn('儲存為模板','mt-save-open'):''}${btn('匯入資料','mt-import-open')}${btn('批量套用參數模板','mt-batch-open','primary')}</div>`;}
+function mtToolActions(compact=false){return `<div class="mt-tool-actions" aria-label="模板與批量設定">${!compact?btn('複製已有商戶','ns-copy-open'):''}${btn('選取模板','mt-library')}${!compact?btn('儲存為模板','mt-save-open'):''}${btn('匯入資料','mt-import-open')}${btn('批量套用參數模板','mt-batch-open','primary')}</div>`;}
 function mtToolbar(){return `<section class="mt-quick-tools" aria-label="快速填寫及參數模板"><div><strong>快速填寫</strong><small>帶入商戶資料、MCC、結算參數及產品費率</small></div>${mtToolActions()}</section>`;}
 const mtOriginalApplication=application;
 application=function(step){const html=mtOriginalApplication(step);if(!mtAllowed())return html;return html.replace('<div class="v2-version">OATS V2 · 六步申請流程</div>','<div class="v2-version">OATS V2 · 六步申請流程</div>'+mtToolbar());};

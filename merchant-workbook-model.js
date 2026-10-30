@@ -3,7 +3,7 @@
   const fields=V2.forms.flatMap(f=>f.sections.flatMap(s=>s.fields)).filter(f=>!f.id.includes('[]')),byId=Object.fromEntries(fields.map(f=>[f.id,f])),title=k=>byId[k]?.label.split(/\s{2,}/)[0].replace(/\s*\*/g,'').trim()||k;
   const common=['merchantName','merchantEnglishName','registerCertNo','mcc','contactName','contactPhone','contactEmail','settlePeriod','currency','cardBankName','cardBankCode','cardName','cardNo','addrStreet','addrStreetEn'];
   const templateFields=[...new Set(['mcc',...MT.scopeFields.profile,...MT.scopeFields.settlement,...MT.scopeFields.products,...MT.scopeFields.identity])].filter(k=>byId[k]&&!['mccName','merchantAgreementNum'].includes(k));
-  const banks={'003':'渣打銀行（香港）','004':'香港上海滙豐銀行','012':'中國銀行（香港）','015':'東亞銀行','016':'星展銀行（香港）','024':'恒生銀行'};
+  const banks=V2.bankCodeReference?Object.fromEntries(V2.bankCodeReference.banks.map(b=>[b.code,b.name])):{'003':'渣打銀行（香港）','004':'香港上海滙豐銀行','012':'中國銀行（香港）','015':'東亞銀行','016':'星展銀行（香港）','024':'恒生銀行'};
   const products=V2.catalog.GROUPS.flatMap(g=>g.rows.map((r,i)=>({key:g.k+'|'+i,label:g.n+'／'+r.n,g,r})));
   const segment={loc:'本地卡',crs:'跨境卡',pref:'優惠費率',std:'統一費率',cn:'國內錢包',hk:'香港錢包',dcc:'DCC',per:'每筆費用'};for(const t of V2.catalog.TENORS)segment['t'+t]=t+' 期分期';
   const companyHeaders=['公司代號','客戶／集團名稱','公司關係','母公司代號','參數模板',...common.map(title),'其他 MCC 1','其他 MCC 2','其他 MCC 3','其他 MCC（以分號分隔）'];

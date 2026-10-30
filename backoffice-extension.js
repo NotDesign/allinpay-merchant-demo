@@ -1,7 +1,7 @@
 // Compiled inside the existing demo closure to reuse the six-step forms and tokens.
 const permissionLabels=['查看商戶與申請','新增商戶／儲存草稿','編輯商戶資料','批量導入','匯出商戶資料','查看完整銀行帳號','商戶轉換','審核及退回補件','同步至 All-In Pay','管理登入帳號／重設密碼','設定角色與權限','查看操作記錄'];
-const roles=['最高管理員','基本管理員','主代理商','次代理商'];
-const rolePermissions=role=>permissionLabels.map((_,i)=>role===roles[0]||role===roles[1]&&!([9,10].includes(i))||role===roles[2]&&[0,1,2,3,4,11].includes(i)||role===roles[3]&&[0,1,2].includes(i));
+const roles=['最高管理員','基本管理員','主代理商','次代理商','下線帳戶'];
+const rolePermissions=role=>permissionLabels.map((_,i)=>role===roles[0]||role===roles[1]||role===roles[2]&&[0,1,2,3,4,9,10,11].includes(i)||role===roles[3]&&[0,1,2,9,10].includes(i)||role===roles[4]&&[0,1,2].includes(i));
 const accountKey='allinpay-accounts-demo-v2',P='Demo1234!';
 let accounts=[['李家豪','admin@example.com',0,'—','已啟用'],['黃嘉敏','manager@example.com',1,'—','已啟用'],['陳偉明','chan@example.com',2,'海港代理','已啟用'],['林嘉欣','lam@example.com',3,'海港代理','已啟用'],['周俊傑','chow@example.com',3,'城市代理','待啟用'],['鄭思穎','cheng@example.com',3,'金聯代理','已停用']].map((a,i)=>({id:'ACC-'+(i+1),name:a[0],email:a[1],role:roles[a[2]],agency:a[3],status:a[4],last:'2026/09/14 '+['09:12','10:08','08:46','09:35','—','08:26'][i],permissions:rolePermissions(roles[a[2]]),scope:a[2]<2?'全平台資料':'本人及獲指派的商戶'}));
 try{const saved=JSON.parse(localStorage.getItem(accountKey)||'null');if(Array.isArray(saved)&&saved.length)accounts=saved;}catch{}

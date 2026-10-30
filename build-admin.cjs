@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = __dirname;
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
-const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js','onboarding-usability.js','merchant-template-model.js','merchant-templates.js','onboarding-progress-risk.js','document-previews.js','merchant-workbook-model.js','merchant-workbook.js','merchant-start.js','notifications.js'].map(read).join('\n');
+const extension = ['backoffice-extension.js','current-backoffice.js','merchant-table-state.js','onboarding-v2-data.js','bank-code-data.js','onboarding-document-schema.js','onboarding-v2.js','upload-controls.js','br-integration.js','onboarding-risk.js','internal-review.js','onboarding-document-feedback.js','multi-document-workflow.js','onboarding-usability.js','merchant-template-model.js','merchant-templates.js','onboarding-progress-risk.js','document-previews.js','merchant-workbook-model.js','merchant-workbook.js','merchant-start.js','notifications.js','client-review.js','account-hierarchy.js'].map(read).join('\n');
 const core = read('core.js');
 if (!/render\(\);\s*\}\)\(\);\s*$/.test(core)) throw Error('Missing core entry');
 const app = read('version-router.js') + '\n' + core.replace(/render\(\);\s*\}\)\(\);\s*$/, () => extension + '\nrender();\n})();');

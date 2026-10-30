@@ -7,7 +7,7 @@ for(const form of V2.forms)for(const section of form.sections){
   if(f.id==='webUrl')f.hint='選填；如提供，請填寫完整 https:// 網址';
   if(['avgPerAmount','maxAmount','avgMonthAmount'].includes(f.id))f.hint='選填；最多 2 位小數';
   if(f.id==='cardBankName')f.hint='選擇銀行後，自動帶入右側銀行行號';
-  if(f.id==='cardBankCode')f.hint='由銀行選單自動帶入；其他銀行可手動填寫';
+  if(f.id==='cardBankCode')f.hint='可直接選擇銀行代碼，銀行名稱會同步更新';
  }
 }
 const usabilityOriginalField=v2Field;
@@ -22,14 +22,14 @@ v2Field=function(f,index=0,linked=false){
   const select=`<select id="field-cardBankName" data-field="cardBankName" data-v2-field="cardBankName" data-bank-picker aria-required="true"><option value="">請選擇銀行</option>${known.map(([c,n])=>`<option value="${esc(n)}" ${name===n&&!custom?'selected':''}>${esc(n)}</option>`).join('')}<option value="__other" ${custom?'selected':''}>其他銀行（手動填寫）</option></select>${custom?`<label for="other-bank-name" class="hint">銀行名稱</label><input id="other-bank-name" data-other-bank-name maxlength="100" value="${esc(name)}" placeholder="請填寫銀行名稱">`:''}`;
   html=html.replace(/<input[^>]*data-field="cardBankName"[^>]*>/,select);
  }
- if(f.id==='cardBankCode'&&!custom)html=html.replace(/<input([^>]*data-field="cardBankCode"[^>]*)>/,'<input$1 readonly aria-readonly="true">');
+ if(f.id==='cardBankCode'){const other=!!v2Model().bankCodeCustom||!!(code&&!ONBOARDING_BANKS[code]);const control=`<select id="field-cardBankCode" data-field="cardBankCode" data-v2-field="cardBankCode" data-bank-code-picker aria-required="true" ${state.readonly?'disabled':''}><option value="">請選擇銀行代碼</option>${known.map(([c,n])=>`<option value="${c}" ${!other&&code===c?'selected':''}>${c} · ${esc(n)}</option>`).join('')}<option value="__other" ${other?'selected':''}>其他代碼（手動填寫）</option></select>${other?`<label for="other-bank-code" class="hint">銀行代碼（3 位數字）</label><input id="other-bank-code" data-other-bank-code value="${esc(code)}" maxlength="3" inputmode="numeric">`:''}<a class="bank-reference-download" href="references/Bank_Code.pdf" download="香港銀行代碼清單.pdf">下載銀行代碼清單</a>`;html=html.replace(/<input[^>]*data-field="cardBankCode"[^>]*>/,control);}
  return html;
 };
 function usabilityPickBank(e){
  const t=e.target;if(!t.hasAttribute('data-bank-picker'))return;e.stopImmediatePropagation();
  if(t.value==='__other'&&v2Model().bankCustom)return;
  if(t.value==='__other'){v2Model().bankCustom=true;state.values.cardBankName='';state.values.cardBankCode='';delete v2Model().bankAutoName;}
- else{v2Model().bankCustom=false;state.values.cardBankName=t.value;state.values.cardBankCode=Object.entries(ONBOARDING_BANKS).find(([,name])=>name===t.value)?.[0]||'';delete v2Model().bankAutoName;}
+ else{v2Model().bankCustom=false;v2Model().bankCodeCustom=false;state.values.cardBankName=t.value;state.values.cardBankCode=Object.entries(ONBOARDING_BANKS).find(([,name])=>name===t.value)?.[0]||'';delete v2Model().bankAutoName;}
  delete state.errors.cardBankName;delete state.errors.cardBankCode;v2SyncDerived();queueMicrotask(()=>render());
 }
 // Update both fields before the shared input/status listeners can restore the old bank.
@@ -54,3 +54,6 @@ v2Documents=function(){
  const marker=document.createElement('div');marker.className='mt-document-status';marker.innerHTML=notice+(cards.length?'<div class="mt-document-status-grid">'+cards.join('')+'</div>':'');
  (ocr||consistency||provided)?.before(marker);ocr?.remove();consistency?.remove();provided?.remove();return template.innerHTML;
 };
+
+function clientPickBankCode(e){const t=e.target;if(t.hasAttribute('data-bank-code-picker')){e.stopImmediatePropagation();if(t.value==='__other'){v2Model().bankCodeCustom=true;v2Model().bankCustom=true;state.values.cardBankCode='';}else{v2Model().bankCodeCustom=false;v2Model().bankCustom=false;state.values.cardBankCode=t.value;if(ONBOARDING_BANKS[t.value])state.values.cardBankName=ONBOARDING_BANKS[t.value];else state.values.cardBankName='';}delete state.errors.cardBankCode;delete state.errors.cardBankName;v2SyncDerived();queueMicrotask(()=>render());}if(t.hasAttribute('data-other-bank-code')){e.stopImmediatePropagation();state.values.cardBankCode=t.value;delete state.errors.cardBankCode;}}
+document.addEventListener('input',clientPickBankCode,true);document.addEventListener('change',clientPickBankCode,true);

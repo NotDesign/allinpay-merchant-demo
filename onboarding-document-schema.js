@@ -18,4 +18,5 @@ for (const form of V2_DATA.forms) for (const section of form.sections) {
   }
 }
 for (const doc of V2_DATA.documents) doc.hint = '選填；可選取或拖曳文件，未提供不會阻擋下一步。每檔上限 10 MB。';
-const ONBOARDING_BANKS = Object.freeze({'003':'渣打銀行（香港）','004':'香港上海滙豐銀行','012':'中國銀行（香港）','015':'東亞銀行','016':'星展銀行（香港）','024':'恒生銀行'});
+const ONBOARDING_BANKS = Object.freeze(typeof BANK_CODE_REFERENCE==='undefined'?{'003':'渣打銀行（香港）','004':'香港上海滙豐銀行','012':'中國銀行（香港）','015':'東亞銀行','016':'星展銀行（香港）','024':'恒生銀行'}:Object.fromEntries(BANK_CODE_REFERENCE.banks.map(b=>[b.code,b.name])));
+if(typeof BANK_CODE_REFERENCE!=='undefined')V2_DATA.bankCodeReference=BANK_CODE_REFERENCE;
