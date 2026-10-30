@@ -33,7 +33,7 @@ function nsCopyConfirm(){
  try{if(!nsCanStart())return deny();const source=nsSources().find(s=>s.key===nsCopySource);if(!source)throw Error('請先選擇來源商戶');
  const saved=mtUpgradeSnapshot(structuredClone(source.snapshot)),files=typeof clientFilesFor==='function'?clientFilesFor(source.key,saved.files||{}):{};
  nsBlankState();Object.assign(state,{values:structuredClone(saved.values||{}),people:structuredClone(saved.people||{directors:1,authSigners:0,shareHolders:0}),files:structuredClone(saved.files||{}),checks:{},emailVerified:false,signature:'',errors:{},readonly:false,editing:null,draftId:null,savedAt:null});
- if(MT_EXTERNAL){state.id=null;state.step=1;}v2Ensure();state.values.signer='';state.values.signerTitle='';delete state.values.__templateApplied;state.values.__copiedFrom={key:source.key,name:source.name};v2Model().ack={};v2Model().ocr=[];
+ if(MT_EXTERNAL){state.id=null;state.step=1;}v2Ensure();state.values.signer='';state.values.signerTitle='';delete state.values.__templateApplied;state.baseFeeDefaults=null;delete state.values.__baseFees;delete state.values.__copiedFrom;v2Model().ack={};v2Model().ocr=[];
  DEMO.fileURLs.clear();DEMO.sourceFiles?.clear();for(const [id,f] of Object.entries(state.files)){const original=files[id];if(original){const url=URL.createObjectURL(original);DEMO.fileURLs.set(id,url);DEMO.sourceFiles.set(id,{file:original,url});f.needsReselect=false;}else if(!f.demo)f.needsReselect=true;}
  v2SyncDerived();nsMode='copy';mtClose();go('application/1');toast('已複製全部已儲存資料及來源費率，請核對本次申請');
  }catch(e){mtError(e.message);}

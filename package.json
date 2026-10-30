@@ -10,7 +10,7 @@
     "test:external": "node verify-external-header.cjs",
     "test": "node verify-admin.cjs",
     "test:onboarding": "node verify-onboarding-v2.cjs",
-    "test:products": "node verify-products-catalog.cjs",
+    "test:products": "node verify-products-catalog.cjs && node verify-products-contract.cjs",
     "test:risk": "node verify-application-status.cjs",
     "test:br": "node verify-br-parser.mjs && node verify-br-integration.cjs",
     "test:feedback": "node verify-document-feedback.cjs && node verify-upload-workflow.cjs",

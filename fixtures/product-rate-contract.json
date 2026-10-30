@@ -1,0 +1,1116 @@
+{
+  "baselineCommit": "fc53f54cb0459d78e9f66c091156e7d3538df486",
+  "groups": [
+    {
+      "k": "POS",
+      "n": "收單",
+      "pre": "EDC",
+      "combo": [
+        "小費",
+        "DCC交易",
+        "MOTO消費",
+        "收單-預授權"
+      ],
+      "rows": [
+        {
+          "n": "VISA 收單-消費",
+          "ct": "Regional",
+          "pref": true,
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 收單-消費",
+          "ct": "Regional",
+          "pref": true,
+          "dcc": true,
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "UNIONPAY 收單-消費",
+          "ct": "Regional",
+          "pref": true,
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "AMERICAEXPRESS 收單-消費",
+          "ct": "Regional",
+          "pref": true,
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "JCB 收單-消費",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "DINERSCLUB 收單-消費",
+          "ct": "Blended",
+          "brand": "DINERSCLUB"
+        },
+        {
+          "n": "VISA 收單-分期消費",
+          "ct": null,
+          "mode": "INST",
+          "brand": "VISA"
+        },
+        {
+          "n": "八達通-消費",
+          "ct": null,
+          "pre": ""
+        }
+      ]
+    },
+    {
+      "k": "CTV",
+      "n": "CTV",
+      "pre": "",
+      "rows": [
+        {
+          "n": "VISA 線上消費",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 線上消費",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "JCB 線上消費",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "UNIONPAY 線上消費",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        }
+      ]
+    },
+    {
+      "k": "CNP",
+      "n": "CNP",
+      "pre": "",
+      "cnp": true,
+      "rows": [
+        {
+          "n": "VISA 線上消費",
+          "ct": "Regional",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 線上消費",
+          "ct": "Regional",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA 線上分期消費",
+          "ct": null,
+          "mode": "INST",
+          "brand": "VISA"
+        },
+        {
+          "n": "DINERSCLUB 線上消費",
+          "ct": "Regional",
+          "brand": "DINERSCLUB"
+        },
+        {
+          "n": "JCB 線上消費",
+          "ct": "Regional",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS 線上消費",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY 線上消費",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA TOKEN線上消費",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD TOKEN線上消費",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "JCB TOKEN線上消費",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS TOKEN線上消費",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY TOKEN線上消費",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA TOKEN預授權",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD TOKEN預授權",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "JCB TOKEN預授權",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS TOKEN預授權",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY TOKEN預授權",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA 線上預授權",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 線上預授權",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "DINERSCLUB 線上預授權",
+          "ct": "Blended",
+          "brand": "DINERSCLUB"
+        },
+        {
+          "n": "JCB 線上預授權",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS 線上預授權",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY 線上預授權",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "UNIONPAY SecurePay",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA Click To Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Click To Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Apple Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Apple Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Google Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Google Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        }
+      ]
+    },
+    {
+      "k": "VD",
+      "n": "VisaDirect",
+      "pre": "",
+      "tip": "費率配置按固定金額收取時，費率填100%，保底和封頂填相同金額",
+      "rows": [
+        {
+          "n": "VISA 本地付款",
+          "ct": null
+        },
+        {
+          "n": "VISA 跨境實時付款",
+          "ct": null
+        },
+        {
+          "n": "VISA 跨境普通匯款",
+          "ct": null
+        }
+      ]
+    },
+    {
+      "k": "ONQR",
+      "n": "線上掃碼支付",
+      "pre": "費率",
+      "rows": [
+        {
+          "n": "微信掃碼-正掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信APP支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信小程序支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號-服務商授權",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信H5支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信H5支付-服務商收銀台",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶H5支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶APP支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶WEB支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "銀聯雲閃付掃碼-正掃",
+          "ct": "Blended",
+          "upi": true
+        },
+        {
+          "n": "payNow-正掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "八達通-正掃",
+          "ct": null
+        },
+        {
+          "n": "八達通-WEB支付",
+          "ct": null
+        }
+      ]
+    },
+    {
+      "k": "INQR",
+      "n": "線下掃碼支付",
+      "pre": "費率",
+      "rows": [
+        {
+          "n": "微信掃碼-正掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信刷卡-反掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號-服務商授權",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶-正掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶刷卡-反掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "銀聯雲閃付掃碼-正掃",
+          "ct": "Blended",
+          "upi": true
+        },
+        {
+          "n": "銀聯雲閃付刷卡-反掃",
+          "ct": "Blended",
+          "upi": true
+        },
+        {
+          "n": "payNow-正掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "PayMe掃碼-正掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "PayMe刷卡-反掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "八達通-正掃",
+          "ct": null
+        }
+      ]
+    },
+    {
+      "k": "PBL",
+      "n": "PayByLink",
+      "pre": "",
+      "cnp": true,
+      "rows": [
+        {
+          "n": "微信掃碼-正掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信H5支付-服務商收銀台",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號-服務商授權",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶H5支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶WEB支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "銀聯雲閃付掃碼-正掃",
+          "ct": "Blended",
+          "upi": true
+        },
+        {
+          "n": "payNow-正掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "八達通-正掃",
+          "ct": null
+        },
+        {
+          "n": "八達通-WEB支付",
+          "ct": null
+        },
+        {
+          "n": "VISA 線上消費",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 線上消費",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "JCB 線上消費",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS 線上消費",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY 線上消費",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "UNIONPAY SecurePay",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA Click To Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Click To Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Apple Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Apple Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Google Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Google Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        }
+      ]
+    },
+    {
+      "k": "AV",
+      "n": "帳戶驗證",
+      "pre": "",
+      "rows": [
+        {
+          "n": "VISA 賬戶驗證",
+          "ct": "Blended",
+          "mode": "PER"
+        },
+        {
+          "n": "MASTERCARD 賬戶驗證",
+          "ct": "Blended",
+          "mode": "PER"
+        },
+        {
+          "n": "UNIONPAY 帳戶風險篩查",
+          "ct": "Blended",
+          "mode": "PER",
+          "note": "只支持結算資金扣收"
+        }
+      ]
+    },
+    {
+      "k": "VAS",
+      "n": "增值服務",
+      "pre": "",
+      "rows": [
+        {
+          "n": "微信報關",
+          "ct": null,
+          "mode": "NONE"
+        }
+      ]
+    },
+    {
+      "k": "ONE",
+      "n": "一碼付",
+      "pre": "",
+      "rows": [
+        {
+          "n": "微信H5支付-服務商收銀台",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "微信公衆號-服務商授權",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶H5支付",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶-正掃",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "payNow-正掃",
+          "ct": "Blended"
+        },
+        {
+          "n": "八達通-WEB支付",
+          "ct": null
+        },
+        {
+          "n": "VISA 線上消費",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD 線上消費",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "JCB 線上消費",
+          "ct": "Blended",
+          "brand": "JCB"
+        },
+        {
+          "n": "AMERICAEXPRESS 線上消費",
+          "ct": "Blended",
+          "brand": "AMERICAEXPRESS"
+        },
+        {
+          "n": "UNIONPAY SecurePay",
+          "ct": "Blended",
+          "brand": "UNIONPAY"
+        },
+        {
+          "n": "VISA Click To Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Click To Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Apple Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Apple Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        },
+        {
+          "n": "VISA Google Pay",
+          "ct": "Blended",
+          "brand": "VISA"
+        },
+        {
+          "n": "MASTERCARD Google Pay",
+          "ct": "Blended",
+          "brand": "MASTERCARD"
+        }
+      ]
+    },
+    {
+      "k": "DD",
+      "n": "代扣",
+      "pre": "",
+      "rows": [
+        {
+          "n": "VISA 代扣",
+          "ct": "Blended"
+        },
+        {
+          "n": "MASTERCARD 代扣",
+          "ct": "Blended"
+        },
+        {
+          "n": "微信代扣",
+          "ct": "Wallet",
+          "wal": true
+        },
+        {
+          "n": "支付寶代扣",
+          "ct": "Wallet",
+          "off": true,
+          "wal": true
+        }
+      ]
+    }
+  ],
+  "tenors": [
+    3,
+    6,
+    9,
+    12,
+    18,
+    24,
+    36
+  ],
+  "smeRules": {
+    "VISA": {
+      "SME": {
+        "ex": [
+          5122,
+          5962,
+          5966,
+          5967,
+          7995,
+          5993,
+          [
+            3000,
+            3300
+          ],
+          4511,
+          [
+            3501,
+            3833
+          ],
+          9211,
+          9222,
+          9311,
+          9399,
+          9405,
+          8062,
+          4121
+        ]
+      },
+      "SMESMK": {
+        "only": [
+          5411
+        ]
+      },
+      "SMEB2B": null
+    },
+    "MASTERCARD": {
+      "SME": {
+        "ex": [
+          8062,
+          9211,
+          9222,
+          9223,
+          9311,
+          9399,
+          9402,
+          9405,
+          4829,
+          5541,
+          5542,
+          5993,
+          [
+            6010,
+            6012
+          ],
+          6050,
+          6051,
+          6532,
+          6533,
+          [
+            6536,
+            6538
+          ],
+          6540,
+          7011,
+          7995
+        ]
+      },
+      "SMESMK": {
+        "only": [
+          5411
+        ]
+      },
+      "SMEB2B": null
+    },
+    "AMERICAEXPRESS": {
+      "SME": {
+        "ex": [
+          [
+            3000,
+            3299
+          ],
+          [
+            3351,
+            3441
+          ],
+          4722,
+          7011,
+          7012,
+          4829,
+          [
+            6010,
+            6012
+          ],
+          6051,
+          6538,
+          7995,
+          5962,
+          5963,
+          5966,
+          5967,
+          7273,
+          7322,
+          7800,
+          7802,
+          9402,
+          9406,
+          5094
+        ]
+      },
+      "SMESMK": null,
+      "SMEB2B": {
+        "ex": [
+          4829,
+          6012,
+          6051,
+          6538,
+          7322
+        ]
+      }
+    }
+  },
+  "sections": [
+    {
+      "id": "1025:7131",
+      "name": "功能配置",
+      "texts": [
+        "功能配置",
+        "按需開通分帳及終端訂單支付。"
+      ],
+      "fields": [
+        {
+          "id": "splitFlag",
+          "label": "分帳功能  Split Payments",
+          "placeholder": "不開通",
+          "hint": "不開通／開通",
+          "type": "Select",
+          "source": "1025:7152"
+        },
+        {
+          "id": "termOrderPay",
+          "label": "終端訂單支付  Terminal Order Payments",
+          "placeholder": "不開通",
+          "hint": "不開通／聯機模式／脫機模式",
+          "type": "Select",
+          "source": "1025:7159"
+        }
+      ]
+    },
+    {
+      "id": "1025:7164",
+      "name": "退貨配置",
+      "texts": [
+        "退貨配置",
+        "費率及每筆固定費用分別設定。"
+      ],
+      "fields": [
+        {
+          "id": "refundFeeFlag",
+          "label": "退貨是否退手續費  Refund Processing Fees",
+          "placeholder": "否",
+          "hint": "是／否",
+          "type": "Select",
+          "source": "1025:7185"
+        },
+        {
+          "id": "overdraftRefund",
+          "label": "透支退貨  Overdraft Refund",
+          "placeholder": "否",
+          "hint": "是／否",
+          "type": "Select",
+          "source": "1025:7192"
+        },
+        {
+          "id": "refundSvcRate",
+          "label": "退貨服務費（%）  Refund Service Rate",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7199"
+        },
+        {
+          "id": "refundSvcFix",
+          "label": "每筆退貨費（HKD）  Fixed Refund Fee",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7204"
+        }
+      ]
+    },
+    {
+      "id": "1025:7207",
+      "name": "其他配置",
+      "texts": [
+        "其他配置",
+        "保證金比例、釋放週期及其他服務費用各自設定。"
+      ],
+      "fields": [
+        {
+          "id": "connectType",
+          "label": "連接模式  Connection Mode",
+          "placeholder": "跳轉模式",
+          "hint": "直連／跳轉；直連卡產品需 PCI DSS",
+          "type": "Select",
+          "source": "1025:7228"
+        },
+        {
+          "id": "tokenCreateWay",
+          "label": "TOKEN 建立模式  Token Creation Mode",
+          "placeholder": "跳轉模式",
+          "hint": "直連／跳轉",
+          "type": "Select",
+          "source": "1025:7235"
+        },
+        {
+          "id": "depositRatio",
+          "label": "CNP 保證金（%）  CNP Deposit Ratio",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7242"
+        },
+        {
+          "id": "depositCycle",
+          "label": "CNP 釋放週期（天）  CNP Release Period",
+          "placeholder": "180",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7247"
+        },
+        {
+          "id": "posCashDepRatio",
+          "label": "收單保證金（%）  Acquiring Deposit Ratio",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7252"
+        },
+        {
+          "id": "posDepCycle",
+          "label": "收單釋放週期（天）  Acquiring Release Period",
+          "placeholder": "0",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7257"
+        },
+        {
+          "id": "onQRDepRatio",
+          "label": "線上掃碼保證金（%）  Online QR Deposit Ratio",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7262"
+        },
+        {
+          "id": "onQRDepCycle",
+          "label": "線上掃碼釋放週期（天）  Online QR Release Period",
+          "placeholder": "0",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7267"
+        },
+        {
+          "id": "inQRDepRatio",
+          "label": "線下掃碼保證金（%）  In-store QR Deposit Ratio",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7272"
+        },
+        {
+          "id": "inQRDepCycle",
+          "label": "線下掃碼釋放週期（天）  In-store QR Release Period",
+          "placeholder": "0",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7277"
+        },
+        {
+          "id": "markup",
+          "label": "加成費率（%）  Markup",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7282"
+        },
+        {
+          "id": "disputeRate",
+          "label": "爭議處理費（%）  Dispute Service Rate",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7287"
+        },
+        {
+          "id": "disputeFix",
+          "label": "每筆爭議費（HKD）  Fixed Dispute Fee",
+          "placeholder": "150.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7292"
+        },
+        {
+          "id": "rdrRate",
+          "label": "預爭議 RDR 費（%）  RDR Service Rate",
+          "placeholder": "0.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7297"
+        },
+        {
+          "id": "rdrFix",
+          "label": "每筆 RDR 費（HKD）  Fixed RDR Fee",
+          "placeholder": "120.00",
+          "hint": "",
+          "type": "Text",
+          "source": "1025:7302"
+        },
+        {
+          "id": "chargeWay",
+          "label": "帳戶驗證扣費方式  Verification Billing",
+          "placeholder": "月結",
+          "hint": "月結／預存款／結算資金",
+          "type": "Select",
+          "source": "1025:7307"
+        },
+        {
+          "id": "monthMinPrice",
+          "label": "月保底（HKD）  Monthly Minimum",
+          "placeholder": "0.00",
+          "hint": "開通帳戶驗證且採月結時必填",
+          "type": "Text",
+          "source": "1025:7314"
+        }
+      ]
+    },
+    {
+      "id": "1025:7317",
+      "name": "結算配置",
+      "texts": [
+        "結算配置",
+        "依協議設定最低清算金額。"
+      ],
+      "fields": [
+        {
+          "id": "minStlAmt",
+          "label": "最低清算金額（HKD）  Minimum Settlement Amount",
+          "placeholder": "0.00",
+          "hint": "選填",
+          "type": "Text",
+          "source": "1025:7338"
+        }
+      ]
+    }
+  ],
+  "options": {
+    "splitFlag": [
+      [
+        "N",
+        "不開通"
+      ],
+      [
+        "Y",
+        "開通"
+      ]
+    ],
+    "termOrderPay": [
+      [
+        "N",
+        "不開通"
+      ],
+      [
+        "ONLINE",
+        "聯機模式"
+      ],
+      [
+        "OFFLINE",
+        "脫機模式"
+      ]
+    ],
+    "refundFeeFlag": [
+      [
+        "N",
+        "否"
+      ],
+      [
+        "Y",
+        "是"
+      ]
+    ],
+    "overdraftRefund": [
+      [
+        "N",
+        "否"
+      ],
+      [
+        "Y",
+        "是"
+      ]
+    ],
+    "connectType": [
+      [
+        "1",
+        "跳轉模式"
+      ],
+      [
+        "0",
+        "直連模式"
+      ]
+    ],
+    "tokenCreateWay": [
+      [
+        "1",
+        "跳轉模式"
+      ],
+      [
+        "0",
+        "直連模式"
+      ]
+    ],
+    "chargeWay": [
+      [
+        "MONTH_SETTLE",
+        "月結"
+      ],
+      [
+        "PRE_FEE",
+        "預存款"
+      ],
+      [
+        "BALANCE",
+        "結算資金"
+      ]
+    ]
+  },
+  "rendererHashes": {
+    "v2InlineFees": "816f0bb98ca59f3c4d5ee390caffdf84d1b9d95855091ff606ea4f4d9e46a960",
+    "v2FeeErrors": "ef2b7d719c203b024050c901e2b205a87368fa3a8cb3db6581436c8bd03283f7"
+  }
+}

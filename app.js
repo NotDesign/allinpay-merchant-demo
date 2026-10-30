@@ -542,7 +542,7 @@ function v2SmeOptions(brand) {const m=+v2Raw('mcc'),rules=V2.catalog.SME_RULES[b
 function v2Sme() {return v2Card('特計商戶','',`<div class="v2-sme-table-wrap"><table class="v2-sme-table"><thead><tr><th scope="col">開通</th><th scope="col">卡組織</th><th scope="col">特計商戶類型</th></tr></thead><tbody>${['VISA','MASTERCARD','AMERICAEXPRESS'].map(b=>{const opts=v2SmeOptions(b),s=v2Model().sme[b]||{},hasMcc=!!v2Raw('mcc');return `<tr><td><input aria-label="開通 ${b} 特計商戶" type="checkbox" data-v2-sme="${b}" ${s.on?'checked':''} ${!opts.length?'disabled':''}></td><th scope="row">${b}</th><td>${!hasMcc?'<span class="hint">請先在第 3 步填寫 MCC</span>':!opts.length?'<span class="hint">目前 MCC 不適用任何特計商戶類型</span>':`<select aria-label="${b} 特計商戶類型" data-v2-sme-type="${b}">${opts.map(o=>`<option ${s.type===o?'selected':''}>${o}</option>`).join('')}</select>`}</td></tr>`;}).join('')}</tbody></table></div><p class="hint v2-sme-help">下拉只列出目前 MCC 可用的特計類型（按卡組織排除清單自動判定）。</p>`);}
 function v2FeeSummary(r,st) {const v=st.v,ct=st.ct;if(r.mode==='NONE')return '無手續費';if(r.mode==='PER')return '每筆 HKD '+(v.per_fix??'0.00');if(r.mode==='INST')return V2.catalog.TENORS.filter(t=>v['t'+t+'_on']).map(t=>t+' 期').join('／')||'請設定開通期數';if(ct==='Regional')return '本地 '+(v.loc_rate??'0.00')+'%／跨境 '+(v.crs_rate??'0.00')+'%';if(ct==='Wallet')return '國內錢包 '+(v.cn_rate??'0.00')+'%／香港錢包 '+(v.hk_rate??'0.00')+'%';return (v.std_rate??'0.00')+'% + HKD '+(v.std_fix??'0.00');}
 function v2Products() {
-  const shown=v2Groups.filter(g=>v2Model().groups[g.k]);
+  const shown=v2Groups.filter(g=>['POS','CNP','INQR'].includes(g.k)||v2Model().groups[g.k]);
   let html=v2Card('產品配置','先選擇產品類別，再勾選開通項目；費率直接顯示於產品同列，毋須逐項開啟視窗。',`<div class="check-grid">${v2Groups.map(g=>`<label class="check"><input type="checkbox" data-v2-group="${g.k}" ${v2Model().groups[g.k]?'checked':''}>${g.n}</label>`).join('')}</div>`)+v2Sme();
   if(!shown.length)html+='<div class="notice v2-catalog-empty">尚未選擇產品類別。請勾選上方類別以設定產品與費率。</div>';
   html+=shown.map(g=>{
@@ -1885,7 +1885,7 @@ function nsCopyConfirm(){
  try{if(!nsCanStart())return deny();const source=nsSources().find(s=>s.key===nsCopySource);if(!source)throw Error('請先選擇來源商戶');
  const saved=mtUpgradeSnapshot(structuredClone(source.snapshot)),files=typeof clientFilesFor==='function'?clientFilesFor(source.key,saved.files||{}):{};
  nsBlankState();Object.assign(state,{values:structuredClone(saved.values||{}),people:structuredClone(saved.people||{directors:1,authSigners:0,shareHolders:0}),files:structuredClone(saved.files||{}),checks:{},emailVerified:false,signature:'',errors:{},readonly:false,editing:null,draftId:null,savedAt:null});
- if(MT_EXTERNAL){state.id=null;state.step=1;}v2Ensure();state.values.signer='';state.values.signerTitle='';delete state.values.__templateApplied;state.values.__copiedFrom={key:source.key,name:source.name};v2Model().ack={};v2Model().ocr=[];
+ if(MT_EXTERNAL){state.id=null;state.step=1;}v2Ensure();state.values.signer='';state.values.signerTitle='';delete state.values.__templateApplied;state.baseFeeDefaults=null;delete state.values.__baseFees;delete state.values.__copiedFrom;v2Model().ack={};v2Model().ocr=[];
  DEMO.fileURLs.clear();DEMO.sourceFiles?.clear();for(const [id,f] of Object.entries(state.files)){const original=files[id];if(original){const url=URL.createObjectURL(original);DEMO.fileURLs.set(id,url);DEMO.sourceFiles.set(id,{file:original,url});f.needsReselect=false;}else if(!f.demo)f.needsReselect=true;}
  v2SyncDerived();nsMode='copy';mtClose();go('application/1');toast('已複製全部已儲存資料及來源費率，請核對本次申請');
  }catch(e){mtError(e.message);}
@@ -1972,15 +1972,12 @@ const BF_KEY='allinpay-base-fees-20261030-v1';
 function bfRead(){try{return JSON.parse(localStorage.getItem(BF_KEY))||{rates:{},revision:0};}catch{return {rates:{},revision:0};}}
 function bfCanEdit(){return !MT_EXTERNAL&&!!BO.user&&[roles[0],roles[1]].includes(BO.user.role)&&can(10);}
 function bfClean(rates){const clean={};for(const [key,st] of Object.entries(rates||{})){const def=MW.products.find(p=>p.key===key);if(!def)continue;const values={};for(const [field,value] of Object.entries(st.v||{})){if(/_(rate|fix|min|max|markup)$/.test(field)){const n=Number(value);if(value!==''&&(!Number.isFinite(n)||n<0||(/_(rate|markup)$/.test(field)&&n>100)))throw Error(def.label+'：費率須為 0–100，其他金額不得小於 0');values[field]=value===''?'0.00':String(value);}else values[field]=value;}clean[key]={ct:st.ct||def.r.ct||null,v:values};}return clean;}
-function bfSeed(){const base=bfRead(),m=v2Model();m.groups={};m.rates={};for(const def of MW.products){const st=base.rates?.[def.key];m.rates[def.key]={on:false,ct:st?.ct||def.r.ct||null,v:structuredClone(st?.v||{})};}state.values.__baseFees={revision:base.revision||0,label:base.label||'初始基礎費率 0%'};}
+// Defaults change values only. The platform product catalog, fields and choices remain unchanged.
+function bfSeed(){state.baseFeeDefaults=structuredClone(bfRead().rates||{});delete state.values.__baseFees;delete state.values.__copiedFrom;}
 const bfReset=v2Reset;v2Reset=function(){bfReset();bfSeed();};
+const bfOriginalGroup=v2SetGroup;v2SetGroup=function(key,on){const previous=new Set(Object.keys(v2Model().rates));bfOriginalGroup(key,on);if(!on||!state.baseFeeDefaults||v2Model().legacy||state.editing||state.draftId||(MT_EXTERNAL&&state.id))return;for(const [id,st] of Object.entries(v2Model().rates))if(!previous.has(id)&&state.baseFeeDefaults[id]){st.ct=state.baseFeeDefaults[id].ct||st.ct;st.v=structuredClone(state.baseFeeDefaults[id].v||{});}};
 if(!Object.keys(v2Model().rates).length&&!v2Raw('merchantName'))bfSeed();
-function bfOpen(){if(!bfCanEdit())return deny();const base=bfRead(),templates=mtTemplates().filter(t=>t.scopes.includes('products'));mtDialog('基礎費率設定',`<div class="notice">新商戶採用基礎費率，初始為 0%。產品均預設未開通。複製商戶沿用來源費率，現有商戶不會被改動。</div><p>目前：<strong>${esc(base.label||'初始基礎費率 0%')}</strong> · v${base.revision||0}</p><div class="field"><label for="bf-source">設定來源</label><select id="bf-source"><option value="zero">全部設為 0%</option><option value="current" ${route().page==='application'?'':'disabled'}>使用目前表單的產品費率</option>${templates.map(t=>`<option value="${esc(t.id)}">模板：${esc(t.name)} · v${t.version}</option>`).join('')}</select></div><p class="hint">可先在「產品與費率」調整各產品，再回到這裡選擇「使用目前表單的產品費率」。只儲存收費類型及費率數值，產品開通狀態不會帶入。</p>`,btn('取消','mt-close')+btn('儲存基礎費率','bf-save','primary'));}
-actions['bf-open']=bfOpen;
-actions['bf-save']=()=>{try{if(!bfCanEdit())return deny();const id=$('#bf-source').value,template=mtTemplates().find(t=>t.id===id);if(id!=='zero'&&id!=='current'&&!template)throw Error('來源模板已變動，請重新選擇');const rates=bfClean(id==='zero'?{}:id==='current'?v2Model().rates:template.products?.rates),old=bfRead(),next={rates,revision:(old.revision||0)+1,label:id==='zero'?'基礎費率 0%':id==='current'?'自訂基礎費率':'模板：'+template.name,updatedAt:new Date().toISOString()};if(mtFailureActive())throw Error('模擬儲存失敗，基礎費率保持原值');localStorage.setItem(BF_KEY,JSON.stringify(next));mtClose();toast('已儲存基礎費率，只套用至之後新建的商戶');}catch(e){mtError(e.message);}};
-const bfTools=mtToolbar;mtToolbar=function(){return bfTools().replace('</section>',(bfCanEdit()?btn('基礎費率設定','bf-open'):'')+'</section>');};
 if(!MT_EXTERNAL){const settings=actions.settings;actions.settings=()=>{settings();if(bfCanEdit())$('#modal .modal-foot')?.insertAdjacentHTML('afterbegin',btn('基礎費率設定','bf-open'));};}
-const bfApplication=application;application=function(step){let html=bfApplication(step);if(step===5){const source=state.values.__copiedFrom,base=state.values.__baseFees;html=html.replace('<div class="v2-version">',`<div class="notice fee-source">${source?'費率沿用來源商戶：'+esc(source.name):'新商戶基礎費率：'+esc(base?.label||'初始 0%')}。可在下方直接調整。</div><div class="v2-version">`);}return html;};
 // Keep raw files per application in this tab only. Saved storage holds metadata only.
 const clientFileRecords=new Map();
 function clientRememberFiles(key,files=state.files){clientBindFiles();const originals={};for(const [id,meta] of Object.entries(files)){const source=DEMO.sourceFiles?.get(id);if(source?.file&&source.fileToken&&source.fileToken===state.files[id]?.localFileToken&&source.file.name===meta.name&&source.file.size===meta.size&&!meta.needsReselect)originals[id]={file:source.file,token:source.fileToken};}clientFileRecords.set(key,originals);}
@@ -2007,6 +2004,69 @@ if(!MT_EXTERNAL){
 }
 Object.assign(window.AllinPayDemo,{clientReviewFeatures:true,getBaseFeeState:()=>({revision:bfRead().revision||0,rates:structuredClone(bfRead().rates||{}),canEdit:bfCanEdit()})});
 if(MT_EXTERNAL){const verifyInvitation=actions.verify;let invitationEntered=false;actions.verify=()=>{const pending=!!state.pendingDraft,registration=!!state.registerSeed;verifyInvitation();const query=new URLSearchParams(location.search);if(state.session&&!pending&&!invitationEntered&&(query.has('inviter')||query.has('agency'))){invitationEntered=true;if(!registration)newApplication();go('application/1');}};}
+
+// Independent default-rate editor. Reuse the merchant fee renderer without changing its fields.
+let bfDraft=null;
+function bfEntry(key){const definition=MW.products.find(p=>p.key===key);if(!definition)throw Error('找不到產品');return bfDraft.rates[key]??={ct:definition.r.ct||null,v:{}};}
+function bfContext(run){
+ const values=state.values,errors=state.errors;
+ try{const model={version:2,groups:{},rates:{},combo:{'POS|DCC交易':true},sme:{},links:{authSigners:{},shareHolders:{}},signals:{},ocr:[],ack:{},manualRisk:false};
+  for(const group of v2Groups){model.groups[group.k]=true;group.rows.forEach((row,index)=>{const key=v2RowKey(group,index),entry=bfEntry(key);model.rates[key]={on:true,ct:entry.ct,v:entry.v};});}
+  state.values={...V2.defaults,__v2:model};state.errors={};return run();
+ }finally{state.values=values;state.errors=errors;}
+}
+function bfIssues(key){const definition=MW.products.find(p=>p.key===key),entry=bfEntry(key);if(definition.r.mode==='INST'&&!V2.catalog.TENORS.some(t=>entry.v['t'+t+'_on']))return [];
+ return bfContext(()=>v2FeeErrors(definition.r,entry));}
+function bfProductsHTML(){
+ const group=v2Groups.find(g=>g.k===bfDraft.group),template=document.createElement('template');template.innerHTML=bfContext(v2Products);
+ const card=[...template.content.querySelectorAll('[data-section]')].find(n=>n.dataset.section===group.n+' · 產品項目');
+ card.querySelector(':scope > p.hint')?.remove();card.querySelector(':scope > .toolbar')?.remove();
+ const query=bfDraft.query.trim().toLocaleLowerCase();let matches=0;
+ for(const row of card.querySelectorAll('[data-v2-rate-row]')){
+  const key=row.dataset.v2RateRow,definition=MW.products.find(p=>p.key===key);if(query&&!definition.label.toLocaleLowerCase().includes(query)){row.remove();continue;}matches++;
+  row.querySelector('[data-v2-product]')?.remove();const error=row.querySelector('[data-v2-rate-error]');if(error){error.removeAttribute('data-v2-rate-error');error.dataset.bfError=key;error.textContent=bfIssues(key).join('；');}
+ }
+ for(const control of card.querySelectorAll('[data-v2-inline-key],[data-v2-inline-pricing]')){
+  for(const [original,target]of [['v2-inline-key','bf-key'],['v2-inline-field','bf-field'],['v2-inline-toggle','bf-toggle'],['v2-inline-pricing','bf-pricing']])if(control.hasAttribute('data-'+original)){control.setAttribute('data-'+target,control.getAttribute('data-'+original));control.removeAttribute('data-'+original);}
+ }
+ for(const node of card.querySelectorAll('[id]'))node.id='bf-'+node.id;
+ for(const label of card.querySelectorAll('label[for]'))label.htmlFor='bf-'+label.htmlFor;
+ const result=document.createElement('div');result.className='bf-editor v2-form';result.innerHTML='<div class="v2-products-page">'+(matches?card.outerHTML:'<p class="bf-empty">找不到符合的產品，請調整搜尋內容。</p>')+'</div>';
+ bfDraft.matches=matches;return result.outerHTML;
+}
+function bfRefreshProducts(focusId=''){
+ if(!bfDraft||!$('#bf-products'))return;const body=$('#modal .modal-body'),top=body.scrollTop;$('#bf-products').innerHTML=bfProductsHTML();$('#bf-match-count').textContent='顯示 '+bfDraft.matches+' 項產品';body.scrollTop=top;if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
+ for(const button of $$('[data-action="bf-group"]'))button.classList.toggle('primary',button.dataset.group===bfDraft.group);
+ const other=$('#bf-other-category');if(other)other.value=['POS','CNP','INQR'].includes(bfDraft.group)?'':bfDraft.group;
+}
+function bfStatus(text){const status=$('#bf-status');if(status)status.textContent=text;}
+function bfOpen(){
+ if(!bfCanEdit())return deny();const saved=bfRead();bfDraft={rates:bfClean(saved.rates),group:'POS',query:'',revision:saved.revision||0};
+ const templates=mtTemplates().filter(t=>t.scopes.includes('products'));
+ mtDialog('基礎費率設定',`<p class="bf-intro">直接修改各產品的預設費率，再按「儲存基礎費率」。新商戶預設使用這些數值，產品仍需另行勾選開通。</p><div class="bf-controls"><div class="bf-categories" aria-label="費率產品類別">${v2Groups.filter(g=>['POS','CNP','INQR'].includes(g.k)).map(g=>btn(g.n,'bf-group',g.k==='POS'?'primary':'',`data-group="${g.k}"`)).join('')}</div><div class="field"><label for="bf-other-category">其他產品類別</label><select id="bf-other-category"><option value="">請選擇</option>${v2Groups.filter(g=>!['POS','CNP','INQR'].includes(g.k)).map(g=>`<option value="${g.k}">${esc(g.n)}</option>`).join('')}</select></div><div class="field"><label for="bf-product-search">搜尋產品</label><input id="bf-product-search" type="search" placeholder="輸入產品或卡組織名稱"></div></div><details class="bf-import"><summary>帶入現有費率（選填）</summary><div class="bf-import-controls">${btn('帶入目前表單費率','bf-current','',route().page==='application'?'':'disabled')}<label for="bf-template">帶入費率模板</label><select id="bf-template"><option value="">選擇模板</option>${templates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)} · v${t.version}</option>`).join('')}</select></div></details><p class="hint bf-result-count" id="bf-match-count"></p><div id="bf-products">${bfProductsHTML()}</div>`, `<span class="hint bf-status" id="bf-status">尚未修改 · 目前儲存版本 v${saved.revision||0}</span>${btn('全部設為 0','bf-zero')}${btn('取消','mt-close')}${btn('儲存基礎費率','bf-save','primary')}`);
+ $('#modal').classList.add('bf-config');bfRefreshProducts();
+}
+function bfSave(){
+ try{if(!bfCanEdit()||!bfDraft)return deny();const rates=bfClean(bfDraft.rates);for(const key of Object.keys(rates)){const issues=bfIssues(key);if(issues.length)throw Error(MW.products.find(p=>p.key===key).label+'：'+issues.join('；'));}
+  if(bfRead().revision!==bfDraft.revision&&!(bfRead().revision===undefined&&bfDraft.revision===0))throw Error('基礎費率已由其他操作更新，請重新開啟核對');
+  if(mtFailureActive())throw Error('模擬儲存失敗，基礎費率保持原值');
+  localStorage.setItem(BF_KEY,JSON.stringify({rates,revision:bfDraft.revision+1,label:'自訂基礎費率',updatedAt:new Date().toISOString()}));mtClose();toast('基礎費率已儲存，之後新增商戶會帶入預設值');
+ }catch(error){mtError(error.message);}
+}
+Object.assign(actions,{'bf-open':bfOpen,'bf-save':bfSave,'bf-group':el=>{if(!bfDraft)return;bfDraft.group=el.dataset.group;bfRefreshProducts();},'bf-zero':()=>{if(!bfDraft)return;bfDraft.rates={};bfRefreshProducts();bfStatus('已全部設為 0，按儲存後生效');},'bf-current':()=>{if(!bfCanEdit()||!bfDraft||route().page!=='application')return deny();bfDraft.rates=bfClean(v2Model().rates);bfRefreshProducts();bfStatus('已帶入目前表單費率，可繼續修改');}});
+function bfEditEvent(event){
+ const target=event.target;if(!bfDraft||!target.closest('#modal.bf-config'))return;event.stopImmediatePropagation();
+ if(target.id==='bf-product-search'){bfDraft.query=target.value;bfRefreshProducts();return;}
+ if(target.id==='bf-other-category'){if(target.value){bfDraft.group=target.value;bfRefreshProducts();}return;}
+ if(target.id==='bf-template'){if(!target.value)return;const template=mtTemplates().find(t=>t.id===target.value);if(template){bfDraft.rates=bfClean(template.products?.rates);bfRefreshProducts();bfStatus('已帶入「'+template.name+'」，可繼續修改');}return;}
+ const key=target.dataset.bfKey||target.dataset.bfPricing;if(!key)return;const entry=bfEntry(key);
+ if(target.dataset.bfPricing){entry.ct=target.value;bfRefreshProducts(target.id);}
+ else if(target.dataset.bfToggle){entry.v[target.dataset.bfToggle]=target.checked;bfRefreshProducts(target.id);}
+ else if(target.dataset.bfField){entry.v[target.dataset.bfField]=target.value;const error=[...$$('[data-bf-error]')].find(n=>n.dataset.bfError===key);if(error)error.textContent=bfIssues(key).join('；');}
+ bfStatus('有未儲存的費率修改');
+}
+document.addEventListener('input',bfEditEvent,true);document.addEventListener('change',bfEditEvent,true);
+$('#modal').addEventListener('close',()=>{if(!$('#modal').open){$('#modal').classList.remove('bf-config');bfDraft=null;}});
 
 // Client review: account hierarchy is enforced when reading and mutating demo data.
 const AC_CHILD_ROLES={
