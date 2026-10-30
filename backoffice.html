@@ -2324,10 +2324,22 @@ if(!MT_EXTERNAL){const settings=actions.settings;actions.settings=()=>{settings(
 const bfApplication=application;application=function(step){let html=bfApplication(step);if(step===5){const source=state.values.__copiedFrom,base=state.values.__baseFees;html=html.replace('<div class="v2-version">',`<div class="notice fee-source">${source?'費率沿用來源商戶：'+esc(source.name):'新商戶基礎費率：'+esc(base?.label||'初始 0%')}。可在下方直接調整。</div><div class="v2-version">`);}return html;};
 // Keep raw files per application in this tab only. Saved storage holds metadata only.
 const clientFileRecords=new Map();
-function clientRememberFiles(key,files=state.files){const originals={};for(const [id,meta] of Object.entries(files)){const source=DEMO.sourceFiles?.get(id);if(source?.file&&source.file.name===meta.name&&source.file.size===meta.size&&!meta.needsReselect)originals[id]=source.file;}clientFileRecords.set(key,originals);}
-function clientFilesFor(key,metadata){const found=clientFileRecords.get(key)||{};return Object.fromEntries(Object.entries(found).filter(([id,f])=>metadata[id]?.name===f.name&&metadata[id]?.size===f.size));}
-if(MT_EXTERNAL){const old=snapshot;snapshot=function(status){const result=old(status);clientRememberFiles('record:'+result.id,result.files);return result;};}
-else{const old=draftSnapshot;draftSnapshot=function(id){const result=old(id);clientRememberFiles('draft:'+result.id,result.files);if(state.editing)clientRememberFiles('row:'+state.editing,result.files);return result;};}
+function clientRememberFiles(key,files=state.files){clientBindFiles();const originals={};for(const [id,meta] of Object.entries(files)){const source=DEMO.sourceFiles?.get(id);if(source?.file&&source.fileToken&&source.fileToken===state.files[id]?.localFileToken&&source.file.name===meta.name&&source.file.size===meta.size&&!meta.needsReselect)originals[id]={file:source.file,token:source.fileToken};}clientFileRecords.set(key,originals);}
+function clientFilesFor(key,metadata){const found=clientFileRecords.get(key)||{};return Object.fromEntries(Object.entries(found).filter(([id,entry])=>metadata[id]?.localFileToken===entry.token&&metadata[id]?.name===entry.file.name&&metadata[id]?.size===entry.file.size).map(([id,entry])=>[id,entry.file]));}
+function clientBindFiles(){
+ const keys=MT_EXTERNAL?['record:'+state.id]:['row:'+state.editing,'draft:'+state.draftId,'draft:'+rows.find(r=>rowKey(r)===state.editing)?.application?.id];
+ for(const [id,meta] of Object.entries(state.files||{})){
+  if(meta.demo)continue;const active=DEMO.sourceFiles?.get(id);
+  if(active?.file&&!active.fileToken&&active.file.name===meta.name&&active.file.size===meta.size&&!meta.needsReselect){active.fileToken=crypto.randomUUID();meta.localFileToken=active.fileToken;}
+  if(active?.fileToken&&active.fileToken===meta.localFileToken){meta.needsReselect=false;continue;}
+  const file=keys.map(key=>clientFilesFor(key,state.files)[id]).find(Boolean);
+  if(file){const url=URL.createObjectURL(file);DEMO.fileURLs.set(id,url);DEMO.sourceFiles.set(id,{file,url,fileToken:meta.localFileToken});meta.needsReselect=false;}
+  else{meta.needsReselect=true;DEMO.fileURLs.delete(id);}
+ }
+}
+const clientFileRender=render;render=function(){clientBindFiles();return clientFileRender();};
+if(MT_EXTERNAL){const old=snapshot;snapshot=function(status){clientBindFiles();const result=old(status);clientRememberFiles('record:'+result.id,result.files);return result;};}
+else{const old=draftSnapshot;draftSnapshot=function(id){clientBindFiles();const result=old(id);clientRememberFiles('draft:'+result.id,result.files);if(state.editing)clientRememberFiles('row:'+state.editing,result.files);return result;};}
 if(!MT_EXTERNAL){
  function clientReviewFile(r,index=IR.doc){const code=irDocTypes[index][1],meta=r.application?.files||{},doc=V2.documents.find(d=>d.code===code||d.id===code||d.name.includes(code)),id=doc?.id||Object.keys(meta).find(k=>k.includes(code));const raw=clientFilesFor('row:'+rowKey(r),meta)[id]||clientFilesFor('draft:'+r.application?.id,meta)[id];return {meta:meta[id],raw,id,blocked:!!raw&&['140401','141301'].includes(code)&&!can(5)};}
  const originalDocument=irDocument,previewURLs=new WeakMap();irDocument=function(r,index=IR.doc){const f=clientReviewFile(r,index);if(f.blocked)return '<div class="notice warn">查看銀行文件原件需要完整銀行帳號權限。</div>';if(f.raw){let url=previewURLs.get(f.raw);if(!url){url=URL.createObjectURL(f.raw);previewURLs.set(f.raw,url);}return `<p class="hint">上傳原文件 · ${esc(f.raw.name)}</p>${/\.pdf$/i.test(f.raw.name)?`<iframe class="br-pdf-preview" src="${esc(url)}" title="${esc(f.raw.name)}"></iframe>`:`<img class="document-preview" src="${esc(url)}" alt="${esc(f.raw.name)}">`}`;}if(f.meta&&!f.meta.demo)return '<div class="notice warn">原文件未保留，請重新上傳後查看或下載。</div>';return originalDocument(r,index);};
