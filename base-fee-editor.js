@@ -1,5 +1,7 @@
 // Independent default-rate editor. Reuse the merchant fee renderer without changing its fields.
 let bfDraft=null;
+const bfProductTools=mtToolActions;
+mtToolActions=function(compact=false){const html=bfProductTools(compact);return !compact&&bfCanEdit()&&route().page==='application'&&Number(route().step)===5?html.replace('>','>'+btn('基礎費率設定','bf-open')):html;};
 function bfEntry(key){const definition=MW.products.find(p=>p.key===key);if(!definition)throw Error('找不到產品');return bfDraft.rates[key]??={ct:definition.r.ct||null,v:{}};}
 function bfContext(run){
  const values=state.values,errors=state.errors;

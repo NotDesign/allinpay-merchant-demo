@@ -1900,7 +1900,7 @@ function mtLibrary(){
 }
 function mtOpenSave(id=''){
  if(!mtAllowed())return;const existing=mtTemplates().find(t=>t.id===id);mtFlow={kind:'save',id:existing?.id||'',scopes:existing?.scopes||['profile','mcc','settlement','products']};
- mtDialog(existing?'更新參數模板':'儲存為參數模板',`<div class="field"><label for="mt-template-name">模板名稱 <span class="required">*</span></label><input id="mt-template-name" maxlength="80" value="${esc(existing?.name||'')}" placeholder="例如：集團餐飲標準設定"></div>${mtScopeInputs({scopes:Object.keys(MT.labels)},mtFlow.scopes)}<p class="hint">共用模板可同時包含商戶資料與費率。公司專屬資料可另外選存，只能逐家公司套用；文件附件、驗證及簽署狀態不會納入模板。</p>`,btn('取消','mt-library')+btn(existing?'確認更新模板':'儲存模板','mt-save','primary'));
+ mtDialog(existing?'更新參數模板':'儲存為參數模板',`<div class="field"><label for="mt-template-name">模板名稱 <span class="required">*</span></label><input id="mt-template-name" maxlength="80" value="${esc(existing?.name||'')}" placeholder="例如：集團餐飲標準設定"></div>${mtScopeInputs({scopes:Object.keys(MT.labels)},mtFlow.scopes)}<p class="hint">共用模板可同時包含商戶資料與費率。公司專屬資料可另外選存，只能逐家公司套用；文件附件、驗證及簽署狀態不會納入模板。</p>`,btn('取消','mt-close')+btn(existing?'確認更新模板':'儲存模板','mt-save','primary'));
 }
 function mtSave(){
  try{if(!mtAllowed())return;const list=mtTemplates(),previous=list.find(t=>t.id===mtFlow.id),snapshot=mtSnapshot();const t=MT.cleanTemplate({id:previous?.id||crypto.randomUUID(),name:$('#mt-template-name').value,version:(previous?.version||0)+1,scopes:mtFlow.scopes,values:snapshot.values,products:snapshot.values.__v2,people:snapshot.people,createdAt:previous?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()});if(list.some(x=>x.name===t.name&&x.id!==t.id))throw Error('已有同名模板，請改名或從清單選擇更新');mtSaveTemplates([t,...list.filter(x=>x.id!==t.id)]);mtLibrary();toast('已儲存模板，可一次套用至多家新商戶');}catch(e){mtError(e.message);}
@@ -2322,7 +2322,6 @@ function bfSeed(){state.baseFeeDefaults=structuredClone(bfRead().rates||{});dele
 const bfReset=v2Reset;v2Reset=function(){bfReset();bfSeed();};
 const bfOriginalGroup=v2SetGroup;v2SetGroup=function(key,on){const previous=new Set(Object.keys(v2Model().rates));bfOriginalGroup(key,on);if(!on||!state.baseFeeDefaults||v2Model().legacy||state.editing||state.draftId||(MT_EXTERNAL&&state.id))return;for(const [id,st] of Object.entries(v2Model().rates))if(!previous.has(id)&&state.baseFeeDefaults[id]){st.ct=state.baseFeeDefaults[id].ct||st.ct;st.v=structuredClone(state.baseFeeDefaults[id].v||{});}};
 if(!Object.keys(v2Model().rates).length&&!v2Raw('merchantName'))bfSeed();
-if(!MT_EXTERNAL){const settings=actions.settings;actions.settings=()=>{settings();if(bfCanEdit())$('#modal .modal-foot')?.insertAdjacentHTML('afterbegin',btn('基礎費率設定','bf-open'));};}
 // Keep raw files per application in this tab only. Saved storage holds metadata only.
 const clientFileRecords=new Map();
 function clientRememberFiles(key,files=state.files){clientBindFiles();const originals={};for(const [id,meta] of Object.entries(files)){const source=DEMO.sourceFiles?.get(id);if(source?.file&&source.fileToken&&source.fileToken===state.files[id]?.localFileToken&&source.file.name===meta.name&&source.file.size===meta.size&&!meta.needsReselect)originals[id]={file:source.file,token:source.fileToken};}clientFileRecords.set(key,originals);}
@@ -2352,6 +2351,8 @@ if(MT_EXTERNAL){const verifyInvitation=actions.verify;let invitationEntered=fals
 
 // Independent default-rate editor. Reuse the merchant fee renderer without changing its fields.
 let bfDraft=null;
+const bfProductTools=mtToolActions;
+mtToolActions=function(compact=false){const html=bfProductTools(compact);return !compact&&bfCanEdit()&&route().page==='application'&&Number(route().step)===5?html.replace('>','>'+btn('基礎費率設定','bf-open')):html;};
 function bfEntry(key){const definition=MW.products.find(p=>p.key===key);if(!definition)throw Error('找不到產品');return bfDraft.rates[key]??={ct:definition.r.ct||null,v:{}};}
 function bfContext(run){
  const values=state.values,errors=state.errors;

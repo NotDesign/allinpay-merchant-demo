@@ -8,7 +8,6 @@ function bfSeed(){state.baseFeeDefaults=structuredClone(bfRead().rates||{});dele
 const bfReset=v2Reset;v2Reset=function(){bfReset();bfSeed();};
 const bfOriginalGroup=v2SetGroup;v2SetGroup=function(key,on){const previous=new Set(Object.keys(v2Model().rates));bfOriginalGroup(key,on);if(!on||!state.baseFeeDefaults||v2Model().legacy||state.editing||state.draftId||(MT_EXTERNAL&&state.id))return;for(const [id,st] of Object.entries(v2Model().rates))if(!previous.has(id)&&state.baseFeeDefaults[id]){st.ct=state.baseFeeDefaults[id].ct||st.ct;st.v=structuredClone(state.baseFeeDefaults[id].v||{});}};
 if(!Object.keys(v2Model().rates).length&&!v2Raw('merchantName'))bfSeed();
-if(!MT_EXTERNAL){const settings=actions.settings;actions.settings=()=>{settings();if(bfCanEdit())$('#modal .modal-foot')?.insertAdjacentHTML('afterbegin',btn('基礎費率設定','bf-open'));};}
 // Keep raw files per application in this tab only. Saved storage holds metadata only.
 const clientFileRecords=new Map();
 function clientRememberFiles(key,files=state.files){clientBindFiles();const originals={};for(const [id,meta] of Object.entries(files)){const source=DEMO.sourceFiles?.get(id);if(source?.file&&source.fileToken&&source.fileToken===state.files[id]?.localFileToken&&source.file.name===meta.name&&source.file.size===meta.size&&!meta.needsReselect)originals[id]={file:source.file,token:source.fileToken};}clientFileRecords.set(key,originals);}
