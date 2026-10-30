@@ -1,6 +1,6 @@
 {
   "active": {
-    "version": "2026.10.30-review-accounts-v1.4",
+    "version": "2026.10.30-individual-permissions-v1.5",
     "baseCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
     "date": "2026-10-30",
     "zip": "allinpay-merchant-demo-20261030.zip"
