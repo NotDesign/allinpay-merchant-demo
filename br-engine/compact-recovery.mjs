@@ -1,4 +1,4 @@
-import {parseBR,parseDate} from './parser.mjs?v=20260929-uploads';
+import {parseBR,parseDate} from './parser.mjs?v=20261102-samples';
 import {findCompactLayout,cropCanvas,prepareSmallScan,ocrRows,adaptiveCanvas} from './layout.mjs';
 const flatText=data=>ocrRows(data).map(r=>r.words.map(w=>w.text).join(' ')).join('\n')||data.text||'';
 const trimText=text=>text.split('\n').map(s=>s.trim().replace(/^[|~_’'`]+\s*|[\s|~_]+$/g,'')).filter(s=>/[A-Za-z0-9\u3400-\u9fff]/.test(s)).join('\n');
@@ -6,7 +6,7 @@ const validLatinLine=line=>/^[A-Z0-9][A-Z0-9 /,.'’&()#*-]*$/.test(line)&&(line
 function aborted(signal){if(signal?.aborted)throw new DOMException('Aborted','AbortError');}
 // Recover the value column only after finding a printed company-name row and legal-status row.
 // Regions are derived from those anchors, not from filenames, known values or fixed pixel coordinates.
-export async function recoverCompactBR({worker,canvas,page,signal,run,onProgress=()=>{}}){
+export async function recoverCompactBR({worker,canvas,page,signal,run,onProgress=()=>{},highResolution=false}){
  aborted(signal);await run(worker.reinitialize('eng'));await run(worker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1',tessedit_char_whitelist:'',user_defined_dpi:'300'}));
  const prepared=prepareSmallScan(canvas);let regions={};let nameImage=null;
  try{
@@ -45,7 +45,9 @@ export async function recoverCompactBR({worker,canvas,page,signal,run,onProgress
   }
   const baseAddress=extracted.address.text.split('\n').filter(validLatinLine).join(' ');
   const columnAddress=layout.rows.filter(row=>row.cy>=geometry.address.y&&row.cy<geometry.address.y+geometry.address.height).map(row=>row.words.filter(w=>w.bbox.x0>=x&&w.bbox.x1<x+span*2).map(w=>w.text).join(' ')).filter(validLatinLine).join(' ');
-  const address=columnAddress.replace(/\s/g,'')===baseAddress.replace(/\s/g,'')?columnAddress:baseAddress;
+  // The anchored value column excludes the vertical border; whole-region OCR
+  // often puts a border glyph on a valid address line and loses its numbers.
+  const address=columnAddress||baseAddress;
   const source=['Business Registration Certificate',`Name of Business/Corporation ${company.value}`,'Business/Branch Name',`Address ${address}`,`Nature of Business ${extracted.nature.text.split('\n').filter(validLatinLine).join(' ')}`,`Status ${extracted.status.text.split('\n').filter(validLatinLine).join(' ')}`].join('\n');
   const result=parseBR(source,{method:'ocr',page});result.warnings=[];result.rawText=rawParts.map(p=>`[${p.label}]\n${p.text}`).join('\n\n');result.recovered=true;
   const set=(key,value,source,confidence)=>{result.fields[key]={...result.fields[key],value,source,confidence,reviewRequired:true,lowResolution:true,autoSelect:confidence===undefined||confidence>=80};if(confidence!==undefined&&confidence<80)result.fields[key].warning=['certificateNumber','startDate'].includes(key)?'小字辨識信心不足，請對照原件核對。':'小字辨識信心不足，尚未勾選帶入；請對照原件修正或確認。';};
@@ -80,13 +82,13 @@ export async function recoverCompactBR({worker,canvas,page,signal,run,onProgress
   }
   // Chinese names are a separate script and can be above the English-name row.
   await run(worker.reinitialize('chi_tra'));await run(worker.setParameters({tessedit_pageseg_mode:'7',tessedit_char_whitelist:'',preserve_interword_spaces:'0'}));
-  nameImage=cropCanvas(prepared,{x,y:n-company.height*2.6,width:prepared.width-x,height:company.height*1.65});
+  nameImage=cropCanvas(prepared,{x,y:n-company.height*2.8,width:company.words.at(-1).bbox.x1-x+company.height,height:company.height*2.3},2);
   const {data:chinese}=await run(worker.recognize(nameImage,{}, {text:true}));
   const zh=chinese.text.trim().replace(/\s+/g,'').replace(/[|~_]+$/g,'');
   // Leave a tiny/uncertain Chinese line empty rather than making up a company name.
   if(chinese.confidence>=75&&/[\u3400-\u9fff]{4}/.test(zh)&&/^[Xx0-9A-Z\u3400-\u9fff（）()·.&-]+$/.test(zh))set('businessNameZh',zh,chinese.text.trim(),chinese.confidence);
   if(result.fields.expiryDate.value&&result.fields.expiryDate.value<new Date().toISOString().slice(0,10))result.warnings.push('這張 BR 的屆滿日期已過，請確認是否有更新版本。');
-  result.warnings.unshift('這張圖片解析度較低，已放大並分區辨識。姓名、地址、日期和號碼可能有錯字，帶入前請逐一核對。');
+  result.warnings.unshift(highResolution?'已按公司名稱、法律地位及日期欄定位分區辨識。帶入前請逐項核對。':'這張圖片解析度較低，已放大並分區辨識。姓名、地址、日期和號碼可能有錯字，帶入前請逐一核對。');
   if(!result.fields.brNumber.value&&!result.maskedBR&&!result.fields.brNumber.alternatives)result.warnings.push('未能可靠讀取完整 BR 號碼；可先帶入其他欄位。');
   result.recognized=true;result.fieldCount=Object.values(result.fields).filter(f=>f.value).length;result.score=20+result.fieldCount*4;
   result.ocrConfidence=null;return result;

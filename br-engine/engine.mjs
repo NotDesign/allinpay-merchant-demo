@@ -1,9 +1,9 @@
 import * as pdfjs from '../vendor/pdfjs/build/pdf.mjs';
-import {prepareSmallScan} from './layout.mjs';
-import {recoverCompactBR} from './compact-recovery.mjs?v=20260929-uploads';
-import {recoverLabelledBR} from './structured-recovery.mjs?v=20260929-uploads';
+import {prepareSmallScan,ocrRows} from './layout.mjs';
+import {recoverCompactBR} from './compact-recovery.mjs?v=20261102-samples';
+import {recoverLabelledBR} from './structured-recovery.mjs?v=20261102-samples';
 import Tesseract from '../vendor/tesseract/tesseract.esm.min.js';
-import {parseBR} from './parser.mjs?v=20260929-uploads';
+import {parseBR} from './parser.mjs?v=20261102-samples';
 import {rotateCanvas,estimateSkew,enhanceCanvas} from './image-processing.mjs';
 const asset = path => new URL(`../vendor/${path}`, import.meta.url).href;
 pdfjs.GlobalWorkerOptions.workerSrc=asset('pdfjs/build/pdf.worker.mjs');
@@ -77,7 +77,8 @@ export async function recognizeDocument({canvas,text,page=1,forceOCR=false,signa
   // label/value regions before accepting a high field-count from whole-page OCR.
   if(Math.max(canvas.width,canvas.height)>=1400){
    const correction=await estimateSkew(canvas,signal),aligned=rotateCanvas(canvas,correction.angle);
-   try{const recovered=await recoverLabelledBR({worker,canvas:aligned,page,signal,run:p=>abortable(p,signal),onProgress});
+   try{const recovered=await recoverLabelledBR({worker,canvas:aligned,page,signal,run:p=>abortable(p,signal),onProgress})
+      ||await recoverCompactBR({worker,canvas:aligned,page,signal,run:p=>abortable(p,signal),onProgress,highResolution:true});
     if(recovered){onProgress({progress:1,label:'分區辨識完成，請對照原件核對。'});return {...recovered,rotation:0,skew:correction.angle,elapsed:performance.now()-start};}
    }finally{aligned.width=1;}
    await abortable(worker.reinitialize(['eng','chi_tra']),signal);
@@ -105,16 +106,7 @@ export async function recognizeDocument({canvas,text,page=1,forceOCR=false,signa
 // OCR reading order can visit the entire label column before the value column.
 // Rebuild physical rows from word coordinates before applying BR labels.
 export function textByPosition(data) {
- const words=(data.blocks||[]).flatMap(b=>(b.paragraphs||[]).flatMap(p=>(p.lines||[]).flatMap(l=>l.words||[]))).filter(w=>w.text?.trim());
- if(!words.length)return data.text||'';
- const rows=[];
- for(const word of words.sort((a,b)=>a.bbox.y0-b.bbox.y0)){
-  const box=word.bbox,h=box.y1-box.y0,cy=(box.y0+box.y1)/2;
-  let row=rows.find(r=>Math.abs(r.cy-cy)<Math.max(r.height,h)*.55);
-  if(!row){row={cy,height:h,words:[]};rows.push(row);}
-  row.words.push(word);row.height=Math.max(row.height,h);
- }
- return rows.sort((a,b)=>a.cy-b.cy).map(r=>r.words.sort((a,b)=>a.bbox.x0-b.bbox.x0).map(w=>w.text).join(' ')).join('\n');
+ return ocrRows(data).map(r=>r.words.map(w=>w.text).join(' ')).join('\n')||data.text||'';
 }
 
 // General document text reader used by the multi-file review workflow.
@@ -129,7 +121,17 @@ export async function extractDocumentText({canvas,text,signal,onProgress=()=>{}}
   worker=await abortable(pending,signal);
   await abortable(worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:Tesseract.PSM.AUTO,user_defined_dpi:'300'}),signal);
   const {data}=await abortable(worker.recognize(canvas,{}, {text:true,blocks:true}),signal);
-  return {text:textByPosition(data),method:'本機 OCR',confidence:Math.round(data.confidence)};
+  let read=textByPosition(data);
+  // An identity card's security background/photo can break automatic page
+  // segmentation. Independently read its printed Latin fields as a text block.
+  // Retain both readings; conflicting numbers remain unresolved in the parser.
+  if(/HONG\s*KONG\s*(?:PERMANENT\s*)?IDENTITY\s*CARD/i.test(read)){
+    await abortable(worker.reinitialize('eng'),signal);
+    await abortable(worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:Tesseract.PSM.SINGLE_BLOCK,tessedit_char_whitelist:''}),signal);
+    const second=await abortable(worker.recognize(canvas,{}, {text:true,blocks:true}),signal);
+    read+='\n[身份證獨立版面讀取]\n'+textByPosition(second.data);
+  }
+  return {text:read,method:'本機 OCR',confidence:Math.round(data.confidence)};
  } finally {signal?.removeEventListener('abort',cancel);if(worker)await worker.terminate().catch(()=>{});}
 }
 function abortable(promise,signal) {

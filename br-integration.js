@@ -17,7 +17,7 @@ Object.assign(brLabels,{registerCertName:'註冊證書名稱',registerCertType:'
 const brAlive = b => DEMO.br === b && !b.disposed;
 async function brLoadModules(){
   if(location.protocol==='file:')throw Error('本機檔案辨識需要 HTTP 服務。請開啟同一後台的 GitHub 網址，或以 npm run serve 啟動下載的完整原始碼。單一 HTML 仍可使用示範資料。');
-  if(!brModules)brModules=Promise.all([import('./br-engine/engine.mjs?v=20260929-uploads'),import('./br-engine/parser.mjs?v=20260929-uploads')]).catch(e=>{brModules=null;throw e;});
+  if(!brModules)brModules=Promise.all([import('./br-engine/engine.mjs?v=20261102-samples'),import('./br-engine/parser.mjs?v=20261102-samples')]).catch(e=>{brModules=null;throw e;});
   return brModules;
 }
 function brRelease(b=DEMO.br){

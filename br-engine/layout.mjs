@@ -1,10 +1,14 @@
 // Layout helpers for compact, older Hong Kong BR scans. No customer values/templates stored.
 export function ocrRows(data) {
  const words=(data.blocks||[]).flatMap(b=>(b.paragraphs||[]).flatMap(p=>(p.lines||[]).flatMap(l=>l.words||[]))).filter(w=>w.text?.trim());
- const rows=[];
+ // Stamps, borders and photos can produce a very tall OCR "word". It must
+ // not enlarge a text row and absorb every subsequent field on the page.
+ const heights=words.map(w=>w.bbox.y1-w.bbox.y0).filter(h=>h>0).sort((a,b)=>a-b);
+ const typical=heights[Math.floor(heights.length/2)]||20,rows=[];
  for(const word of words.sort((a,b)=>a.bbox.y0-b.bbox.y0)){
   const box=word.bbox,h=box.y1-box.y0,cy=(box.y0+box.y1)/2;
-  let row=rows.find(r=>Math.abs(r.cy-cy)<Math.max(r.height,h)*.55);
+  if(h>typical*3.5)continue;
+  let row=rows.find(r=>Math.abs(r.cy-cy)<Math.min(r.height,h,typical*1.5)*.55);
   if(!row){row={cy,height:h,words:[]};rows.push(row);}row.words.push(word);row.height=Math.max(row.height,h);
  }
  return rows.sort((a,b)=>a.cy-b.cy).map(r=>({...r,words:r.words.sort((a,b)=>a.bbox.x0-b.bbox.x0)}));

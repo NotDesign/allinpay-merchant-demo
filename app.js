@@ -800,7 +800,7 @@ Object.assign(brLabels,{registerCertName:'註冊證書名稱',registerCertType:'
 const brAlive = b => DEMO.br === b && !b.disposed;
 async function brLoadModules(){
   if(location.protocol==='file:')throw Error('本機檔案辨識需要 HTTP 服務。請開啟同一後台的 GitHub 網址，或以 npm run serve 啟動下載的完整原始碼。單一 HTML 仍可使用示範資料。');
-  if(!brModules)brModules=Promise.all([import('./br-engine/engine.mjs?v=20260929-uploads'),import('./br-engine/parser.mjs?v=20260929-uploads')]).catch(e=>{brModules=null;throw e;});
+  if(!brModules)brModules=Promise.all([import('./br-engine/engine.mjs?v=20261102-samples'),import('./br-engine/parser.mjs?v=20261102-samples')]).catch(e=>{brModules=null;throw e;});
   return brModules;
 }
 function brRelease(b=DEMO.br){
@@ -1113,9 +1113,9 @@ async function batchRecognize(){
  const b=documentBatch;if(!b?.files.length||b.phase!=='upload')return;b.phase='reading';b.controller=new AbortController();
  modal('多文件辨識中','<p id="document-progress" role="status">正在載入本機辨識引擎…</p><progress id="document-progress-bar" max="100" value="0"></progress><p class="hint">辨識文件種類及可填欄位。可隨時取消，現有資料不受影響。</p>',btn('取消辨識','close'));let timer;
  try{
-  const [[engine],parser]=await Promise.all([brLoadModules(),import('./br-engine/multi-document.mjs?v=20260929-uploads')]);
+  const [[engine],parser]=await Promise.all([brLoadModules(),import('./br-engine/multi-document.mjs?v=20261102-samples')]);
   for(let i=0;i<b.files.length;i++){
-   if(b.cancelled)return;const entry=b.files[i];entry.text=[];let doc;const classifications=[];
+   if(b.cancelled)return;const entry=b.files[i];entry.text=[];entry.identities=[];let doc;const classifications=[];
    try{
     doc=await engine.loadDocument(entry.file);
     for(let p=1;p<=doc.pages;p++){
@@ -1123,17 +1123,24 @@ async function batchRecognize(){
      try{
       view=await doc.render(p);timer=setTimeout(()=>b.controller.abort(),120000);
       const progress=n=>{if(!b.cancelled)$('#document-progress').textContent=(i+1)+'／'+b.files.length+' · '+entry.file.name+' · 第 '+p+' 頁 · '+Math.round(n*100)+'%';};
-      const tryBR=entry.type==='BR'||entry.type==='AUTO'&&(!view.text.trim()||parser.classifyDocument(view.text).id==='140101');
+      // Identify scanned documents before invoking the BR-specific pipeline.
+      // A filename or a document checklist does not establish its type.
+      let result=entry.type==='BR'?null:await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:progress});
+      const tryBR=entry.type==='BR'||entry.type==='AUTO'&&parser.classifyDocument(result.text).id==='140101';
       const br=tryBR?await engine.recognizeDocument({...view,page:p,signal:b.controller.signal,onProgress:x=>progress(x.progress)}):null;
-      const result=br?.recognized?{text:br.rawText,method:br.method,confidence:br.ocrConfidence}:await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:progress});clearTimeout(timer);
-      if(b.cancelled)return;entry.text.push(result.text);classifications.push(parser.classifyDocument(result.text,{brRecognized:!!br?.recognized}));
+      result=br?.recognized?{text:br.rawText,method:br.method,confidence:br.ocrConfidence}:result||await engine.extractDocumentText({...view,signal:b.controller.signal,onProgress:progress});clearTimeout(timer);
+      if(b.cancelled)return;entry.text.push(result.text);const classification=parser.classifyDocument(result.text,{brRecognized:!!br?.recognized});classifications.push(classification);
+      if(classification.kind==='ID')entry.identities.push({values:parser.extractIdentity(result.text),page:p,method:result.method});
       const candidates=br?.recognized?parser.candidatesFromBR(br):parser.extractCandidates(result.text,entry.type);
       for(const candidate of candidates){const value=v2Canonical(candidate.key,candidate.value);if(!b.items.some(o=>o.key===candidate.key&&o.value===value&&o.fileIndex===i))b.items.push({...candidate,value,fileIndex:i,page:p,source:(br?.recognized?'BR · ':'')+entry.file.name+' · 第 '+p+' 頁',method:result.method,confidence:candidate.confidence??result.confidence,selected:false,replace:false});}
      }finally{clearTimeout(timer);if(view)view.canvas.width=1;}
     }
-    const ids=[...new Set(classifications.map(c=>c.id).filter(Boolean))];
-    entry.destination=ids.length===1&&!classifications.some(c=>c.ambiguous)?ids[0]:'';
-    entry.reason=entry.destination?'按文件內文判斷：'+batchDocName(entry.destination):'未能確定唯一文件種類，請選擇附件位置';
+    const ids=[...new Set(classifications.map(c=>c.id).filter(Boolean))],kinds=[...new Set(classifications.map(c=>c.kind==='ID'?'IDENTITY':c.id).filter(Boolean))];
+    entry.destination=ids.length===1&&kinds.length===1&&!classifications.some(c=>c.ambiguous)?ids[0]:'';
+    entry.kind=kinds.length===1?classifications.find(c=>c.kind)?.kind||'':'';
+    entry.reason=entry.kind?classifications.find(c=>c.kind).reason:entry.destination?'按文件內文判斷：'+batchDocName(entry.destination):'未能確定唯一文件種類，請選擇附件位置';
+    entry.identity={};
+    for(const key of v2PersonKeys){const values=[...new Set(entry.identities.map(x=>x.values[key]).filter(Boolean))];if(values.length===1)entry.identity[key]=values[0];}
    }catch(error){if(b.cancelled)return;entry.reason='未完成辨識，仍可手動分配附件';b.failures.push(entry.file.name+'：'+(error.name==='AbortError'?'辨識逾時，請重試或手動分配。':error.message));if(b.controller.signal.aborted)b.controller=new AbortController();}
    finally{await doc?.destroy();if(!b.cancelled)$('#document-progress-bar').value=(i+1)/b.files.length*100;}
   }
@@ -1143,9 +1150,23 @@ async function batchRecognize(){
   batchReview();
  }catch(error){if(!b.cancelled){b.failures.push(error.message);batchReview();}}finally{clearTimeout(timer);}
 }
+function batchIdentityOwners(){
+ return [['directors','董事'],['authSigners','授權簽名人'],['shareHolders','股東']].flatMap(([g,label])=>Array.from({length:Math.max(1,state.people[g]||0)},(_,i)=>({value:g+'['+i+']',label:label+' '+(i+1)+' · '+(v2Raw(g+'['+i+'].name')||'待填姓名')})));
+}
+function batchSetIdentityOwner(index,owner){
+ const b=documentBatch,f=b.files[index];
+ if(!batchIdentityOwners().some(o=>o.value===owner))owner='';
+ b.items=b.items.filter(o=>o.fileIndex!==index||!o.identity);f.owner=owner;
+ if(owner){
+  const group=owner.split('[')[0];f.destination=group==='directors'?'140901':group==='shareHolders'?'141001':'100301';
+  f.include=!state.files[f.destination]&&!b.files.some((x,i)=>i!==index&&x.include&&x.destination===f.destination);f.replace=false;
+  for(const [key,value]of Object.entries(f.identity||{}))b.items.push({key:owner+'.'+key,value,step:2,fileIndex:index,page:f.identities?.[0]?.page||1,source:f.file.name+' · 身份證（持有人由你指定）',method:f.identities?.[0]?.method||'本機 OCR',identity:true,autoSelect:false,selected:false,replace:false,warning:'請核對姓名、證件號碼及出生日期；不會以簽發日期推算有效期'});
+ }
+ batchReview();
+}
 function batchAssignments(ready){const b=documentBatch;return '<h3>文件自動分配</h3><p class="hint">確認每份文件的上傳位置。重複位置或已有附件須自行選擇；未勾選的文件不會加入。</p><div class="batch-assignments">'+b.files.map((f,i)=>{
  const duplicate=f.destination&&b.files.filter(x=>x.destination===f.destination).length>1,old=state.files[f.destination];
- return '<section class="batch-assignment"><strong>'+esc(f.file.name)+'</strong><small>'+esc(f.reason||'請選擇附件位置')+'</small><label>對應上傳位置<select aria-label="文件 '+(i+1)+' 對應上傳位置" data-document-destination="'+i+'" '+(ready?'disabled':'')+'><option value="">待手動分配／略過</option>'+
+ return '<section class="batch-assignment"><strong>'+esc(f.file.name)+'</strong><small>'+esc(f.reason||'請選擇附件位置')+'</small>'+(f.kind==='ID'?'<label>身份證持有人<select aria-label="文件 '+(i+1)+' 身份證持有人" data-document-owner="'+i+'" '+(ready?'disabled':'')+'><option value="">先選擇持有人，再核對欄位</option>'+batchIdentityOwners().map(o=>'<option value="'+o.value+'" '+(o.value===f.owner?'selected':'')+'>'+esc(o.label)+'</option>').join('')+'</select></label><p class="hint">身份證不會自動歸為董事；選定持有人後，下方顯示可核對欄位。</p>':'')+'<label>對應上傳位置<select aria-label="文件 '+(i+1)+' 對應上傳位置" data-document-destination="'+i+'" '+(ready?'disabled':'')+'><option value="">待手動分配／略過</option>'+
  V2.documents.map(d=>'<option value="'+d.id+'" '+(f.destination===d.id?'selected':'')+'>'+esc(batchDocName(d.id))+'</option>').join('')+'</select></label>'+
  (duplicate?'<p class="error">多份文件對應同一位置，請只選一份，或合併 PDF 後重新加入。</p>':'')+
  (old?'<p class="hint">原有附件：'+esc(old.name)+'</p><label class="check"><input type="checkbox" data-document-file-replace="'+i+'" '+(f.replace?'checked':'')+' '+(ready?'disabled':'')+'>確認取代此位置原有附件</label>':'')+
@@ -1158,7 +1179,7 @@ function batchReview(ready=false){
  '<div class="batch-source-list">'+b.files.map((f,i)=>btn('查看文件 '+(i+1),'document-source','','data-index="'+i+'"')).join('')+'</div>'+
  batchAssignments(ready)+'<h3>表單欄位</h3><div class="batch-candidates">'+
  (b.items.map((o,i)=>{const existing=v2Raw(o.key),conflict=existing&&existing!==o.value;return '<section class="batch-candidate"><label class="check"><input type="checkbox" data-document-select="'+i+'" '+(o.selected?'checked':'')+' '+(ready?'disabled':'')+'><strong>'+esc(v2Label(o.key))+'</strong></label><input aria-label="核對 '+esc(v2Label(o.key))+'" data-document-value="'+i+'" value="'+esc(o.value)+'" '+(ready?'readonly':'')+'><small>'+esc(o.source)+' · '+esc(o.method)+'</small>'+
- (existing?'<p class="hint">原有內容：'+esc(existing)+'</p>':'')+(conflict?'<label class="check"><input type="checkbox" data-document-replace="'+i+'" '+(o.replace?'checked':'')+' '+(ready?'disabled':'')+'>確認以此值取代原有內容</label>':'')+'</section>';}).join('')||'<p>沒有可帶入的候選欄位；仍可將文件分配到附件位置。</p>')+'</div>'+
+ (o.warning?'<p class="notice warn">'+esc(o.warning)+'</p>':'')+(existing?'<p class="hint">原有內容：'+esc(existing)+'</p>':'')+(conflict?'<label class="check"><input type="checkbox" data-document-replace="'+i+'" '+(o.replace?'checked':'')+' '+(ready?'disabled':'')+'>確認以此值取代原有內容</label>':'')+'</section>';}).join('')||'<p>沒有可帶入的候選欄位；仍可將文件分配到附件位置。</p>')+'</div>'+
  (b.failures.length?'<div class="notice warn"><strong>仍需手動補充</strong><ul>'+b.failures.map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul></div>':'')+
  (ready?'':'<label class="check"><input type="checkbox" id="batch-reviewed">我已核對文件位置、欄位內容及取代選項</label>')+'<p id="document-error" class="error" role="alert"></p>',
  btn('取消，保留原資料','close')+(ready?btn('返回核對','document-review'):'')+btn(ready?'確認並套用':'已核對，準備套用',ready?'document-apply':'document-ready','primary'));
@@ -1167,7 +1188,7 @@ function batchValidate(){
  const b=documentBatch,selected=b.items.filter(o=>o.selected),files=b.files.filter(f=>f.include),keys=new Set(),slots=new Set();
  if(!selected.length&&!files.length)return '請至少選擇一份文件或一個已核對欄位。';
  for(const f of files){if(!V2.documents.some(d=>d.id===f.destination))return '請選擇有效的文件位置。';if(slots.has(f.destination))return batchDocName(f.destination)+'有多份文件，請只選一份。';slots.add(f.destination);if(state.files[f.destination]&&!f.replace)return '請確認取代「'+batchDocName(f.destination)+'」的原有附件。';}
- for(const o of selected){if(!o.value.trim())return '選取的欄位不可空白。';if(keys.has(o.key))return v2Label(o.key)+'有多個結果，請只選一個。';keys.add(o.key);if(o.key==='registerCertNo'&&!/^\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]$/i.test(o.value))return '請按原件核對完整登記證號碼，包含最後三段。';if(v2Raw(o.key)&&v2Raw(o.key)!==o.value&&!o.replace)return '請確認要取代「'+v2Label(o.key)+'」的原有內容。';}
+ for(const o of selected){if(!o.value.trim())return '選取的欄位不可空白。';if(keys.has(o.key))return v2Label(o.key)+'有多個結果，請只選一個。';keys.add(o.key);if(o.key==='registerCertNo'&&!/^\d{8}-\d{3}-\d{2}-\d{2}-[A-Z0-9]$/i.test(o.value))return '請按原件核對完整登記證號碼，包含最後三段。';if(o.identity){const owner=documentBatch.files[o.fileIndex].owner,m=owner?.match(/^(directors|authSigners|shareHolders)\[(\d+)\]$/);if(!m||!o.key.startsWith(owner+'.'))return '請重新選擇身份證持有人。';if(v2Model().links[m[1]]?.[m[2]]!=null)return '此持有人正沿用董事資料，請先取消「與董事相同」，或將文件指定給對應董事。';if(o.key.endsWith('.idcardNo')&&!/^[A-Z]{1,2}\d{6}\([0-9A]\)$/i.test(o.value))return '請按原件核對完整身份證號碼。';}if(v2Raw(o.key)&&v2Raw(o.key)!==o.value&&!o.replace)return '請確認要取代「'+v2Label(o.key)+'」的原有內容。';}
  return '';
 }
 function batchReady(){const error=batchValidate()||(!$('#batch-reviewed')?.checked?'請先確認已核對文件位置及欄位。':'');if(error){$('#document-error').textContent=error;return;}documentBatch.confirmed=true;batchReview(true);}
@@ -1177,14 +1198,14 @@ function batchApply(){
  const before=structuredClone(state.values),beforeFiles=structuredClone(state.files),beforePeople={...state.people},changed=[];
  try{
   const selected=b.items.filter(o=>o.selected),files=b.files.filter(f=>f.include);
-  for(const o of selected){if(o.key.startsWith('directors[0]'))state.people.directors=Math.max(1,state.people.directors);state.values[o.key]=o.value;v2Model().ocr.push({key:o.key,value:o.value,source:o.source,step:o.step,applied:o.value,method:o.method,confidence:o.confidence});}
+  for(const o of selected){const person=o.key.match(/^(directors|authSigners|shareHolders)\[(\d+)\]/);if(person)state.people[person[1]]=Math.max(+person[2]+1,state.people[person[1]]||0);state.values[o.key]=o.value;v2Model().ocr.push({key:o.key,value:o.value,source:o.source,step:o.step,applied:o.value,method:o.method,confidence:o.confidence});}
   for(const f of files){const id=f.destination,url=URL.createObjectURL(f.file);changed.push({id,url,old:DEMO.fileURLs.get(id),oldSource:DEMO.sourceFiles?.get(id)});DEMO.fileURLs.set(id,url);(DEMO.sourceFiles??=new Map()).set(id,{file:f.file,url});state.files[id]={name:f.file.name,size:f.file.size,type:f.file.type,demo:false,needsReselect:false};}
   v2SyncDerived();const done=[...files.map(f=>batchDocName(f.destination)+'：'+f.file.name),...selected.map(o=>v2Label(o.key)+'：'+v2Display(o.key,o.value))],pending=[...b.files.filter(f=>!f.include).map(f=>f.file.name+'：尚未加入附件位置'),...b.items.filter(o=>!o.selected).map(o=>v2Label(o.key)+'：'+o.value)],failures=[...b.failures];
   render();v2ImportResult(done,pending,failures);$('#modal .v2-import-success h3').textContent='完成匯入 · '+files.length+' 份文件、'+selected.length+' 個欄位';$('#modal .v2-import-pending h3').textContent='仍待核對 · '+pending.length+' 個項目未帶入';for(const x of changed)if(x.old)URL.revokeObjectURL(x.old);batchDispose();
  }catch(error){state.values=before;state.files=beforeFiles;state.people=beforePeople;for(const x of changed){URL.revokeObjectURL(x.url);if(x.old)DEMO.fileURLs.set(x.id,x.old);else DEMO.fileURLs.delete(x.id);if(x.oldSource)DEMO.sourceFiles.set(x.id,x.oldSource);else DEMO.sourceFiles?.delete(x.id);}modal('資料寫入失敗','<p>已還原原有資料及附件，請重新核對。</p>',btn('返回核對','document-review','primary'));}
 }
 Object.assign(actions,{'v2-ocr':batchOpen,'document-recognize':batchRecognize,'document-ready':batchReady,'document-apply':batchApply,'document-review':()=>batchReview(),'document-remove':el=>{const f=documentBatch.files.splice(+el.dataset.index,1)[0];URL.revokeObjectURL(f.url);batchUpload();},'document-source':el=>{const f=documentBatch.files[+el.dataset.index];modal('原始文件與辨識文字','<p>'+esc(f.file.name)+'</p>'+(/\.pdf$/i.test(f.file.name)?'<iframe class="batch-preview" title="原始 PDF" src="'+f.url+'"></iframe>':/\.(png|jpe?g)$/i.test(f.file.name)?'<img class="batch-preview" alt="原始文件" src="'+f.url+'">':'<p>此文件無法預覽。</p>')+'<details><summary>查看辨識文字（只保留於記憶體）</summary><pre class="batch-text">'+esc((f.text||[]).join('\n\n'))+'</pre></details>',btn('返回核對','document-review','primary'));}});
-document.addEventListener('change',e=>{const t=e.target,b=documentBatch;if(t.id==='document-batch-files')batchAdd([...t.files]);if(!b)return;if(t.dataset.documentType!==undefined)b.files[+t.dataset.documentType].type=t.value;if(t.dataset.documentSelect!==undefined)b.items[+t.dataset.documentSelect].selected=t.checked;if(t.dataset.documentReplace!==undefined)b.items[+t.dataset.documentReplace].replace=t.checked;if(t.dataset.documentDestination!==undefined){const f=b.files[+t.dataset.documentDestination];f.destination=t.value;f.include=!!t.value;f.replace=false;batchReview();}if(t.dataset.documentInclude!==undefined)b.files[+t.dataset.documentInclude].include=t.checked;if(t.dataset.documentFileReplace!==undefined)b.files[+t.dataset.documentFileReplace].replace=t.checked;});
+document.addEventListener('change',e=>{const t=e.target,b=documentBatch;if(t.id==='document-batch-files')batchAdd([...t.files]);if(!b)return;if(t.dataset.documentOwner!==undefined){batchSetIdentityOwner(+t.dataset.documentOwner,t.value);return;}if(t.dataset.documentType!==undefined)b.files[+t.dataset.documentType].type=t.value;if(t.dataset.documentSelect!==undefined)b.items[+t.dataset.documentSelect].selected=t.checked;if(t.dataset.documentReplace!==undefined)b.items[+t.dataset.documentReplace].replace=t.checked;if(t.dataset.documentDestination!==undefined){const f=b.files[+t.dataset.documentDestination];f.destination=t.value;f.include=!!t.value;f.replace=false;batchReview();}if(t.dataset.documentInclude!==undefined)b.files[+t.dataset.documentInclude].include=t.checked;if(t.dataset.documentFileReplace!==undefined)b.files[+t.dataset.documentFileReplace].replace=t.checked;});
 document.addEventListener('input',e=>{if(e.target.dataset.documentValue!==undefined)documentBatch.items[+e.target.dataset.documentValue].value=e.target.value;});
 $('#modal').addEventListener('close',()=>{if(documentBatch){batchDispose();render();}});
 window.addEventListener('pagehide',batchDispose);
