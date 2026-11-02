@@ -1,5 +1,5 @@
 import {parseBR,parseDate} from './parser.mjs?v=20261102-samples';
-import {findCompactLayout,cropCanvas,prepareSmallScan,ocrRows,adaptiveCanvas} from './layout.mjs';
+import {findCompactLayout,cropCanvas,prepareSmallScan,ocrRows,adaptiveCanvas} from './layout.mjs?v=20261102-samples';
 const flatText=data=>ocrRows(data).map(r=>r.words.map(w=>w.text).join(' ')).join('\n')||data.text||'';
 const trimText=text=>text.split('\n').map(s=>s.trim().replace(/^[|~_’'`]+\s*|[\s|~_]+$/g,'')).filter(s=>/[A-Za-z0-9\u3400-\u9fff]/.test(s)).join('\n');
 const validLatinLine=line=>/^[A-Z0-9][A-Z0-9 /,.'’&()#*-]*$/.test(line)&&(line.match(/[A-Z]/g)||[]).length>=2;

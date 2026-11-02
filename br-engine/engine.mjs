@@ -1,5 +1,5 @@
 import * as pdfjs from '../vendor/pdfjs/build/pdf.mjs';
-import {prepareSmallScan,ocrRows} from './layout.mjs';
+import {prepareSmallScan,ocrRows} from './layout.mjs?v=20261102-samples';
 import {recoverCompactBR} from './compact-recovery.mjs?v=20261102-samples';
 import {recoverLabelledBR} from './structured-recovery.mjs?v=20261102-samples';
 import Tesseract from '../vendor/tesseract/tesseract.esm.min.js';

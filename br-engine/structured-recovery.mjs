@@ -1,5 +1,5 @@
 import {parseBR,parseDate} from './parser.mjs?v=20261102-samples';
-import {ocrRows,cropCanvas,prepareSmallScan,findCompactLayout} from './layout.mjs';
+import {ocrRows,cropCanvas,prepareSmallScan,findCompactLayout} from './layout.mjs?v=20261102-samples';
 
 // Printed labels locate the value column. Never identify a document by filename,
 // company name, certificate number, or a cached customer-specific answer.
