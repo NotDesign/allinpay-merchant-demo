@@ -17,7 +17,7 @@ for(const [kind,expected] of Object.entries(hashes)){
   const directory=kind==='main'?out:path.join(out,release.directory);
   const version=JSON.parse(await readFile(path.join(directory,'version.json'),'utf8'));
   assert.equal(version.version,release.version);
-  if(kind==='main'){assert.equal(version.baseCommit,release.baseCommit);for(const feature of ['multiMcc','merchantTemplates','batchTemplateApply','customerCompanyHierarchy','combinedMerchantImport'])assert.equal(version[feature],true);}
+  if(kind==='main'){assert.equal(version.baseCommit,release.baseCommit);for(const feature of ['multiMcc','merchantTemplates','batchTemplateApply','customerCompanyHierarchy','combinedMerchantImport','externalInvitationRegistrationFirst','externalDuplicateRegistrationCheck','externalLoginDraftContinuation'])assert.equal(version[feature],true);}
   else assert.equal(version.commit,release.sourceCommit);
   for(const [filename,hash] of Object.entries(expected)){
     let contents=await readFile(path.join(directory,filename),'utf8');

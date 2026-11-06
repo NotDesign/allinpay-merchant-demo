@@ -1,9 +1,9 @@
 {
   "active": {
-    "version": "2026.11.02-document-recognition-v1.6",
+    "version": "2026.11.06-registration-first-v1.7",
     "baseCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
-    "date": "2026-11-02",
-    "zip": "allinpay-merchant-demo-20261102.zip"
+    "date": "2026-11-06",
+    "zip": "allinpay-merchant-demo-20261106.zip"
   },
   "legacy": {
     "version": "2026.09.29-excel-freeze-mid-states",
