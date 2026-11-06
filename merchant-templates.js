@@ -30,7 +30,7 @@ v2Score=function(){
  const high=selected.filter(m=>m.lv==='high'),mid=selected.filter(m=>m.lv==='mid');
  if(high.length)industryItems.push({label:'所選 MCC 含高風險（'+high.map(m=>m.c).join('、')+'）',n:25});
  else if(mid.length)industryItems.push({label:'所選 MCC 含中風險（'+mid.map(m=>m.c).join('、')+'）',n:12});
- if(selected.some(m=>v2Num('avgPerAmount')>m.avg*3))industryItems.push({label:'平均單筆偏離所選行業常態超過 3 倍',n:12});
+ if(selected.some(m=>m.avg>0&&v2Num('avgPerAmount')>m.avg*3))industryItems.push({label:'平均單筆偏離所選行業常態超過 3 倍',n:12});
  const total=Math.min(100,industryItems.reduce((s,i)=>s+i.n,0)),s=v2Model().signals;
  return {...result,items:industryItems,total,level:total<=20?'1':total<=45?'2':'3',reject:s.sanction?'命中制裁／PEP 名單':s.frozen?'關聯已凍結／關閉商戶':total>70?'風控評分超過 70':null};
 };

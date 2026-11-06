@@ -12,7 +12,7 @@ const onboardingRiskRules=[
  ['PAY-02','產品與交易','卡產品採直連',10,()=>v2Cnp()&&v2Raw('connectType')==='0'],
  ['PAY-03','產品與交易','月銷售超過 500,000',10,()=>v2Num('avgMonthAmount')>500000],
  ['PAY-04','產品與交易','單筆最高超過 20,000',8,()=>v2Num('maxAmount')>20000],
- ['PAY-05','產品與交易','平均單筆偏離所選行業常態超過 3 倍',12,()=>mtMccList().some(c=>{const m=V2.catalog.MCCS.find(m=>m.c===c);return m&&v2Num('avgPerAmount')>m.avg*3;})],
+ ['PAY-05','產品與交易','平均單筆偏離所選行業常態超過 3 倍',12,()=>mtMccList().some(c=>{const m=V2.catalog.MCCS.find(m=>m.c===c);return m&&m.avg>0&&v2Num('avgPerAmount')>m.avg*3;})],
  ['DOC-01','資料與實體核對','OCR 與人工修改差異不少於 2 項',10,()=>v2Model().signals.ocr||v2Model().ocr.filter(o=>o.applied&&v2Raw(o.key)!==String(o.applied)).length>=2],
  ['DOC-02','資料與實體核對','無門店照／虛擬辦公室',12,()=>v2Model().signals.virtual||v2Offline()&&!state.files['101401']],
  ['BANK-01','結算與關聯','結算帳戶為對私',8,()=>v2Raw('isCompay')==='N'],
@@ -21,7 +21,7 @@ const onboardingRiskRules=[
  ['PAY-06','產品與交易','涉及預付／儲值／預售',20,()=>!!v2Model().signals.prepaid]
 ];
 function onboardingRiskCoverage(){return [
- {label:'MCC 行業',done:mtMccList().length>0&&mtMccList().every(c=>V2.catalog.MCCS.some(m=>m.c===c))},
+ {label:'MCC 行業',done:mtMccList().length>0&&mtMccList().every(c=>V2.catalog.MCCS.some(m=>m.c===c&&['low','mid','high'].includes(m.lv)))},
  {label:'開通產品',done:v2Rows().length>0},
  {label:'結算帳戶',done:!!(v2Raw('cardName')&&v2Raw('cardNo')&&v2Raw('cardBankCode'))}
 ];}

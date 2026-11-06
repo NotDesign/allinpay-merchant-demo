@@ -64,7 +64,7 @@ function v2Score() {
   if(v2Cnp()&&v2Raw('connectType')==='0')add('卡產品採直連',10);
   if(v2Num('avgMonthAmount')>500000)add('月銷售超過 500,000',10);
   if(v2Num('maxAmount')>20000)add('單筆最高超過 20,000',8);
-  if(m&&v2Num('avgPerAmount')>m.avg*3)add('平均單筆偏離行業常態超過 3 倍',12);
+  if(m&&m.avg>0&&v2Num('avgPerAmount')>m.avg*3)add('平均單筆偏離行業常態超過 3 倍',12);
   const edits=v2Model().ocr.filter(o=>o.applied&&v2Raw(o.key)!==String(o.applied)).length;
   if(s.ocr||edits>=2)add('OCR 與人工修改差異不少於 2 項',10);
   if(s.virtual||v2Offline()&&!state.files['101401'])add('無門店照／虛擬辦公室',12);
