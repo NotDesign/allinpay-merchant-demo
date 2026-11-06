@@ -10,6 +10,7 @@ for(const form of V2.forms)for(const section of form.sections){
   if(f.id==='cardBankCode')f.hint='可直接選擇銀行代碼，銀行名稱會同步更新';
  }
 }
+const usabilityHongKongBanks=['004','012','024','003','015','009','016','018','020','025','027','028','035','039','040','041','043','072','128','250','382','387','388','389','390','391','392','393','395'];
 const usabilityOriginalField=v2Field;
 const usabilityOriginalBankSync=syncBankName;
 syncBankName=function(changed){if(v2Raw('cardCountryCode')==='HKG'&&v2Model().bankCustom){state.values.cardBankCode=v2Raw('cardBankCode').split(/\s+/)[0];return;}usabilityOriginalBankSync(changed);};
@@ -17,7 +18,7 @@ v2Field=function(f,index=0,linked=false){
  if(f.id==='authSigners[].birthDay')return usabilityOriginalField(f,index,false);
  let html=usabilityOriginalField(f,index,linked);
  if(v2Raw('cardCountryCode')!=='HKG')return html;
- const name=v2Raw('cardBankName'),code=v2Raw('cardBankCode'),known=Object.entries(ONBOARDING_BANKS),custom=!!v2Model().bankCustom||!!(name&&!known.some(([,n])=>n===name))||!!(code&&!ONBOARDING_BANKS[code]);
+ const name=v2Raw('cardBankName'),code=v2Raw('cardBankCode'),known=Object.entries(ONBOARDING_BANKS).sort(([a],[b])=>{const ai=usabilityHongKongBanks.indexOf(a),bi=usabilityHongKongBanks.indexOf(b);return (ai<0?1000+Number(a):ai)-(bi<0?1000+Number(b):bi);}),custom=!!v2Model().bankCustom||!!(name&&!known.some(([,n])=>n===name))||!!(code&&!ONBOARDING_BANKS[code]);
  if(f.id==='cardBankName'){
   const select=`<select id="field-cardBankName" data-field="cardBankName" data-v2-field="cardBankName" data-bank-picker aria-required="true"><option value="">請選擇銀行</option>${known.map(([c,n])=>`<option value="${esc(n)}" ${name===n&&!custom?'selected':''}>${esc(n)}</option>`).join('')}<option value="__other" ${custom?'selected':''}>其他銀行（手動填寫）</option></select>${custom?`<label for="other-bank-name" class="hint">銀行名稱</label><input id="other-bank-name" data-other-bank-name maxlength="100" value="${esc(name)}" placeholder="請填寫銀行名稱">`:''}`;
   html=html.replace(/<input[^>]*data-field="cardBankName"[^>]*>/,select);

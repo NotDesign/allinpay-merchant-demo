@@ -2,7 +2,7 @@
   "name": "allinpay-backoffice-demo",
   "version": "0.1.0",
   "private": true,
-  "description": "AllinPay International Application Agency System \u2014 Figma-based backoffice with local BR OCR",
+  "description": "AllinPay International Application Agency System — Figma-based backoffice with local BR OCR",
   "scripts": {
     "setup": "node scripts/vendor.mjs",
     "build": "node build-admin.cjs",
@@ -22,7 +22,8 @@
     "test:client-review": "node verify-client-review.cjs && node verify-account-access.cjs",
     "test:session": "node verify-session-timeout.cjs",
     "test:mcc": "node verify-mcc-reference.cjs",
-    "test:bank": "node verify-bank-autofill.cjs"
+    "test:bank": "node verify-bank-autofill.cjs",
+    "test:selects": "node verify-searchable-selects.cjs"
   },
   "dependencies": {
     "exceljs": "4.4.0",

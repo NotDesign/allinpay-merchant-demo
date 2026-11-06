@@ -47,6 +47,7 @@ jobs:
           npm run test:session
           npm run test:mcc
           npm run test:bank
+          npm run test:selects
           node verify-internal-review.cjs
           npm run test:templates
         env:
