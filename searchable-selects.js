@@ -13,7 +13,7 @@
   const options=Array.from(select.options).map((option,index)=>{
    const bank=bankSelect?BANK_CODE_REFERENCE.banks.find(b=>b.code===option.value||b.name===option.value):null;
    const priority=bank?commonBanks.indexOf(bank.code):-1;
-   return {index,value:option.value,label:option.label,disabled:option.disabled||!!option.closest('optgroup:disabled'),hidden:option.hidden,bank,group:bank?(priority>=0?'香港常用銀行':'其他在港銀行／清算參考'):option.parentElement instanceof HTMLOptGroupElement?option.parentElement.label:'',rank:bank?(priority>=0?priority+1:1000+Number(bank.code)):option.value===''?-1:10000+index,search:normalize([option.label,option.value,bank?.en,bank?.zh,bank?.code,bank&&bankAliases[bank.code]].filter(Boolean).join(' '))};
+   return {index,value:option.value,label:option.label,description:option.dataset.description||'',disabled:option.disabled||!!option.closest('optgroup:disabled'),hidden:option.hidden,bank,group:bank?(priority>=0?'香港常用銀行':'其他在港銀行／清算參考'):option.parentElement instanceof HTMLOptGroupElement?option.parentElement.label:'',rank:bank?(priority>=0?priority+1:1000+Number(bank.code)):option.value===''?-1:10000+index,search:normalize([option.label,option.value,option.dataset.description,bank?.en,bank?.zh,bank?.code,bank&&bankAliases[bank.code]].filter(Boolean).join(' '))};
   }).filter(o=>!o.hidden);
   if(bankSelect)options.sort((a,b)=>a.rank-b.rank);
   return {options,bankSelect};
@@ -45,7 +45,7 @@
   let group=null;
   a.list.innerHTML=a.filtered.map(option=>{
    const heading=option.group&&option.group!==group?'<div class="sdd-group" role="presentation">'+escape(option.group)+'</div>':'';group=option.group;
-   const selected=option.index===a.select.selectedIndex,details=option.bank?(a.bankSelect&&a.select.hasAttribute('data-bank-picker')?option.bank.code+' · '+option.bank.en:option.bank.en):'';
+   const selected=option.index===a.select.selectedIndex,details=option.bank?(a.bankSelect&&a.select.hasAttribute('data-bank-picker')?option.bank.code+' · '+option.bank.en:option.bank.en):option.description;
    return heading+`<button type="button" role="option" tabindex="-1" id="sdd-option-${option.index}" data-sdd-option="${option.index}" aria-selected="${selected}" aria-disabled="${option.disabled}" ${option.disabled?'disabled':''}><span class="sdd-option-text"><span>${escape(option.label)}</span>${details?'<small>'+escape(details)+'</small>':''}</span><span class="sdd-check" aria-hidden="true">${selected?'✓':''}</span></button>`;
   }).join('')||'<div class="sdd-empty">沒有符合的選項，請換個關鍵字。</div>';
   const other=a.options.find(o=>o.value==='__other'&&!o.disabled);

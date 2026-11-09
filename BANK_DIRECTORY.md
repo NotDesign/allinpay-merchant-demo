@@ -1,4 +1,4 @@
-# 銀行資料對照及金管局 API
+# 內建銀行及分行資料對照
 
 銀行名稱／行號、分行地址及會員 SWIFT／BIC 分開記錄，不共用一個來源地址欄位。
 
@@ -13,18 +13,15 @@
 
 資料值的銀行編號、分行編號均為字串，保留前置零。此版不更改既有表單欄位識別碼或平台費率契約。
 
-## 主要業務地址 API
+## 操作順序及資料來源
 
-金管局 `register-ais-lros` 提供 `name`、`local_address`、`principle_address`、`type` 等欄位，沒有行號或 SWIFT。`local_address` 為香港主要業務地址，不是開戶分行、BIC 登記或指定匯款地址。
+後台及 External 先選銀行所在地及銀行行號，帶入銀行名稱與已知會員 SWIFT；再以可搜尋的分行選單帶入對應地址。分行可按編號、名稱或地址搜尋；清單以外保留手動輸入。換銀行清除舊分行與地址，清除分行時只清除原先自動帶入的地址。已儲存的手動修改仍可還原。
 
-畫面可開啟「查詢金管局主要地址」，明確按「連接金管局／重試」執行公開 GET。僅以銀行名稱精確正規化並唯一匹配；查詢結果只作參考顯示，不覆寫分行地址。請求不附登入憑證或表單內容，逾時保留原值，內建對照及手動填寫繼續可用。後台 CSP 只額外允許 `https://api.hkma.gov.hk`。
-
-2026-11-06 實際本機 HTTP 及瀏覽器連線均逾時，尚未驗證服務實際連通或 CORS。自動測試對成功、格式及失敗分支採模擬 API 回應，不能當作正式服務接通證據。
+銀行資料使用內建對照表，填寫過程不發出金管局 API 或其他遠端銀行查詢。金管局查詢按鈕、視窗及相關請求已移除。
 
 ## 來源
 
 - [HKICL 銀行及分行代碼](https://fps.hkicl.com.hk/eng/information_centre/clearing_code_and_branch_code_list.php)
 - [HKICL 會員 BIC](https://www.hkicl.com.hk/eng/information_centre/list_of_live_and_t%26t_bics_of_members.php)
-- [金管局 API 規格](https://apidocs.hkma.gov.hk/chi/documentation/bank-svf-info/register-ais-lros/)
 
 原工作簿只作讀取。`bank-directory-data.js` 記錄來源日期、來源網址及工作簿雜湊；以 `scripts/build-bank-directory.py --branches /path/branches.xlsx --bics /path/bics.xlsx` 重建。實際商用資料的更新及供應授權需由正式系統處理；Demo 不宣稱已接入商用銀行目錄服務。

@@ -1,9 +1,9 @@
 {
   "active": {
-    "version": "2026.11.06-searchable-selects-v1.9",
+    "version": "2026.11.09-built-in-banks-v1.10",
     "baseCommit": "391f597dcdbae4a021932ba4ea3db71b31537784",
-    "date": "2026-11-06",
-    "zip": "allinpay-merchant-demo-20261106-v19.zip"
+    "date": "2026-11-09",
+    "zip": "allinpay-merchant-demo-20261109-v110.zip"
   },
   "legacy": {
     "version": "2026.09.29-excel-freeze-mid-states",
