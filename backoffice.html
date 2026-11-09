@@ -2645,8 +2645,9 @@ let bankExplicit='';
 const bankFieldOrder=['cardCountryCode','cardProvinceCode','cardCityCode','cardBankCode','cardBankName','swiftCode','cardBranchCode','cardAddress'];
 for(const form of V2.forms)for(const section of form.sections)if(section.fields.some(f=>f.id==='cardBankCode')){
  section.fields.sort((a,b)=>bankFieldOrder.indexOf(a.id)-bankFieldOrder.indexOf(b.id));
- section.texts[1]='先選銀行所在地及行號，再選開戶分行。香港銀行名稱、SWIFT 及分行地址使用內建資料自動帶入。';
+ section.texts[1]='銀行所在地預設為中國香港。先選銀行行號，再選開戶分行；銀行名稱、SWIFT 及分行地址使用內建資料自動帶入。';
  for(const field of section.fields){
+  if(field.id==='cardCountryCode')field.hint='銀行所在地預設為中國香港。';
   if(field.id==='cardBankCode')field.hint='搜尋行號或銀行名稱；選取後自動帶入銀行名稱及 SWIFT。';
   if(field.id==='cardBankName')field.hint='按行號自動帶入；也可直接選擇銀行。';
   if(field.id==='cardBranchCode')field.hint='選取開戶分行後自動帶入地址；清單以外可手動填寫。';
@@ -2679,7 +2680,7 @@ function bankAutofill(){
  for(const f of ['cardAddress','swiftCode','cardBranchCode']){const el=$('[data-field="'+f+'"]'),value=f==='cardBranchCode'&&el?.hasAttribute('data-bank-branch-picker')&&v2Model().bankBranchCustom?'__other':v2Raw(f);if(el&&el.value!==value)el.value=value;}
 }
 const bankBaseDerived=v2SyncDerived;
-v2SyncDerived=function(...args){const result=bankBaseDerived.apply(this,args);bankAutofill();return result;};
+v2SyncDerived=function(...args){if(!state.readonly&&!v2Raw('cardCountryCode'))state.values.cardCountryCode='HKG';const result=bankBaseDerived.apply(this,args);bankAutofill();return result;};
 // Reuse the existing picker handlers; their shared sync now fills the dependent fields.
 for(const [name,handler] of [['code',clientPickBankCode],['name',usabilityPickBank]]){
  for(const type of ['input','change'])document.removeEventListener(type,handler,true);
@@ -2695,7 +2696,14 @@ for(const type of ['input','change'])document.addEventListener(type,e=>{
 actions['bank-branch-list']=()=>{v2Model().bankBranchCustom=false;render();};
 const bankBaseField=v2Field;
 v2Field=function(f,...args){
- let html=bankBaseField.call(this,f,...args);if(v2Raw('cardCountryCode')!=='HKG')return html;
+ const country=v2Raw('cardCountryCode'),legacyCountry=country&&country!=='HKG';
+ const field=f.id==='cardCountryCode'&&legacyCountry?{...f,hint:'此筆既有資料的銀行所在地已保留。'}:f;
+ let html=bankBaseField.call(this,field,...args);
+ if(f.id==='cardCountryCode'){
+  const label=country?v2Display('cardCountryCode',country):'未提供';
+  return html.replace(/<select\b[^>]*data-v2-field="cardCountryCode"[\s\S]*?<\/select>/,()=>`<input id="field-cardCountryCode" type="text" data-bank-country-display value="${esc(label)}" readonly aria-readonly="true"><input type="hidden" data-field="cardCountryCode" data-v2-field="cardCountryCode" value="${esc(country)}">`);
+ }
+ if(country!=='HKG')return html;
  const bank=bankCurrent();
  if(f.id==='cardBranchCode'&&(!v2Raw('cardBankCode')||bank?.branches.length)){
   const current=v2Raw('cardBranchCode'),branches=[...new Map((bank?.branches||[]).map(b=>[b.code,b])).values()].sort((a,b)=>a.code.localeCompare(b.code)),custom=!!v2Model().bankBranchCustom;
