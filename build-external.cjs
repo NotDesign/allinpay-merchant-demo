@@ -9,6 +9,7 @@ const source=read('external.js');
 const entry="document.addEventListener('input',e=>{const t=e.target;";
 if(!source.includes(entry))throw Error('Missing External extension entry');
 const html=read('external.template.html')
+ .replace('href="mee-pay-favicon.png"', () => 'href="data:image/png;base64,'+fs.readFileSync(path.join(root,'mee-pay-favicon.png')).toString('base64')+'"')
  .replace('/* BUNDLE_CSS */',()=>['external.css','onboarding-v2.css','br-integration.css','document-feedback.css','external-onboarding.css','merchant-templates.css'].map(read).join('\n'))
  .replace('/* BUNDLE_ASSETS */',()=>safe('const ASSETS='+JSON.stringify(assets)+';'))
  .replace('/* BUNDLE_JS */',()=>safe(read('version-router.js')+'\n'+source.replace(entry,()=>shared+'\n'+entry)));

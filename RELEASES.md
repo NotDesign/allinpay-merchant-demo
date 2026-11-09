@@ -1,3 +1,11 @@
+## 2026.11.09-mee-pay-tabs-v1.11
+
+目前後台登入／管理、External 與版本頁的瀏覽器分頁品牌改為 Mee Pay，加入以原始彩色 Logo 圖形製作的透明 PNG favicon。獨立後台及 External HTML 內嵌圖示，支援本機離線開啟；既有頁面 Logo、銀行資料、表單欄位及封存版本保留。
+
+已驗證四頁標題、圖示解碼、透明背景、原有頁面 Logo 及離線獨立 HTML。
+
+當前 ZIP：`allinpay-merchant-demo-20261109-v111.zip`。
+
 ## 2026.11.09-built-in-banks-v1.10
 
 後台與 External 同步移除金管局主要地址查詢按鈕、視窗、請求及後台 CSP 的遠端允許來源。銀行資料直接使用內建目錄；無需遠端查詢即可帶入銀行名稱、會員 SWIFT 及實際分行地址。

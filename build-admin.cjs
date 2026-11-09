@@ -16,6 +16,7 @@ for (const name of fs.readdirSync(root).filter(n => /\.(png|svg)$/.test(n))) {
 }
 const safe = text => text.replace(/<\/script/gi, '<\\/script');
 const html = read('index.html')
+  .replace('href="mee-pay-favicon.png"', () => 'href="data:image/png;base64,' + fs.readFileSync(path.join(root, 'mee-pay-favicon.png')).toString('base64') + '"')
   .replace(/<link rel="stylesheet" href="([^"]+)">/g, (_, name) => '<style>' + read(name) + '</style>')
   .replace(/<script defer src="[^"]+"><\/script>/g, '')
   .replace('</body>', () => '<script>' + safe(read('data.js')) + '</script><script>' + safe(packed) + '</script></body>');
