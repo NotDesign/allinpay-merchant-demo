@@ -1,3 +1,7 @@
+# Mee Pay 開發交付入口 — 2026-11-09 / v1.12
+
+請先閱讀 [DEVELOPMENT.md](DEVELOPMENT.md)：包含啟動、原始碼對照、測試方式及正式服務接入範圍。此交付分支以應用程式提交 `3c6eb82f933b0e7885bf2a0ab71a17ddb081f4f0` 為基準，另提供合併原始碼與 OCR runtime 的開發 ZIP。下列日期段落保留版本演進紀錄。
+
 ## 2026/11/09 開戶銀行所在地預設香港
 
 後台與 External 的開戶銀行國家／地區預設為中國香港，以唯讀欄位顯示，移除下拉選擇及搜尋。保留 `cardCountryCode=HKG` 對接欄位、銀行行號／名稱／SWIFT／分行地址連動；商戶營業地址的國家選擇維持原有操作。既有非香港銀行資料保留原國家及帳戶內容，以原地區唯讀顯示，避免誤標或覆寫。
@@ -49,9 +53,9 @@
 - 銀行代碼與名稱可雙向選取，保留前置零。參考官方 PDF（資料日期 2024-11-06），清單以外可手動輸入；下載路徑 `references/Bank_Code.pdf`。
 - Excel 必填星號、範例及原生下拉清單。`範例_` 工作表只供參考，匯入時忽略；未完成資料可先匯入成草稿。
 
-# ALLINPAY · 商戶申請與後台 Demo
+# Mee Pay · 商戶申請與後台 Demo
 
-> **目前主版本為 2026/11/06，以 0929 為基礎加入 MCC 複選、客戶／母子公司、商戶及費率模板、批量套用與匯入，並保留原產品費率欄位。** 0929 與 1009 均保留固定封存入口及 ZIP。請從[版本入口](https://notdesign.github.io/allinpay-merchant-demo/versions.html)選擇；技術紀錄見 [RELEASES.md](RELEASES.md)。
+> **目前應用程式版本為 2026/11/09 v1.12，以 0929 為基礎加入 MCC 複選、客戶／母子公司、商戶及費率模板、批量套用與匯入，並保留原產品費率欄位。** 0929 與 1009 均保留固定封存入口及 ZIP。請從[版本入口](https://notdesign.github.io/allinpay-merchant-demo/versions.html)選擇；技術紀錄見 [RELEASES.md](RELEASES.md)。
 
 ## 新增商戶的快速填寫
 
@@ -72,7 +76,7 @@
 - [外部申請](https://notdesign.github.io/allinpay-merchant-demo/external.html)
 - [後台登入與系統（單一 HTML）](https://notdesign.github.io/allinpay-merchant-demo/backoffice.html)
 - [下載單一 HTML](https://github.com/NotDesign/allinpay-merchant-demo/raw/refs/heads/main/backoffice.html)
-- [下載完整原始碼 ZIP](https://github.com/NotDesign/allinpay-merchant-demo/archive/refs/heads/main.zip)
+- [下載完整原始碼 ZIP](https://github.com/NotDesign/allinpay-merchant-demo/archive/refs/heads/codex/developer-handoff-20261109-v112.zip)
 
 下載 ZIP 後可直接開啟 `external.html` 或 `backoffice.html` 演示業務流程；單一 HTML 內嵌畫面、假資料及互動。**實際 BR 辨識請使用線上 Demo，或安裝本機 OCR 資源並用 HTTP 啟動完整原始碼**（下方指令）。`index.html` 是同一後台的多檔案入口。
 
@@ -117,7 +121,7 @@
 - 六步均顯示右側固定風控、缺件及提交完整度側欄；內容依目前填寫資料更新。特計商戶以三欄表格呈現，未填 MCC 時停用，填寫後依各卡組織規則提供可用方案。
 - 多文件辨識可一次拖入最多 30 份文件、合計 100 MB，每份最多 10 MB／PDF 5 頁。按文件內文預選 BR、CI、銀行月結單等對應的附件位置，並提取可確定的表單欄位；預覽核對後一次套用。身份證角色、照片、ZIP 及不確定種類由使用者指定位置；ZIP 不解壓或辨識。重複位置、相異欄位及原有附件不會自動覆蓋，必須明確選擇及確認。缺件及風控是本機規則示例，不代表正式合規驗證。
 - 帳號管理、個別帳號權限 Overlay；儲存前輸入示例密碼。修改只影響選取帳號，不影響同角色其他帳號。
-- 四層角色及「權限不足」演示：只顯示自己的帳號、隱藏其他人的權限且不可編輯。
+- 五級角色（最高管理員、基本管理員、主代理商、次代理商、下線帳戶）及「權限不足」演示：只顯示自己的帳號、隱藏其他人的權限且不可編輯。
 - 批量導入示例、操作記錄、設定及登出。
 - 最高管理員、基本管理員、主代理商及次代理商均可分享外部申請連結。管理員連結附 `inviter` 帳號 ID，代理商保留 `agency` 代碼；此為追蹤參數示範，不會自動串接外部表單資料。
 
@@ -161,7 +165,7 @@ Logo、圖片及功能圖示使用 Figma 回傳素材。`asset-manifest.json` �
 - 草稿和示例帳號存在目前瀏覽器 localStorage，沒有加密或跨裝置同步。不同網址（包含單檔版與伺服器版）可能使用不同儲存空間。清除瀏覽器資料會移除紀錄。
 - 檔案不會上傳至伺服器；草稿只保存附件名稱／大小等中繼資料，重新載入後真實附件要重新選取。示例附件並非真實文件。
 - 儀表板統計根據目前瀏覽器的假資料計算，會隨提交、審核及同步結果更新。正式商業規則、銀行／MCC／地區清單仍需串接正式資料。
-- 批量導入僅處理簡單 CSV 示範格式（不含引號內逗號）；Excel 為明確標示的模擬結果，不是完整試算表解析器。
+- Excel 由 ExcelJS 實際解析及匯出；CSV 支援帶引號欄位。匯入前仍需核對欄位、資料格式及公司關係；這不等於正式批次 API。
 - 此公開靜態網站的 HTML、JavaScript 及示例資料皆可下載；不索引不代表私人或存取控制。
 
 ## 開發與驗證
@@ -172,6 +176,7 @@ Logo、圖片及功能圖示使用 Figma 回傳素材。`asset-manifest.json` �
 npm ci --ignore-scripts
 npm run setup
 npm run build
+npm run build:external
 npm run serve
 # http://127.0.0.1:4321/backoffice.html
 ```
