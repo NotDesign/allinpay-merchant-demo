@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "date": "2026-11-17T03:57:43.648Z",
+  "checks": [
+    "backoffice: default Hong Kong country is readonly with a hidden HKG API value and no country selector/popover; bank-first DOM and visual order, searchable branches, manual branch fallback, offline code/name/SWIFT linkage, exact bank+branch address, leading zeroes, bank switch clears old branch, single-branch autofill, manual values and draft restore, legacy overseas country/bank retained on restore and explicit save, blank saved country defaults to Hong Kong, new merchant resets to Hong Kong; no HKMA controls, windows or requests; 1600–320px fit.",
+    "external: default Hong Kong country is readonly with a hidden HKG API value and no country selector/popover; bank-first DOM and visual order, searchable branches, manual branch fallback, offline code/name/SWIFT linkage, exact bank+branch address, leading zeroes, bank switch clears old branch, single-branch autofill, manual values and draft restore, legacy overseas country/bank retained on restore and explicit save, blank saved country defaults to Hong Kong, new merchant resets to Hong Kong; no HKMA controls, windows or requests; 1600–320px fit."
+  ],
+  "errors": [],
+  "lookupEvidence": "Bundled directory only; real offline bank and branch selection tested; no remote lookup requests."
+}

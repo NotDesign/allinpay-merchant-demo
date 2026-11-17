@@ -1,51 +1,353 @@
 // Guided entry keeps starting a new merchant separate from editing an existing one.
-let nsCopySource='',nsCopyScopes=['profile','mcc','settlement','products'],nsCopyGroup='',nsCopyQuery='',nsCopyPage=1,nsMode='blank';
-const nsCanStart=()=>!!mtOwner()&&(MT_EXTERNAL||can(1));
-const nsIcon=kind=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${kind==='new'?'<path d="M12 5v14M5 12h14"/>':kind==='copy'?'<rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>'}</svg>`;
-function nsGroupOf(values={},legacy=''){
- const relation=values.__customer||{},name=relation.name||values.groupId||legacy||'';
- const known=Object.values(mtCustomerStore()[mtOwner()]||{}).find(g=>g.id===relation.id||g.name===name);
- return {id:known?.id||relation.id||name,name:known?.name||name};
+let nsCopySource = "",
+  nsCopyScopes = ["profile", "mcc", "settlement", "products"],
+  nsCopyGroup = "",
+  nsCopyQuery = "",
+  nsCopyPage = 1,
+  nsMode = "blank";
+const nsCanStart = () => !!mtOwner() && (MT_EXTERNAL || can(1));
+const nsIcon = (kind) =>
+  `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${kind === "new" ? '<path d="M12 5v14M5 12h14"/>' : kind === "copy" ? '<rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>' : '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>'}</svg>`;
+function nsGroupOf(values = {}, legacy = "") {
+  const relation = values.__customer || {},
+    name = relation.name || values.groupId || legacy || "";
+  const known = Object.values(mtCustomerStore()[mtOwner()] || {}).find(
+    (g) => g.id === relation.id || g.name === name,
+  );
+  return { id: known?.id || relation.id || name, name: known?.name || name };
 }
-function nsSources(){
- if(!nsCanStart())return [];
- if(MT_EXTERNAL)return state.records.filter(r=>r.email===state.email).map(r=>({key:'record:'+r.id,name:r.values.merchantName||r.values.companyZh||r.values.merchantEnglishName||'未命名商戶',group:nsGroupOf(r.values),status:r.status,snapshot:r}));
- return [...scopedDrafts().map(d=>({key:'draft:'+d.id,name:d.values.merchantName||d.values.merchantEnglishName||'未命名草稿',group:nsGroupOf(d.values),status:'草稿',snapshot:d})),...scopedRows().map(r=>({key:'row:'+rowKey(r),name:r['客戶中文名稱']||r['客戶英文名稱'],group:nsGroupOf(r.application?.values,r['所屬集團']),status:statusNames[r.status],snapshot:r.application||{values:{merchantName:r['客戶中文名稱'],merchantEnglishName:r['客戶英文名稱'],registerCertNo:r.BR,registerCertPeriod:r['BR 有效期'],dbaNo:r['DBA no.'],groupId:r['所屬集團'],parentMerchant:r['上級商戶'],cardNo:r.bank,cardBranchCode:r['分行代碼'],mcc:r['MCC 行業代碼']?.split(/[、,;]/)[0]||'',contactName:r['客戶聯繫人'],contactPhone:r['聯絡人電話'],contactEmail:r['聯絡人電郵'],cardBankName:r['銀行名稱'],cardBankCode:r['銀行代碼']}}}))];
+function nsSources() {
+  if (!nsCanStart()) return [];
+  if (MT_EXTERNAL)
+    return state.records
+      .filter((r) => r.email === state.email)
+      .map((r) => ({
+        key: "record:" + r.id,
+        name:
+          r.values.merchantName ||
+          r.values.companyZh ||
+          r.values.merchantEnglishName ||
+          "未命名商戶",
+        group: nsGroupOf(r.values),
+        status: r.status,
+        snapshot: r,
+      }));
+  return [
+    ...scopedDrafts().map((d) => ({
+      key: "draft:" + d.id,
+      name:
+        d.values.merchantName || d.values.merchantEnglishName || "未命名草稿",
+      group: nsGroupOf(d.values),
+      status: "草稿",
+      snapshot: d,
+    })),
+    ...scopedRows().map((r) => ({
+      key: "row:" + rowKey(r),
+      name: r["客戶中文名稱"] || r["客戶英文名稱"],
+      group: nsGroupOf(r.application?.values, r["所屬集團"]),
+      status: statusNames[r.status],
+      snapshot: r.application || {
+        values: {
+          merchantName: r["客戶中文名稱"],
+          merchantEnglishName: r["客戶英文名稱"],
+          registerCertNo: r.BR,
+          registerCertPeriod: r["BR 有效期"],
+          dbaNo: r["DBA no."],
+          groupId: r["所屬集團"],
+          parentMerchant: r["上級商戶"],
+          cardNo: r.bank,
+          cardBranchCode: r["分行代碼"],
+          mcc: r["MCC 行業代碼"]?.split(/[、,;]/)[0] || "",
+          contactName: r["客戶聯繫人"],
+          contactPhone: r["聯絡人電話"],
+          contactEmail: r["聯絡人電郵"],
+          cardBankName: r["銀行名稱"],
+          cardBankCode: r["銀行代碼"],
+        },
+      },
+    })),
+  ];
 }
-function nsGroups(){const groups=new Map(mtCustomers().map(g=>[g.id,{id:g.id,name:g.name}]));for(const source of nsSources())if(source.group.id&&!groups.has(source.group.id))groups.set(source.group.id,source.group);return [...groups.values()];}
-const nsSearchText=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,' ').trim();
-function nsFilteredSources(){const query=nsSearchText(nsCopyQuery);return nsSources().filter(source=>(!nsCopyGroup||nsCopyGroup==='__none'?!nsCopyGroup||!source.group.id:source.group.id===nsCopyGroup)&&(!query||nsSearchText([source.name,source.snapshot.values?.merchantEnglishName,source.group.name,source.snapshot.values?.registerCertNo].join(' ')).includes(query)));}
-function nsBlankState(){
- if(MT_EXTERNAL)newApplication();else v2Reset();state.readonly=false;state.errors={};if(typeof bfSeed==='function')bfSeed();
+function nsGroups() {
+  const groups = new Map(
+    mtCustomers().map((g) => [g.id, { id: g.id, name: g.name }]),
+  );
+  for (const source of nsSources())
+    if (source.group.id && !groups.has(source.group.id))
+      groups.set(source.group.id, source.group);
+  return [...groups.values()];
 }
-function nsStartBlank(template=false){if(!nsCanStart())return deny();if(template){mtStartTemplate=true;mtLibrary();return;}nsBlankState();nsMode='blank';go('application/1');}
-function nsEnter(){go('application/1');}
-function nsCopyResults(){
- const list=nsFilteredSources(),size=10,pages=Math.max(1,Math.ceil(list.length/size));nsCopyPage=Math.max(1,Math.min(pages,nsCopyPage));const shown=list.slice((nsCopyPage-1)*size,nsCopyPage*size),matchingGroups=nsGroups().filter(g=>nsSearchText(g.name).includes(nsSearchText(nsCopyQuery)));
- const empty=(nsCopyGroup&&nsCopyGroup!=='__none'||nsCopyQuery&&matchingGroups.length)?'這個客戶／集團尚沒有符合條件的已儲存商戶。請先儲存一家公司，或調整搜尋條件。':'沒有符合的商戶，請調整公司或集團名稱。';
- return `<div class="ns-result-meta" role="status" aria-live="polite">找到 ${list.length} 家商戶${list.length?' · 顯示 '+((nsCopyPage-1)*size+1)+'–'+Math.min(nsCopyPage*size,list.length):''}</div><div class="ns-source-list" role="radiogroup" aria-label="來源商戶">${shown.map(source=>`<label class="ns-source-row ${source.key===nsCopySource?'selected':''}"><input type="radio" name="ns-source" data-ns-source value="${esc(source.key)}" ${source.key===nsCopySource?'checked':''}><span><strong>${esc(source.name)}</strong><small>${esc(source.group.name||'未分組')}${source.snapshot.values?.merchantEnglishName?' · '+esc(source.snapshot.values.merchantEnglishName):''}</small></span><span class="status gray">${esc(source.status||'已有商戶')}</span></label>`).join('')||`<p class="ns-empty">${empty}</p>`}</div>${pages>1?`<div class="ns-source-pages">${btn('上一頁','ns-copy-page','',`data-page="${nsCopyPage-1}" ${nsCopyPage===1?'disabled':''}`)}<span>${nsCopyPage}／${pages}</span>${btn('下一頁','ns-copy-page','',`data-page="${nsCopyPage+1}" ${nsCopyPage===pages?'disabled':''}`)}</div>`:''}`;
+const nsSearchText = (value) =>
+  String(value || "")
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+function nsFilteredSources() {
+  const query = nsSearchText(nsCopyQuery);
+  return nsSources().filter(
+    (source) =>
+      (!nsCopyGroup || nsCopyGroup === "__none"
+        ? !nsCopyGroup || !source.group.id
+        : source.group.id === nsCopyGroup) &&
+      (!query ||
+        nsSearchText(
+          [
+            source.name,
+            source.snapshot.values?.merchantEnglishName,
+            source.group.name,
+            source.snapshot.values?.registerCertNo,
+          ].join(" "),
+        ).includes(query)),
+  );
 }
-function nsRefreshCopy(){const host=$('#ns-source-results');if(!host)return;const focused=document.activeElement?.matches('[data-ns-source]')?document.activeElement.value:null;host.innerHTML=nsCopyResults();if(focused)[...host.querySelectorAll('[data-ns-source]')].find(input=>input.value===focused)?.focus({preventScroll:true});const source=nsSources().find(s=>s.key===nsCopySource);$('#ns-source-preview').textContent=source?'已選「'+source.name+'」；確認後完整複製來源已儲存的表單資料及費率。':'請選擇來源商戶，確認後才會建立新的申請。';}
-function nsCopyOpen(){
- if(!nsCanStart())return deny();nsCopySource='';nsCopyGroup='';nsCopyQuery='';nsCopyPage=1;nsCopyScopes=['profile','mcc','settlement','products'];mtDialog('複製已有商戶',`<p>先選客戶／集團，再搜尋來源商戶。只沿用來源已儲存的資料；缺少的項目會保持空白。</p><div class="grid"><div class="field"><label for="ns-copy-group">1 選擇客戶／集團</label><select id="ns-copy-group"><option value="">全部客戶／集團</option><option value="__none">未分組商戶</option>${nsGroups().map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><label for="ns-source-search">2 搜尋並選擇來源商戶</label><input id="ns-source-search" type="search" placeholder="公司、英文名稱、集團或 BR"></div></div><div id="ns-source-results">${nsCopyResults()}</div><p id="ns-source-preview" class="hint">請選擇來源商戶，確認後才會建立新的申請。</p><div class="notice">完整複製公司資料、BR、董事／人員、結算帳戶及產品費率。簽署、驗證與審批須重新完成；來源商戶不會被修改。附件原件只在目前瀏覽器可用，未保留的文件須重新上傳。</div>`,btn('取消','mt-close')+btn('確認複製並開始填寫','ns-copy-confirm','primary'));
+function nsBlankState() {
+  if (MT_EXTERNAL) newApplication();
+  else v2Reset();
+  state.readonly = false;
+  state.errors = {};
+  if (typeof bfSeed === "function") bfSeed();
 }
-function nsCopyConfirm(){
- try{if(!nsCanStart())return deny();const source=nsSources().find(s=>s.key===nsCopySource);if(!source)throw Error('請先選擇來源商戶');
- const saved=mtUpgradeSnapshot(structuredClone(source.snapshot)),files=typeof clientFilesFor==='function'?clientFilesFor(source.key,saved.files||{}):{};
- nsBlankState();Object.assign(state,{values:structuredClone(saved.values||{}),people:structuredClone(saved.people||{directors:1,authSigners:0,shareHolders:0}),files:structuredClone(saved.files||{}),checks:{},emailVerified:false,signature:'',errors:{},readonly:false,editing:null,draftId:null,savedAt:null});
- if(MT_EXTERNAL){state.id=null;state.step=1;}v2Ensure();state.values.signer='';state.values.signerTitle='';delete state.values.__templateApplied;state.baseFeeDefaults=null;delete state.values.__baseFees;delete state.values.__copiedFrom;v2Model().ack={};v2Model().ocr=[];
- DEMO.fileURLs.clear();DEMO.sourceFiles?.clear();for(const [id,f] of Object.entries(state.files)){const original=files[id];if(original){const url=URL.createObjectURL(original);DEMO.fileURLs.set(id,url);DEMO.sourceFiles.set(id,{file:original,url});f.needsReselect=false;}else if(!f.demo)f.needsReselect=true;}
- v2SyncDerived();nsMode='copy';mtClose();go('application/1');toast('已複製全部已儲存資料及來源費率，請核對本次申請');
- }catch(e){mtError(e.message);}
+function nsStartBlank(template = false) {
+  if (!nsCanStart()) return deny();
+  if (template) {
+    mtStartTemplate = true;
+    mtLibrary();
+    return;
+  }
+  nsBlankState();
+  nsMode = "blank";
+  go("application/1");
 }
-const nsConfirmTemplate=mtConfirmApply;mtConfirmApply=function(){if(!mtStartTemplate||mtFlow?.kind!=='form')return nsConfirmTemplate();try{if(!mtFlow.preview)throw Error('請先預覽套用內容');const template=mtTemplates().find(t=>t.id===mtFlow.templateId);if(!template)throw Error('模板已變更，請重新選擇');const plan=mtPrepare(template,[mtCurrentTarget()])[0];nsBlankState();Object.assign(state,{values:plan.snapshot.values,people:plan.snapshot.people,files:{},checks:{},emailVerified:false,signature:'',errors:{}});nsMode='template';mtClose();v2SyncDerived();go('application/1');toast('已確認模板，請核對並繼續填寫');}catch(e){mtError(e.message);}};
-Object.assign(actions,{'ns-blank':()=>nsStartBlank(),'ns-template':()=>nsStartBlank(true),'ns-copy-open':nsCopyOpen,'ns-copy-confirm':nsCopyConfirm,'ns-copy-page':el=>{nsCopyPage=+el.dataset.page;nsRefreshCopy();},'ns-enter':nsEnter,'ns-back':()=>go('application/1'),'mt-apply-confirm':mtConfirmApply,'ns-drafts':()=>go(MT_EXTERNAL?'applications':'drafts')});
-actions.new=()=>nsStartBlank();
-if(!MT_EXTERNAL){const nsSidebar=sidebar,nsTabs=tabs;sidebar=page=>nsSidebar(['new-merchant','merchant-setup'].includes(page)?'application':page).replace('href="#/application/1"','href="#/application/1" data-action="new"');tabs=page=>nsTabs(['new-merchant','merchant-setup'].includes(page)?'application':page);}
-const nsRender=render;render=function(){if(['new-merchant','merchant-setup'].includes(route().page))history.replaceState(null,'','#/'+(MT_EXTERNAL?'form':'application')+'/1');nsRender();};
-document.addEventListener('input',e=>{if(e.target.id==='ns-source-search'){nsCopyQuery=e.target.value;nsCopyPage=1;nsCopySource='';nsRefreshCopy();}});
-document.addEventListener('change',e=>{const t=e.target;if(t.id==='ns-copy-group'){nsCopyGroup=t.value;nsCopyPage=1;nsCopySource='';nsRefreshCopy();}if(t.dataset.nsSource!==undefined){nsCopySource=t.value;nsRefreshCopy();}if(t.dataset.nsScope)nsCopyScopes=t.checked?[...nsCopyScopes,t.dataset.nsScope]:nsCopyScopes.filter(k=>k!==t.dataset.nsScope);});
-function nsStepperHTML(current,external=false){const pages=onboardingFillProgress().pages;return `<nav class="${external?'external-v2-steps':'stepper'} ns-progress" aria-label="申請步驟">${pages.map(p=>{const complete=p.optional?p.files>0:p.total>0&&!p.missing.length,active=p.step===current;return `<button type="button" class="step ${active?'active':''} ${complete?'done':''}" data-action="step" data-step="${p.step}" data-step-state="${active?'current':complete?'complete':'pending'}" ${active?'aria-current="step"':''} aria-label="${p.step} ${esc(p.name)}${complete?'，資料已完成':''}"><span class="number">${p.step}</span><span class="step-text">${esc(p.name)}</span></button>`;}).join('')}</nav>`;}
-if(!MT_EXTERNAL)stepper=current=>nsStepperHTML(current);
-let nsProgressQueued=false;function nsUpdateProgress(){if(nsProgressQueued||route().page!=='application')return;nsProgressQueued=true;requestAnimationFrame(()=>{nsProgressQueued=false;const nav=$('.ns-progress');if(nav&&!document.activeElement?.closest('.ns-progress'))nav.outerHTML=nsStepperHTML(route().step,MT_EXTERNAL);});}
-for(const event of ['input','change'])document.addEventListener(event,e=>{if(e.target.closest('.v2-form'))nsUpdateProgress();});
+function nsEnter() {
+  go("application/1");
+}
+function nsCopyResults() {
+  const list = nsFilteredSources(),
+    size = 10,
+    pages = Math.max(1, Math.ceil(list.length / size));
+  nsCopyPage = Math.max(1, Math.min(pages, nsCopyPage));
+  const shown = list.slice((nsCopyPage - 1) * size, nsCopyPage * size),
+    matchingGroups = nsGroups().filter((g) =>
+      nsSearchText(g.name).includes(nsSearchText(nsCopyQuery)),
+    );
+  const empty =
+    (nsCopyGroup && nsCopyGroup !== "__none") ||
+    (nsCopyQuery && matchingGroups.length)
+      ? "這個客戶／集團尚沒有符合條件的已儲存商戶。請先儲存一家公司，或調整搜尋條件。"
+      : "沒有符合的商戶，請調整公司或集團名稱。";
+  return `<div class="ns-result-meta" role="status" aria-live="polite">找到 ${list.length} 家商戶${list.length ? " · 顯示 " + ((nsCopyPage - 1) * size + 1) + "–" + Math.min(nsCopyPage * size, list.length) : ""}</div><div class="ns-source-list" role="radiogroup" aria-label="來源商戶">${shown.map((source) => `<label class="ns-source-row ${source.key === nsCopySource ? "selected" : ""}"><input type="radio" name="ns-source" data-ns-source value="${esc(source.key)}" ${source.key === nsCopySource ? "checked" : ""}><span><strong>${esc(source.name)}</strong><small>${esc(source.group.name || "未分組")}${source.snapshot.values?.merchantEnglishName ? " · " + esc(source.snapshot.values.merchantEnglishName) : ""}</small></span><span class="status gray">${esc(source.status || "已有商戶")}</span></label>`).join("") || `<p class="ns-empty">${empty}</p>`}</div>${pages > 1 ? `<div class="ns-source-pages">${btn("上一頁", "ns-copy-page", "", `data-page="${nsCopyPage - 1}" ${nsCopyPage === 1 ? "disabled" : ""}`)}<span>${nsCopyPage}／${pages}</span>${btn("下一頁", "ns-copy-page", "", `data-page="${nsCopyPage + 1}" ${nsCopyPage === pages ? "disabled" : ""}`)}</div>` : ""}`;
+}
+function nsRefreshCopy() {
+  const host = $("#ns-source-results");
+  if (!host) return;
+  const focused = document.activeElement?.matches("[data-ns-source]")
+    ? document.activeElement.value
+    : null;
+  host.innerHTML = nsCopyResults();
+  if (focused)
+    [...host.querySelectorAll("[data-ns-source]")]
+      .find((input) => input.value === focused)
+      ?.focus({ preventScroll: true });
+  const source = nsSources().find((s) => s.key === nsCopySource);
+  $("#ns-source-preview").textContent = source
+    ? "已選「" + source.name + "」；確認後完整複製來源已儲存的表單資料及費率。"
+    : "請選擇來源商戶，確認後才會建立新的申請。";
+}
+function nsCopyOpen() {
+  if (!nsCanStart()) return deny();
+  nsCopySource = "";
+  nsCopyGroup = "";
+  nsCopyQuery = "";
+  nsCopyPage = 1;
+  nsCopyScopes = ["profile", "mcc", "settlement", "products"];
+  mtDialog(
+    "複製已有商戶",
+    `<p>先選客戶／集團，再搜尋來源商戶。只沿用來源已儲存的資料；缺少的項目會保持空白。</p><div class="grid"><div class="field"><label for="ns-copy-group">1 選擇客戶／集團</label><select id="ns-copy-group"><option value="">全部客戶／集團</option><option value="__none">未分組商戶</option>${nsGroups()
+      .map((g) => `<option value="${esc(g.id)}">${esc(g.name)}</option>`)
+      .join(
+        "",
+      )}</select></div><div class="field"><label for="ns-source-search">2 搜尋並選擇來源商戶</label><input id="ns-source-search" type="search" placeholder="公司、英文名稱、集團或 BR"></div></div><div id="ns-source-results">${nsCopyResults()}</div><p id="ns-source-preview" class="hint">請選擇來源商戶，確認後才會建立新的申請。</p><div class="notice">完整複製公司資料、BR、董事／人員、結算帳戶及產品費率。簽署、驗證與審批須重新完成；來源商戶不會被修改。附件原件只在目前瀏覽器可用，未保留的文件須重新上傳。</div>`,
+    btn("取消", "mt-close") +
+      btn("確認複製並開始填寫", "ns-copy-confirm", "primary"),
+  );
+}
+function nsCopyConfirm() {
+  try {
+    if (!nsCanStart()) return deny();
+    const source = nsSources().find((s) => s.key === nsCopySource);
+    if (!source) throw Error("請先選擇來源商戶");
+    const saved = mtUpgradeSnapshot(structuredClone(source.snapshot)),
+      files =
+        typeof clientFilesFor === "function"
+          ? clientFilesFor(source.key, saved.files || {})
+          : {};
+    nsBlankState();
+    Object.assign(state, {
+      values: structuredClone(saved.values || {}),
+      people: structuredClone(
+        saved.people || { directors: 1, authSigners: 0, shareHolders: 0 },
+      ),
+      files: structuredClone(saved.files || {}),
+      checks: {},
+      emailVerified: false,
+      signature: "",
+      errors: {},
+      readonly: false,
+      editing: null,
+      draftId: null,
+      savedAt: null,
+    });
+    if (MT_EXTERNAL) {
+      state.id = null;
+      state.step = 1;
+    }
+    v2Ensure();
+    state.values.signer = "";
+    state.values.signerTitle = "";
+    delete state.values.__templateApplied;
+    state.baseFeeDefaults = null;
+    delete state.values.__baseFees;
+    delete state.values.__copiedFrom;
+    v2Model().ack = {};
+    v2Model().ocr = [];
+    DEMO.fileURLs.clear();
+    DEMO.sourceFiles?.clear();
+    for (const [id, f] of Object.entries(state.files)) {
+      const original = files[id];
+      if (original) {
+        const url = URL.createObjectURL(original);
+        DEMO.fileURLs.set(id, url);
+        DEMO.sourceFiles.set(id, { file: original, url });
+        f.needsReselect = false;
+      } else if (!f.demo) f.needsReselect = true;
+    }
+    v2SyncDerived();
+    nsMode = "copy";
+    mtClose();
+    go("application/1");
+    toast("已複製全部已儲存資料及來源費率，請核對本次申請");
+  } catch (e) {
+    mtError(e.message);
+  }
+}
+const nsConfirmTemplate = mtConfirmApply;
+mtConfirmApply = function () {
+  if (!mtStartTemplate || mtFlow?.kind !== "form") return nsConfirmTemplate();
+  try {
+    if (!mtFlow.preview) throw Error("請先預覽套用內容");
+    const template = mtTemplates().find((t) => t.id === mtFlow.templateId);
+    if (!template) throw Error("模板已變更，請重新選擇");
+    const plan = mtPrepare(template, [mtCurrentTarget()])[0];
+    nsBlankState();
+    Object.assign(state, {
+      values: plan.snapshot.values,
+      people: plan.snapshot.people,
+      files: {},
+      checks: {},
+      emailVerified: false,
+      signature: "",
+      errors: {},
+    });
+    nsMode = "template";
+    mtClose();
+    v2SyncDerived();
+    go("application/1");
+    toast("已確認模板，請核對並繼續填寫");
+  } catch (e) {
+    mtError(e.message);
+  }
+};
+Object.assign(actions, {
+  "ns-blank": () => nsStartBlank(),
+  "ns-template": () => nsStartBlank(true),
+  "ns-copy-open": nsCopyOpen,
+  "ns-copy-confirm": nsCopyConfirm,
+  "ns-copy-page": (el) => {
+    nsCopyPage = +el.dataset.page;
+    nsRefreshCopy();
+  },
+  "ns-enter": nsEnter,
+  "ns-back": () => go("application/1"),
+  "mt-apply-confirm": mtConfirmApply,
+  "ns-drafts": () => go(MT_EXTERNAL ? "applications" : "drafts"),
+});
+actions.new = () => nsStartBlank();
+if (!MT_EXTERNAL) {
+  const nsSidebar = sidebar,
+    nsTabs = tabs;
+  sidebar = (page) =>
+    nsSidebar(
+      ["new-merchant", "merchant-setup"].includes(page) ? "application" : page,
+    ).replace(
+      'href="#/application/1"',
+      'href="#/application/1" data-action="new"',
+    );
+  tabs = (page) =>
+    nsTabs(
+      ["new-merchant", "merchant-setup"].includes(page) ? "application" : page,
+    );
+}
+const nsRender = render;
+render = function () {
+  if (["new-merchant", "merchant-setup"].includes(route().page))
+    history.replaceState(
+      null,
+      "",
+      "#/" + (MT_EXTERNAL ? "form" : "application") + "/1",
+    );
+  nsRender();
+};
+document.addEventListener("input", (e) => {
+  if (e.target.id === "ns-source-search") {
+    nsCopyQuery = e.target.value;
+    nsCopyPage = 1;
+    nsCopySource = "";
+    nsRefreshCopy();
+  }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "ns-copy-group") {
+    nsCopyGroup = t.value;
+    nsCopyPage = 1;
+    nsCopySource = "";
+    nsRefreshCopy();
+  }
+  if (t.dataset.nsSource !== undefined) {
+    nsCopySource = t.value;
+    nsRefreshCopy();
+  }
+  if (t.dataset.nsScope)
+    nsCopyScopes = t.checked
+      ? [...nsCopyScopes, t.dataset.nsScope]
+      : nsCopyScopes.filter((k) => k !== t.dataset.nsScope);
+});
+function nsStepperHTML(current, external = false) {
+  const pages = onboardingFillProgress().pages;
+  return `<nav class="${external ? "external-v2-steps" : "stepper"} ns-progress" aria-label="申請步驟">${pages
+    .map((p) => {
+      const complete = p.optional
+          ? p.files > 0
+          : p.total > 0 && !p.missing.length,
+        active = p.step === current;
+      return `<button type="button" class="step ${active ? "active" : ""} ${complete ? "done" : ""}" data-action="step" data-step="${p.step}" data-step-state="${active ? "current" : complete ? "complete" : "pending"}" ${active ? 'aria-current="step"' : ""} aria-label="${p.step} ${esc(p.name)}${complete ? "，資料已完成" : ""}"><span class="number">${p.step}</span><span class="step-text">${esc(p.name)}</span></button>`;
+    })
+    .join("")}</nav>`;
+}
+if (!MT_EXTERNAL) stepper = (current) => nsStepperHTML(current);
+let nsProgressQueued = false;
+function nsUpdateProgress() {
+  if (nsProgressQueued || route().page !== "application") return;
+  nsProgressQueued = true;
+  requestAnimationFrame(() => {
+    nsProgressQueued = false;
+    const nav = $(".ns-progress");
+    if (nav && !document.activeElement?.closest(".ns-progress"))
+      nav.outerHTML = nsStepperHTML(route().step, MT_EXTERNAL);
+  });
+}
+for (const event of ["input", "change"])
+  document.addEventListener(event, (e) => {
+    if (e.target.closest(".v2-form")) nsUpdateProgress();
+  });

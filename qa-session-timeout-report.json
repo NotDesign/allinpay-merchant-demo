@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-11-17T03:57:46.323Z",
+  "url": "http://127.0.0.1:4397",
+  "checks": [
+    "Backoffice reload preserves the original idle deadline instead of granting another five minutes.",
+    "backoffice: unauthenticated pages excluded; trusted activity resets the five-minute deadline; 30-second top-layer warning; Escape cannot hide it; explicit extension preserves the original modal and fields; expiry closes protected UI, invalidates login/OTP and preserves saved drafts; wake-up, re-login, manual logout and 1440/390/320 layouts verified.",
+    "external: unauthenticated pages excluded; trusted activity resets the five-minute deadline; 30-second top-layer warning; Escape cannot hide it; explicit extension preserves the original modal and fields; expiry closes protected UI, invalidates login/OTP and preserves saved drafts; wake-up, re-login, manual logout and 1440/390/320 layouts verified."
+  ],
+  "errors": []
+}

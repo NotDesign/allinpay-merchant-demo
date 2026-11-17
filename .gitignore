@@ -9,3 +9,11 @@ vendor-manifest.json
 .release-archive/
 .release-legacy/
 *-merchant-demo-*.zip
+
+# Developer edition generated files
+node_modules/
+qa-*.png
+qa-*.json
+
+__pycache__/
+*.pyc

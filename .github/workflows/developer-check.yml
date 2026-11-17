@@ -1,0 +1,29 @@
+name: Verify readable two-merchant developer edition
+on:
+  push:
+    branches: [codex/two-merchant-readable-20261117-v112]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run setup
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Verify developer edition
+        run: |
+          npm run serve > /tmp/meepay-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4321/backoffice.html > /dev/null; then break; fi
+            sleep 1
+          done
+          npm test

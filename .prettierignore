@@ -1,0 +1,10 @@
+node_modules/
+vendor/
+assets/
+app.js
+external-app.js
+backoffice.html
+external.html
+onboarding-v2.js
+qa-*
+*.zip

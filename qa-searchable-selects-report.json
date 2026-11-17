@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "date": "2026-11-17T03:57:51.287Z",
+  "root": "http://127.0.0.1:4397",
+  "checks": [
+    "backoffice: 34 original selects searched across six steps and management controls; readonly Hong Kong bank country opens no picker; merchant address country/province/city remain searchable and independent; Hong Kong banks first, Chinese/English/code/alias search, exact bank/SWIFT/branch linkage, keyboard/IME/Escape, no-result preservation, responsive top-layer popovers, nested account controls and existing MCC multiselect retained.",
+    "external: 37 original selects searched across six steps and management controls; readonly Hong Kong bank country opens no picker; merchant address country/province/city remain searchable and independent; Hong Kong banks first, Chinese/English/code/alias search, exact bank/SWIFT/branch linkage, keyboard/IME/Escape, no-result preservation, responsive top-layer popovers, nested account controls and existing MCC multiselect retained."
+  ],
+  "errors": []
+}

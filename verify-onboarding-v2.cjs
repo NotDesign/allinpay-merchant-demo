@@ -1,56 +1,446 @@
-const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
-const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const base=process.env.DEMO_URL||'http://127.0.0.1:4319/backoffice.html';
-(async()=>{
- const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
- const context=await browser.newContext({viewport:{width:1440,height:1000}}),p=await context.newPage(),errors=[],checks=[];
- p.on('pageerror',e=>errors.push(e.message));
- const click=async(a,extra='')=>p.locator(`[data-action="${a}"]${extra}`).first().click();
- const go=async s=>{await p.evaluate(s=>location.hash='/application/'+s,s);await p.waitForSelector('.v2-form');await p.waitForFunction(s=>document.querySelector('.step.active')?.dataset.step===String(s),s);};
- const field=k=>p.locator(`[data-field="${k}"]`),set=async(k,v)=>{if(k==='mcc'){await p.locator('.mt-mcc-picker summary').click();await p.locator('[data-mt-mcc="'+v+'"]').check();await click('mt-mcc-done');const primary=p.locator('[data-action="mt-mcc-primary"][data-code="'+v+'"]');if(await primary.count())await primary.click();return;}await field(k).fill(v);await field(k).blur();},select=async(k,v)=>field(k).selectOption(v);
- const sample=async()=>{await click('sample');await click('confirm-sample');};
- const summary=()=>p.evaluate(()=>AllinPayDemo.getOnboarding());
- const close=async()=>{if(await p.locator('#modal').evaluate(e=>e.open))await p.locator('#modal [data-action="close"]').first().click();};
- await p.goto(base+'#/login');await click('pick-role','[data-index="0"]');await click('bo-login');await go(2);await sample();
- let s=await summary();assert.equal(s.version,2);assert.equal(s.fields.length,110);assert.equal(s.documents.length,21);assert.equal(s.products.reduce((n,g)=>n+g.count,0),117);assert.deepEqual(s.errors,{});
- const c={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'onboarding-v2-data.js'),'utf8')+';this.data=V2_DATA',c);for(const id of c.data.sourceFieldIds.filter(id=>id!=='dbaNo'))assert(s.fields.includes(id),'Missing source field '+id);
- checks.push('Original base fields plus Word corrections: DBA number removed, parent merchant and inspection date added; 110 fields; 21 optional document types; 117 products');
- await p.evaluate(()=>location.hash='/merchants');await click('edit','[data-mid="M000238"]');await click('confirm-edit');await go(2);assert.equal(await field('registerCertNo').inputValue(),'71234567-000');await go(4);assert.equal(await field('cardBankCode').inputValue(),'004');checks.push('Existing merchant BR, bank identifiers retained on V2 edit migration');await sample();await go(2);
- assert.equal(await field('dbaNo').count(),0);await select('legalStatus','PERSON');assert.equal(await field('nar1Period').count(),0);await select('legalStatus','BODY_CORPORATE');assert.equal(await field('nar1Period').count(),1);
- await set('registerCertNo','BAD');await click('next');assert.equal(await field('registerCertNo').getAttribute('aria-invalid'),'true');await set('registerCertNo','12345678-000');
- await set('merchantName','長'.repeat(34));assert((await summary()).errors.merchantName.includes('bytes'));await sample();
- await click('v2-add-person','[data-group="authSigners"]');await p.locator('[data-v2-link="authSigners"]').check();assert.equal(await field('authSigners[0].name').inputValue(),'陳示例');assert(await field('authSigners[0].name').getAttribute('readonly')!==null);
- await set('directors[0].name','陳更新');await go(3);await go(2);assert.equal(await field('authSigners[0].name').inputValue(),'陳更新');await p.locator('[data-v2-link="authSigners"]').uncheck();assert.equal(await field('authSigners[0].name').getAttribute('readonly'),null);
- await click('v2-add-person','[data-group="directors"]');await set('directors[1].name','林董事');await p.locator('[data-v2-director="authSigners"]').selectOption('1');await click('v2-remove-person','[data-group="directors"][data-index="1"]');assert.equal(await p.locator('[data-v2-link="authSigners"]').isChecked(),false);assert.equal(await field('authSigners[0].name').inputValue(),'林董事');checks.push('legal status, BR format, UTF8 length, linked directors update and safe unlink on removal');
- await sample();await go(3);assert.equal(await field('financeName').count(),0);assert.equal(await field('maintainerName').count(),1);assert.equal(await field('mccName').inputValue(),'餐廳及食肆 / Eating Places, Restaurants');assert.equal(await field('webUrl').count(),0);await set('mcc','5732');assert.equal(await field('mccName').inputValue(),'電子產品店 / Electronics Stores\n餐廳及食肆 / Eating Places, Restaurants');assert.deepEqual((await p.evaluate(()=>AllinPayDemo.getTemplateState())).mccCodes,['5732','5812']);
- await select('addrCountryCode','CHN');assert.equal(await field('addrCityCode').count(),1);await select('addrProvinceCode','CN-GD');await select('addrCityCode','CN-GD-SZ');await go(2);await select('threeCertFlag','0');assert.equal(await field('creditCode').count(),1);assert((await summary()).errors.creditCode);await select('threeCertFlag','1');assert.equal(await field('creditCode').count(),0);
- await sample();await go(4);await set('swiftCode','');assert.equal((await summary()).errors.swiftCode,undefined);await select('cardBranchCode','');assert.equal((await summary()).errors.cardBranchCode,undefined);await set('settlePeriod','d2');assert.equal(await field('settlePeriod').inputValue(),'D2');await set('settlePeriod','T100');assert((await summary()).errors.settlePeriod);await click('v2-settlement','[data-value="T3"]');assert.equal(await field('settlePeriod').inputValue(),'T3');await select('isCompay','N');assert.equal(await field('cardIdcardNo').count(),1);await set('cardIdcardNo','BAD');assert((await summary()).errors.cardIdcardNo);await set('cardIdcardNo','Z123456(0)');assert.equal((await summary()).errors.cardIdcardNo,undefined);
- assert.equal(await field('cardCountryCode').inputValue(),'HKG');assert.equal(await field('cardCountryCode').getAttribute('type'),'hidden');assert.equal(await p.locator('select[data-field="cardCountryCode"]').count(),0);
- const bankCountry=p.locator('[data-bank-country-display]');assert.equal(await bankCountry.inputValue(),'中國香港');assert.equal(await bankCountry.isEditable(),false);await bankCountry.click();assert.equal(await p.locator('#searchable-select-popover').count(),0);
- assert.equal(await field('swiftCode').count(),1);assert.equal(await field('cardCityCode').count(),0);assert.notEqual(await field('cardBranchCode').getAttribute('aria-required'),'true');checks.push('MCC lookup, removed old fields, Mainland merchant certificates/geography, readonly default Hong Kong bank country with preserved HKG API field and no picker, optional HK branch/SWIFT, personal settlement, editable cycle');
- const rate=(key,f)=>p.locator('[data-v2-inline-key="'+key+'"][data-v2-inline-field="'+f+'"]');
- await sample();await go(5);await rate('POS|0','loc_rate').fill('101');assert((await p.locator('[data-v2-rate-error="POS|0"]').innerText()).includes('0–100'));await rate('POS|0','loc_rate').fill('1.75');assert.equal((await summary()).selectedProducts[0].values.loc_rate,'1.75');
- await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption('Blended');await rate('POS|0','std_rate').fill('2.10');assert.equal((await summary()).selectedProducts[0].pricing,'Blended');
- await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption('Regional');assert.equal(await rate('POS|0','loc_rate').inputValue(),'1.75');
- for(const group of c.data.catalog.GROUPS)await p.locator(`[data-v2-group="${group.k}"]`).check();assert.equal(await p.locator('[data-v2-product]').count(),117);
- // Exercise every inline fee editor, including Wallet, Regional, Blended, PER and INST.
- let editorCount=0;for(const g of c.data.catalog.GROUPS)for(let i=0;i<g.rows.length;i++){
-   const r=g.rows[i],key=g.k+'|'+i;await p.locator(`[data-v2-product="${key}"]`).check();if(r.mode==='NONE')continue;
-   if(r.mode==='INST')await p.locator(`[data-v2-inline-key="${key}"][data-v2-inline-toggle="t3_on"]`).check();
-   assert(await p.locator(`[data-v2-rate-row="${key}"] .v2-inline-fieldset`).isEnabled(),key+' inline editor');
-   assert.equal(await p.locator('#modal').evaluate(e=>e.open),false,key+' no modal');editorCount++;
- }
- assert.equal((await summary()).selectedProducts.length,117);checks.push('All 117 product toggles and '+editorCount+' inline fee editors; pricing values retained; validation; all pricing modes');
- await p.screenshot({path:path.join(__dirname,'qa-v2-products.png')});
- await go(3);assert.equal(await field('webUrl').count(),1);await set('webUrl','');assert.equal((await summary()).errors.webUrl,undefined);await go(2);assert((await summary()).errors._auth);await click('v2-add-person','[data-group="authSigners"]');await p.locator('[data-v2-link="authSigners"]').check();assert.equal(await p.locator('[data-action="v2-add-person"][data-group="authSigners"]').isDisabled(),true);await go(1);assert.equal(await p.locator('.upload-row').count(),21);
- await sample();await go(3);await set('mcc','4722');await go(5);await p.locator('[data-v2-group="CNP"]').check();await p.locator('[data-v2-product="CNP|0"]').check();await select('connectType','0');let high=await summary();assert(+high.score.total>=25);assert.equal(high.errors['file-141301'],undefined);assert.equal(high.errors['file-141201'],undefined);await go(3);await select('riskLevel','1');assert.equal(await field('riskOverrideReason').count(),1);await set('riskOverrideReason','Demo：已完成加強核實。');assert.equal((await summary()).errors.riskOverrideReason,undefined);checks.push('AMEX signer condition; online website; all documents optional at high risk; risk downgrade explanation unchanged');
- await sample();await go(5);await rate('POS|0','loc_rate').fill('1.88');await click('save-draft');assert.equal(await p.locator('#modal-title').innerText(),'草稿儲存成功');await close();await p.reload();await p.evaluate(()=>location.hash='/drafts');await p.waitForSelector('[data-action="restore"]');await click('restore');await p.waitForSelector('.v2-form');assert.equal((await summary()).selectedProducts[0].values.loc_rate,'1.88');checks.push('V2 fee data survives draft save, browser reload and restore');
- await go(1);await p.locator('[data-demo-upload="140101"]').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64')});await click('save-draft');await close();await p.reload();await p.evaluate(()=>location.hash='/drafts');await p.waitForSelector('[data-action="restore"]');await click('restore');await p.waitForSelector('.v2-form');assert.equal((await summary()).errors['file-140101'],undefined);await go(1);assert.match(await p.locator('[data-upload-row="140101"]').innerText(),/重新上傳/);checks.push('Real file metadata restored with non-blocking reselect notice');
- await sample();await go(1);await click('v2-ocr');await p.locator('#document-batch-files').setInputFiles(path.join(__dirname,'fixtures/sample-br.pdf'));await click('document-recognize');await p.waitForSelector('[data-document-select]');const english=p.locator('.batch-candidate').filter({has:p.locator('[aria-label="核對 英文名稱"]')});await english.locator('[data-document-select]').check();if(await english.locator('[data-document-replace]').count())await english.locator('[data-document-replace]').check();await p.locator('#batch-reviewed').check();await click('document-ready');await click('document-apply');assert.equal(await p.locator('#modal-title').innerText(),'已成功寫入申請資料');assert.equal(await p.locator('.modal-foot button').count(),1);await close();await go(2);await set('merchantEnglishName','UPDATED SAMPLE LIMITED');await go(6);assert((await summary()).errors['_check-ocr-merchantEnglishName']);await click('v2-difference','[data-key="ocr-merchantEnglishName"]');await click('v2-ack');assert((await p.locator('#v2-difference-error').innerText()).includes('原因'));await p.locator('#v2-difference-reason').fill('已核對示例原件');await click('v2-ack');assert.equal((await summary()).errors['_check-ocr-merchantEnglishName'],undefined);await go(2);await set('merchantEnglishName','CHANGED AGAIN LIMITED');await go(6);assert((await summary()).errors['_check-ocr-merchantEnglishName']);checks.push('Real local document reading, explicit selection and conflict replacement; difference confirmation invalidated on subsequent change');
- await sample();await go(6);await p.locator('[data-v2-signal="sanction"]').check();assert((await summary()).errors._risk);await p.locator('[data-v2-signal="sanction"]').uncheck();assert.deepEqual((await summary()).errors,{});
- await p.locator('[data-check="613:4956"]').check();await p.locator('#simulate-failure').check();await click('submit');assert.equal(await p.locator('#modal-title').innerText(),'申請提交失敗');await close();await click('save-draft');assert.equal(await p.locator('#modal-title').innerText(),'草稿儲存失敗');await close();await p.locator('#simulate-failure').uncheck();await click('submit');await click('confirm-submit');assert.equal(await p.locator('#modal-title').innerText(),'申請提交成功');await close();checks.push('Risk redline block; submission and draft failure/retry; complete valid submission');
- for(const width of [1440,1024,390]){await p.setViewportSize({width,height:900});for(let step=1;step<=6;step++){await go(step);assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Overflow ${width} step ${step}`);}await p.screenshot({path:path.join(__dirname,'qa-v2-review-'+width+'.png')});}
- await go(5);assert(await p.locator('[data-v2-rate-row="POS|0"]').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await p.locator('[data-v2-rate-row="POS|0"]').screenshot({path:path.join(__dirname,'qa-v2-fee-mobile.png')});checks.push('Six pages at 1440/1024/390 widths without horizontal overflow; mobile inline fee controls');
+const { chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
+const assert = require("node:assert/strict"),
+  fs = require("node:fs"),
+  path = require("node:path"),
+  vm = require("node:vm");
+const base = process.env.DEMO_URL || "http://127.0.0.1:4319/backoffice.html";
+(async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    ...(process.env.CHROME_PATH
+      ? { executablePath: process.env.CHROME_PATH }
+      : {}),
+  });
+  const context = await browser.newContext({
+      viewport: { width: 1440, height: 1000 },
+    }),
+    p = await context.newPage(),
+    errors = [],
+    checks = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  const click = async (a, extra = "") =>
+    p.locator(`[data-action="${a}"]${extra}`).first().click();
+  const go = async (s) => {
+    await p.evaluate((s) => (location.hash = "/application/" + s), s);
+    await p.waitForSelector(".v2-form");
+    await p.waitForFunction(
+      (s) => document.querySelector(".step.active")?.dataset.step === String(s),
+      s,
+    );
+  };
+  const field = (k) => p.locator(`[data-field="${k}"]`),
+    set = async (k, v) => {
+      if (k === "mcc") {
+        await p.locator(".mt-mcc-picker summary").click();
+        await p.locator('[data-mt-mcc="' + v + '"]').check();
+        await click("mt-mcc-done");
+        const primary = p.locator(
+          '[data-action="mt-mcc-primary"][data-code="' + v + '"]',
+        );
+        if (await primary.count()) await primary.click();
+        return;
+      }
+      await field(k).fill(v);
+      await field(k).blur();
+    },
+    select = async (k, v) => field(k).selectOption(v);
+  const sample = async () => {
+    await click("sample");
+    await click("confirm-sample");
+  };
+  const summary = () => p.evaluate(() => AllinPayDemo.getOnboarding());
+  const close = async () => {
+    if (await p.locator("#modal").evaluate((e) => e.open))
+      await p.locator('#modal [data-action="close"]').first().click();
+  };
+  await p.goto(base + "#/login");
+  await click("pick-role", '[data-index="0"]');
+  await click("bo-login");
+  await go(2);
+  await sample();
+  let s = await summary();
+  assert.equal(s.version, 2);
+  assert.equal(s.fields.length, 110);
+  assert.equal(s.documents.length, 21);
+  assert.equal(
+    s.products.reduce((n, g) => n + g.count, 0),
+    117,
+  );
+  assert.deepEqual(s.errors, {});
+  const c = {};
+  vm.runInNewContext(
+    fs.readFileSync(path.join(__dirname, "onboarding-v2-data.js"), "utf8") +
+      ";this.data=V2_DATA",
+    c,
+  );
+  for (const id of c.data.sourceFieldIds.filter((id) => id !== "dbaNo"))
+    assert(s.fields.includes(id), "Missing source field " + id);
+  checks.push(
+    "Original base fields plus Word corrections: DBA number removed, parent merchant and inspection date added; 110 fields; 21 optional document types; 117 products",
+  );
+  await p.evaluate(() => (location.hash = "/merchants"));
+  await click("edit", '[data-mid="M000238"]');
+  await click("confirm-edit");
+  await go(2);
+  assert.equal(await field("registerCertNo").inputValue(), "71234567-000");
+  await go(4);
+  assert.equal(await field("cardBankCode").inputValue(), "004");
+  checks.push(
+    "Existing merchant BR, bank identifiers retained on V2 edit migration",
+  );
+  await sample();
+  await go(2);
+  assert.equal(await field("dbaNo").count(), 0);
+  await select("legalStatus", "PERSON");
+  assert.equal(await field("nar1Period").count(), 0);
+  await select("legalStatus", "BODY_CORPORATE");
+  assert.equal(await field("nar1Period").count(), 1);
+  await set("registerCertNo", "BAD");
+  await click("next");
+  assert.equal(
+    await field("registerCertNo").getAttribute("aria-invalid"),
+    "true",
+  );
+  await set("registerCertNo", "12345678-000");
+  await set("merchantName", "長".repeat(34));
+  assert((await summary()).errors.merchantName.includes("bytes"));
+  await sample();
+  await click("v2-add-person", '[data-group="authSigners"]');
+  await p.locator('[data-v2-link="authSigners"]').check();
+  assert.equal(await field("authSigners[0].name").inputValue(), "陳示例");
+  assert(
+    (await field("authSigners[0].name").getAttribute("readonly")) !== null,
+  );
+  await set("directors[0].name", "陳更新");
+  await go(3);
+  await go(2);
+  assert.equal(await field("authSigners[0].name").inputValue(), "陳更新");
+  await p.locator('[data-v2-link="authSigners"]').uncheck();
+  assert.equal(
+    await field("authSigners[0].name").getAttribute("readonly"),
+    null,
+  );
+  await click("v2-add-person", '[data-group="directors"]');
+  await set("directors[1].name", "林董事");
+  await p.locator('[data-v2-director="authSigners"]').selectOption("1");
+  await click("v2-remove-person", '[data-group="directors"][data-index="1"]');
+  assert.equal(
+    await p.locator('[data-v2-link="authSigners"]').isChecked(),
+    false,
+  );
+  assert.equal(await field("authSigners[0].name").inputValue(), "林董事");
+  checks.push(
+    "legal status, BR format, UTF8 length, linked directors update and safe unlink on removal",
+  );
+  await sample();
+  await go(3);
+  assert.equal(await field("financeName").count(), 0);
+  assert.equal(await field("maintainerName").count(), 1);
+  assert.equal(
+    await field("mccName").inputValue(),
+    "餐廳及食肆 / Eating Places, Restaurants",
+  );
+  assert.equal(await field("webUrl").count(), 0);
+  await set("mcc", "5732");
+  assert.equal(
+    await field("mccName").inputValue(),
+    "電子產品店 / Electronics Stores\n餐廳及食肆 / Eating Places, Restaurants",
+  );
+  assert.deepEqual(
+    (await p.evaluate(() => AllinPayDemo.getTemplateState())).mccCodes,
+    ["5732", "5812"],
+  );
+  await select("addrCountryCode", "CHN");
+  assert.equal(await field("addrCityCode").count(), 1);
+  await select("addrProvinceCode", "CN-GD");
+  await select("addrCityCode", "CN-GD-SZ");
+  await go(2);
+  await select("threeCertFlag", "0");
+  assert.equal(await field("creditCode").count(), 1);
+  assert((await summary()).errors.creditCode);
+  await select("threeCertFlag", "1");
+  assert.equal(await field("creditCode").count(), 0);
+  await sample();
+  await go(4);
+  await set("swiftCode", "");
+  assert.equal((await summary()).errors.swiftCode, undefined);
+  await select("cardBranchCode", "");
+  assert.equal((await summary()).errors.cardBranchCode, undefined);
+  await set("settlePeriod", "d2");
+  assert.equal(await field("settlePeriod").inputValue(), "D2");
+  await set("settlePeriod", "T100");
+  assert((await summary()).errors.settlePeriod);
+  await click("v2-settlement", '[data-value="T3"]');
+  assert.equal(await field("settlePeriod").inputValue(), "T3");
+  await select("isCompay", "N");
+  assert.equal(await field("cardIdcardNo").count(), 1);
+  await set("cardIdcardNo", "BAD");
+  assert((await summary()).errors.cardIdcardNo);
+  await set("cardIdcardNo", "Z123456(0)");
+  assert.equal((await summary()).errors.cardIdcardNo, undefined);
+  assert.equal(await field("cardCountryCode").inputValue(), "HKG");
+  assert.equal(await field("cardCountryCode").getAttribute("type"), "hidden");
+  assert.equal(
+    await p.locator('select[data-field="cardCountryCode"]').count(),
+    0,
+  );
+  const bankCountry = p.locator("[data-bank-country-display]");
+  assert.equal(await bankCountry.inputValue(), "中國香港");
+  assert.equal(await bankCountry.isEditable(), false);
+  await bankCountry.click();
+  assert.equal(await p.locator("#searchable-select-popover").count(), 0);
+  assert.equal(await field("swiftCode").count(), 1);
+  assert.equal(await field("cardCityCode").count(), 0);
+  assert.notEqual(
+    await field("cardBranchCode").getAttribute("aria-required"),
+    "true",
+  );
+  checks.push(
+    "MCC lookup, removed old fields, Mainland merchant certificates/geography, readonly default Hong Kong bank country with preserved HKG API field and no picker, optional HK branch/SWIFT, personal settlement, editable cycle",
+  );
+  const rate = (key, f) =>
+    p.locator(
+      '[data-v2-inline-key="' + key + '"][data-v2-inline-field="' + f + '"]',
+    );
+  await sample();
+  await go(5);
+  await rate("POS|0", "loc_rate").fill("101");
+  assert(
+    (await p.locator('[data-v2-rate-error="POS|0"]').innerText()).includes(
+      "0–100",
+    ),
+  );
+  await rate("POS|0", "loc_rate").fill("1.75");
+  assert.equal((await summary()).selectedProducts[0].values.loc_rate, "1.75");
+  await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption("Blended");
+  await rate("POS|0", "std_rate").fill("2.10");
+  assert.equal((await summary()).selectedProducts[0].pricing, "Blended");
+  await p.locator('[data-v2-inline-pricing="POS|0"]').selectOption("Regional");
+  assert.equal(await rate("POS|0", "loc_rate").inputValue(), "1.75");
+  for (const group of c.data.catalog.GROUPS)
+    await p.locator(`[data-v2-group="${group.k}"]`).check();
+  assert.equal(await p.locator("[data-v2-product]").count(), 117);
+  // Exercise every inline fee editor, including Wallet, Regional, Blended, PER and INST.
+  let editorCount = 0;
+  for (const g of c.data.catalog.GROUPS)
+    for (let i = 0; i < g.rows.length; i++) {
+      const r = g.rows[i],
+        key = g.k + "|" + i;
+      await p.locator(`[data-v2-product="${key}"]`).check();
+      if (r.mode === "NONE") continue;
+      if (r.mode === "INST")
+        await p
+          .locator(
+            `[data-v2-inline-key="${key}"][data-v2-inline-toggle="t3_on"]`,
+          )
+          .check();
+      assert(
+        await p
+          .locator(`[data-v2-rate-row="${key}"] .v2-inline-fieldset`)
+          .isEnabled(),
+        key + " inline editor",
+      );
+      assert.equal(
+        await p.locator("#modal").evaluate((e) => e.open),
+        false,
+        key + " no modal",
+      );
+      editorCount++;
+    }
+  assert.equal((await summary()).selectedProducts.length, 117);
+  checks.push(
+    "All 117 product toggles and " +
+      editorCount +
+      " inline fee editors; pricing values retained; validation; all pricing modes",
+  );
+  await p.screenshot({ path: path.join(__dirname, "qa-v2-products.png") });
+  await go(3);
+  assert.equal(await field("webUrl").count(), 1);
+  await set("webUrl", "");
+  assert.equal((await summary()).errors.webUrl, undefined);
+  await go(2);
+  assert((await summary()).errors._auth);
+  await click("v2-add-person", '[data-group="authSigners"]');
+  await p.locator('[data-v2-link="authSigners"]').check();
+  assert.equal(
+    await p
+      .locator('[data-action="v2-add-person"][data-group="authSigners"]')
+      .isDisabled(),
+    true,
+  );
+  await go(1);
+  assert.equal(await p.locator(".upload-row").count(), 21);
+  await sample();
+  await go(3);
+  await set("mcc", "4722");
+  await go(5);
+  await p.locator('[data-v2-group="CNP"]').check();
+  await p.locator('[data-v2-product="CNP|0"]').check();
+  await select("connectType", "0");
+  let high = await summary();
+  assert(+high.score.total >= 25);
+  assert.equal(high.errors["file-141301"], undefined);
+  assert.equal(high.errors["file-141201"], undefined);
+  await go(3);
+  await select("riskLevel", "1");
+  assert.equal(await field("riskOverrideReason").count(), 1);
+  await set("riskOverrideReason", "Demo：已完成加強核實。");
+  assert.equal((await summary()).errors.riskOverrideReason, undefined);
+  checks.push(
+    "AMEX signer condition; online website; all documents optional at high risk; risk downgrade explanation unchanged",
+  );
+  await sample();
+  await go(5);
+  await rate("POS|0", "loc_rate").fill("1.88");
+  await click("save-draft");
+  assert.equal(await p.locator("#modal-title").innerText(), "草稿儲存成功");
+  await close();
+  await p.reload();
+  await p.evaluate(() => (location.hash = "/drafts"));
+  await p.waitForSelector('[data-action="restore"]');
+  await click("restore");
+  await p.waitForSelector(".v2-form");
+  assert.equal((await summary()).selectedProducts[0].values.loc_rate, "1.88");
+  checks.push("V2 fee data survives draft save, browser reload and restore");
+  await go(1);
+  await p
+    .locator('[data-demo-upload="140101"]')
+    .setInputFiles({
+      name: "test.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==",
+        "base64",
+      ),
+    });
+  await click("save-draft");
+  await close();
+  await p.reload();
+  await p.evaluate(() => (location.hash = "/drafts"));
+  await p.waitForSelector('[data-action="restore"]');
+  await click("restore");
+  await p.waitForSelector(".v2-form");
+  assert.equal((await summary()).errors["file-140101"], undefined);
+  await go(1);
+  assert.match(
+    await p.locator('[data-upload-row="140101"]').innerText(),
+    /重新上傳/,
+  );
+  checks.push("Real file metadata restored with non-blocking reselect notice");
+  await sample();
+  await go(1);
+  await click("v2-ocr");
+  await p
+    .locator("#document-batch-files")
+    .setInputFiles(path.join(__dirname, "fixtures/sample-br.pdf"));
+  await click("document-recognize");
+  await p.waitForSelector("[data-document-select]");
+  const english = p
+    .locator(".batch-candidate")
+    .filter({ has: p.locator('[aria-label="核對 英文名稱"]') });
+  await english.locator("[data-document-select]").check();
+  if (await english.locator("[data-document-replace]").count())
+    await english.locator("[data-document-replace]").check();
+  await p.locator("#batch-reviewed").check();
+  await click("document-ready");
+  await click("document-apply");
+  assert.equal(
+    await p.locator("#modal-title").innerText(),
+    "已成功寫入申請資料",
+  );
+  assert.equal(await p.locator(".modal-foot button").count(), 1);
+  await close();
+  await go(2);
+  await set("merchantEnglishName", "UPDATED SAMPLE LIMITED");
+  await go(6);
+  assert((await summary()).errors["_check-ocr-merchantEnglishName"]);
+  await click("v2-difference", '[data-key="ocr-merchantEnglishName"]');
+  await click("v2-ack");
+  assert(
+    (await p.locator("#v2-difference-error").innerText()).includes("原因"),
+  );
+  await p.locator("#v2-difference-reason").fill("已核對示例原件");
+  await click("v2-ack");
+  assert.equal(
+    (await summary()).errors["_check-ocr-merchantEnglishName"],
+    undefined,
+  );
+  await go(2);
+  await set("merchantEnglishName", "CHANGED AGAIN LIMITED");
+  await go(6);
+  assert((await summary()).errors["_check-ocr-merchantEnglishName"]);
+  checks.push(
+    "Real local document reading, explicit selection and conflict replacement; difference confirmation invalidated on subsequent change",
+  );
+  await sample();
+  await go(6);
+  await p.locator('[data-v2-signal="sanction"]').check();
+  assert((await summary()).errors._risk);
+  await p.locator('[data-v2-signal="sanction"]').uncheck();
+  assert.deepEqual((await summary()).errors, {});
+  await p.locator('[data-check="613:4956"]').check();
+  await p.locator("#simulate-failure").check();
+  await click("submit");
+  assert.equal(await p.locator("#modal-title").innerText(), "申請提交失敗");
+  await close();
+  await click("save-draft");
+  assert.equal(await p.locator("#modal-title").innerText(), "草稿儲存失敗");
+  await close();
+  await p.locator("#simulate-failure").uncheck();
+  await click("submit");
+  await click("confirm-submit");
+  assert.equal(await p.locator("#modal-title").innerText(), "申請提交成功");
+  await close();
+  checks.push(
+    "Risk redline block; submission and draft failure/retry; complete valid submission",
+  );
+  for (const width of [1440, 1024, 390]) {
+    await p.setViewportSize({ width, height: 900 });
+    for (let step = 1; step <= 6; step++) {
+      await go(step);
+      assert(
+        await p.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1,
+        ),
+        `Overflow ${width} step ${step}`,
+      );
+    }
+    await p.screenshot({
+      path: path.join(__dirname, "qa-v2-review-" + width + ".png"),
+    });
+  }
+  await go(5);
+  assert(
+    await p
+      .locator('[data-v2-rate-row="POS|0"]')
+      .evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
+  );
+  await p
+    .locator('[data-v2-rate-row="POS|0"]')
+    .screenshot({ path: path.join(__dirname, "qa-v2-fee-mobile.png") });
+  checks.push(
+    "Six pages at 1440/1024/390 widths without horizontal overflow; mobile inline fee controls",
+  );
 
- assert.deepEqual(errors,[]);await context.close();await browser.close();fs.writeFileSync(path.join(__dirname,'qa-onboarding-v2-report.json'),JSON.stringify({passed:true,date:new Date().toISOString(),url:base,checks,errors},null,2));console.log('PASS:',checks.join('\n'));
-})().catch(e=>{console.error(e);process.exit(1)});
+  assert.deepEqual(errors, []);
+  await context.close();
+  await browser.close();
+  fs.writeFileSync(
+    path.join(__dirname, "qa-onboarding-v2-report.json"),
+    JSON.stringify(
+      {
+        passed: true,
+        date: new Date().toISOString(),
+        url: base,
+        checks,
+        errors,
+      },
+      null,
+      2,
+    ),
+  );
+  console.log("PASS:", checks.join("\n"));
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -1,115 +1,364 @@
-const {chromium}=require('playwright');
-const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const path=require('node:path'),{pathToFileURL}=require('node:url');
-const root=(process.env.DEMO_URL||'http://127.0.0.1:4340/backoffice.html').replace(/\/(backoffice|external|index)\.html.*$/,''),errors=[],checks=[];
-const originalSha='41350467a3bbe2326eb386d069547c65d1e6727d1088f07680102978660d5f56',whiteSha='5ba6765e16f15c8536d1297b1209c5b1bb237c6fae3a914ac074108d67236b6d';
-async function browserTab(p,filename,title){
- const label=filename+' browser tab',embedded=['backoffice.html','external.html'].includes(filename);
- assert.equal(await p.title(),title,label+' Mee Pay title');
- const icon=p.locator('head link[rel~="icon"]');
- assert.equal(await icon.count(),1,label+' has exactly one favicon');
- assert.equal(await icon.getAttribute('type'),'image/png',label+' PNG MIME type');
- assert.equal(await icon.getAttribute('sizes'),'64x64',label+' declared icon dimensions');
- const href=await icon.getAttribute('href');
- if(embedded){
-  assert.match(href,/^data:image\/png;base64,/,label+' embeds its standalone favicon');
-  assert.deepEqual(Buffer.from(href.split(',')[1],'base64').subarray(0,8),Buffer.from([137,80,78,71,13,10,26,10]),label+' valid PNG signature');
- }else assert.equal(href,'mee-pay-favicon.png',label+' uses the shared favicon asset');
- const result=await icon.evaluate(async e=>{
-  const img=new Image();img.src=e.href;await img.decode();
-  const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
-  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
-  const {data}=ctx.getImageData(0,0,c.width,c.height),alpha=(x,y)=>data[(y*c.width+x)*4+3];
-  let visiblePixels=0,centerColorfulPixels=0;const colors=new Set();
-  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
-   const i=(y*c.width+x)*4,[r,g,b,a]=data.subarray(i,i+4);
-   if(a>32)visiblePixels++;
-   if(x>=8&&x<c.width-8&&y>=8&&y<c.height-8&&a>32&&Math.max(r,g,b)-Math.min(r,g,b)>45){
-    centerColorfulPixels++;colors.add([r,g,b].map(v=>Math.floor(v/64)).join(','));
-   }
-  }
-  return {width:c.width,height:c.height,corners:[alpha(0,0),alpha(c.width-1,0),alpha(0,c.height-1),alpha(c.width-1,c.height-1)],visiblePixels,centerColorfulPixels,colorCount:colors.size};
- });
- assert.equal(result.width,64,label+' decoded width');assert.equal(result.height,64,label+' decoded height');
- assert(result.corners.every(a=>a<=1),label+' transparent corners');
- assert(result.visiblePixels>256&&result.centerColorfulPixels>128&&result.colorCount>=3,label+' visible colorful logo mark: '+JSON.stringify(result));
+const { chromium } = require("playwright");
+const assert = require("node:assert/strict"),
+  fs = require("node:fs"),
+  crypto = require("node:crypto");
+const path = require("node:path"),
+  { pathToFileURL } = require("node:url");
+const root = (
+    process.env.DEMO_URL || "http://127.0.0.1:4340/backoffice.html"
+  ).replace(/\/(backoffice|external|index)\.html.*$/, ""),
+  errors = [],
+  checks = [];
+const originalSha =
+    "41350467a3bbe2326eb386d069547c65d1e6727d1088f07680102978660d5f56",
+  whiteSha = "5ba6765e16f15c8536d1297b1209c5b1bb237c6fae3a914ac074108d67236b6d";
+async function browserTab(p, filename, title) {
+  const label = filename + " browser tab",
+    embedded = ["backoffice.html", "external.html"].includes(filename);
+  assert.equal(await p.title(), title, label + " Mee Pay title");
+  const icon = p.locator('head link[rel~="icon"]');
+  assert.equal(await icon.count(), 1, label + " has exactly one favicon");
+  assert.equal(
+    await icon.getAttribute("type"),
+    "image/png",
+    label + " PNG MIME type",
+  );
+  assert.equal(
+    await icon.getAttribute("sizes"),
+    "64x64",
+    label + " declared icon dimensions",
+  );
+  const href = await icon.getAttribute("href");
+  if (embedded) {
+    assert.match(
+      href,
+      /^data:image\/png;base64,/,
+      label + " embeds its standalone favicon",
+    );
+    assert.deepEqual(
+      Buffer.from(href.split(",")[1], "base64").subarray(0, 8),
+      Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      label + " valid PNG signature",
+    );
+  } else
+    assert.equal(
+      href,
+      "mee-pay-favicon.png",
+      label + " uses the shared favicon asset",
+    );
+  const result = await icon.evaluate(async (e) => {
+    const img = new Image();
+    img.src = e.href;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const { data } = ctx.getImageData(0, 0, c.width, c.height),
+      alpha = (x, y) => data[(y * c.width + x) * 4 + 3];
+    let visiblePixels = 0,
+      centerColorfulPixels = 0;
+    const colors = new Set();
+    for (let y = 0; y < c.height; y++)
+      for (let x = 0; x < c.width; x++) {
+        const i = (y * c.width + x) * 4,
+          [r, g, b, a] = data.subarray(i, i + 4);
+        if (a > 32) visiblePixels++;
+        if (
+          x >= 8 &&
+          x < c.width - 8 &&
+          y >= 8 &&
+          y < c.height - 8 &&
+          a > 32 &&
+          Math.max(r, g, b) - Math.min(r, g, b) > 45
+        ) {
+          centerColorfulPixels++;
+          colors.add([r, g, b].map((v) => Math.floor(v / 64)).join(","));
+        }
+      }
+    return {
+      width: c.width,
+      height: c.height,
+      corners: [
+        alpha(0, 0),
+        alpha(c.width - 1, 0),
+        alpha(0, c.height - 1),
+        alpha(c.width - 1, c.height - 1),
+      ],
+      visiblePixels,
+      centerColorfulPixels,
+      colorCount: colors.size,
+    };
+  });
+  assert.equal(result.width, 64, label + " decoded width");
+  assert.equal(result.height, 64, label + " decoded height");
+  assert(
+    result.corners.every((a) => a <= 1),
+    label + " transparent corners",
+  );
+  assert(
+    result.visiblePixels > 256 &&
+      result.centerColorfulPixels > 128 &&
+      result.colorCount >= 3,
+    label + " visible colorful logo mark: " + JSON.stringify(result),
+  );
 }
-async function artwork(p,selector,label,tone='original'){
- const white=tone==='white',expectedSha=white?whiteSha:originalSha;
- const img=p.locator(selector+' img[alt="Mee Pay — Mobility evolution ethics"]');
- assert.equal(await img.count(),1,label+' logo exists');
- await img.evaluate(async e=>{await e.decode()});
- const result=await img.evaluate(e=>{
-  const c=document.createElement('canvas');c.width=e.naturalWidth;c.height=e.naturalHeight;
-  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(e,0,0);
-  const pixel=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data);
-  const r=e.getBoundingClientRect(),w=e.parentElement.getBoundingClientRect();
-  return {src:e.src,width:e.naturalWidth,height:e.naturalHeight,ratio:r.width/r.height,
-   wrapperBackground:getComputedStyle(e.parentElement).backgroundColor,linkBackground:getComputedStyle(e.parentElement.parentElement).backgroundColor,imageFilter:getComputedStyle(e).filter,
-   wrapper:{left:w.left,right:w.right,top:w.top,bottom:w.bottom,width:w.width,height:w.height},
-   background:pixel(100,100),letterCounter:pixel(1185,360),letterCounterP:pixel(1430,320),title:pixel(1040,340),tagline:pixel(1030,510),fingerprint:pixel(600,330),shape:pixel(600,390)};
- });
- assert.equal(result.width,2060);assert.equal(result.height,763);
- assert(Math.abs(result.ratio-2060/763)<.01,label+' original image proportions');
- assert(result.background[3]<=1,label+' real transparent background');
- assert(result.letterCounter[3]<=1&&result.letterCounterP[3]<=1,label+' letter counters also show the background');
- assert.equal(result.wrapperBackground,'rgba(0, 0, 0, 0)',label+' no white logo wrapper');
- assert.equal(result.linkBackground,'rgba(0, 0, 0, 0)',label+' no white logo link');
- assert.equal(result.imageFilter,'none',label+' no recoloring filter');
- // Brave may add one-bit canvas noise; the independent SHA check below still requires exact original asset bytes.
- const pixel=(actual,expected,name)=>assert(actual.every((v,i)=>Math.abs(v-expected[i])<=(i===3?1:2)),label+' '+name+': '+JSON.stringify(actual));
- pixel(result.title,white?[255,255,255,255]:[46,35,53,255],white?'white title on dark background':'original title on light background');
- pixel(result.tagline,white?[255,255,255,255]:[49,39,56,255],white?'white tagline on dark background':'original tagline on light background');
- pixel(result.fingerprint,[247,240,249,255],'fingerprint remains opaque');
- pixel(result.shape,[140,116,216,255],'original artwork color');
- assert(Math.abs(result.wrapper.width/result.wrapper.height-1384/458)<.015,label+' complete artwork frame');
- const bytes=result.src.startsWith('data:')?Buffer.from(result.src.split(',')[1],'base64'):await (await p.request.get(result.src)).body();
- assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),expectedSha,label+' correct logo bytes');
- return result;
+async function artwork(p, selector, label, tone = "original") {
+  const white = tone === "white",
+    expectedSha = white ? whiteSha : originalSha;
+  const img = p.locator(
+    selector + ' img[alt="Mee Pay — Mobility evolution ethics"]',
+  );
+  assert.equal(await img.count(), 1, label + " logo exists");
+  await img.evaluate(async (e) => {
+    await e.decode();
+  });
+  const result = await img.evaluate((e) => {
+    const c = document.createElement("canvas");
+    c.width = e.naturalWidth;
+    c.height = e.naturalHeight;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(e, 0, 0);
+    const pixel = (x, y) => Array.from(ctx.getImageData(x, y, 1, 1).data);
+    const r = e.getBoundingClientRect(),
+      w = e.parentElement.getBoundingClientRect();
+    return {
+      src: e.src,
+      width: e.naturalWidth,
+      height: e.naturalHeight,
+      ratio: r.width / r.height,
+      wrapperBackground: getComputedStyle(e.parentElement).backgroundColor,
+      linkBackground: getComputedStyle(e.parentElement.parentElement)
+        .backgroundColor,
+      imageFilter: getComputedStyle(e).filter,
+      wrapper: {
+        left: w.left,
+        right: w.right,
+        top: w.top,
+        bottom: w.bottom,
+        width: w.width,
+        height: w.height,
+      },
+      background: pixel(100, 100),
+      letterCounter: pixel(1185, 360),
+      letterCounterP: pixel(1430, 320),
+      title: pixel(1040, 340),
+      tagline: pixel(1030, 510),
+      fingerprint: pixel(600, 330),
+      shape: pixel(600, 390),
+    };
+  });
+  assert.equal(result.width, 2060);
+  assert.equal(result.height, 763);
+  assert(
+    Math.abs(result.ratio - 2060 / 763) < 0.01,
+    label + " original image proportions",
+  );
+  assert(result.background[3] <= 1, label + " real transparent background");
+  assert(
+    result.letterCounter[3] <= 1 && result.letterCounterP[3] <= 1,
+    label + " letter counters also show the background",
+  );
+  assert.equal(
+    result.wrapperBackground,
+    "rgba(0, 0, 0, 0)",
+    label + " no white logo wrapper",
+  );
+  assert.equal(
+    result.linkBackground,
+    "rgba(0, 0, 0, 0)",
+    label + " no white logo link",
+  );
+  assert.equal(result.imageFilter, "none", label + " no recoloring filter");
+  // Brave may add one-bit canvas noise; the independent SHA check below still requires exact original asset bytes.
+  const pixel = (actual, expected, name) =>
+    assert(
+      actual.every((v, i) => Math.abs(v - expected[i]) <= (i === 3 ? 1 : 2)),
+      label + " " + name + ": " + JSON.stringify(actual),
+    );
+  pixel(
+    result.title,
+    white ? [255, 255, 255, 255] : [46, 35, 53, 255],
+    white
+      ? "white title on dark background"
+      : "original title on light background",
+  );
+  pixel(
+    result.tagline,
+    white ? [255, 255, 255, 255] : [49, 39, 56, 255],
+    white
+      ? "white tagline on dark background"
+      : "original tagline on light background",
+  );
+  pixel(result.fingerprint, [247, 240, 249, 255], "fingerprint remains opaque");
+  pixel(result.shape, [140, 116, 216, 255], "original artwork color");
+  assert(
+    Math.abs(result.wrapper.width / result.wrapper.height - 1384 / 458) < 0.015,
+    label + " complete artwork frame",
+  );
+  const bytes = result.src.startsWith("data:")
+    ? Buffer.from(result.src.split(",")[1], "base64")
+    : await (await p.request.get(result.src)).body();
+  assert.equal(
+    crypto.createHash("sha256").update(bytes).digest("hex"),
+    expectedSha,
+    label + " correct logo bytes",
+  );
+  return result;
 }
-(async()=>{
- const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
- try{
-  const p=await browser.newPage({viewport:{width:1440,height:1000}});p.on('pageerror',e=>errors.push(e.message));
-  await p.goto(root+'/backoffice.html#/login');
-  await browserTab(p,'backoffice.html','Mee Pay · 後台管理 Demo');
-  for(const width of [1440,1024,768,390,320]){
-   await p.setViewportSize({width,height:1000});const r=await artwork(p,'.auth-brand-panel .brand','Backend login '+width,'white');
-   assert(r.wrapper.left>=0&&r.wrapper.right<=width,'Backend login logo fits');
-   if(width===1440||width===390)await p.screenshot({path:'qa-mee-pay-backoffice-login-'+width+'.png'});
+(async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    ...(process.env.CHROME_PATH
+      ? { executablePath: process.env.CHROME_PATH }
+      : {}),
+  });
+  try {
+    const p = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    p.on("pageerror", (e) => errors.push(e.message));
+    await p.goto(root + "/backoffice.html#/login");
+    await browserTab(p, "backoffice.html", "Mee Pay · 後台管理 Demo");
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await p.setViewportSize({ width, height: 1000 });
+      const r = await artwork(
+        p,
+        ".auth-brand-panel .brand",
+        "Backend login " + width,
+        "white",
+      );
+      assert(
+        r.wrapper.left >= 0 && r.wrapper.right <= width,
+        "Backend login logo fits",
+      );
+      if (width === 1440 || width === 390)
+        await p.screenshot({
+          path: "qa-mee-pay-backoffice-login-" + width + ".png",
+        });
+    }
+    await p.locator('[data-action="pick-role"]').first().click();
+    await p.locator('[data-action="bo-login"]').click();
+    await p.waitForSelector(".metrics");
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await p.setViewportSize({ width, height: 1000 });
+      if (
+        (await p.locator(".mobile-menu").isVisible()) &&
+        !(await p
+          .locator(".sidebar")
+          .evaluate((e) => e.classList.contains("open")))
+      )
+        await p.locator('[data-action="mobile-menu"]').click();
+      await p.waitForFunction(() => {
+        const t = getComputedStyle(
+          document.querySelector(".sidebar"),
+        ).transform;
+        return t === "none" || Math.abs(new DOMMatrixReadOnly(t).m41) < 0.01;
+      });
+      const r = await artwork(
+        p,
+        ".sidebar .brand",
+        "Backend sidebar " + width,
+        "white",
+      );
+      assert(
+        r.wrapper.left >= 0 && r.wrapper.right <= width,
+        JSON.stringify({ width, rect: r.wrapper }),
+      );
+      for (const text of [
+        "儀表板",
+        "商戶入網",
+        "新增商戶",
+        "商戶管理",
+        "內審控制台",
+      ])
+        assert(
+          (await p.locator(".sidebar").innerText()).includes(text),
+          "Side menu retains " + text,
+        );
+      if (width === 1440 || width === 390)
+        await p
+          .locator(".sidebar")
+          .screenshot({ path: "qa-mee-pay-sidebar-" + width + ".png" });
+    }
+    await p.setViewportSize({ width: 1440, height: 1000 });
+    await p.goto(root + "/external.html#/login");
+    await browserTab(p, "external.html", "Mee Pay · 外部商戶申請 Demo");
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await p.setViewportSize({ width, height: 1000 });
+      const r = await artwork(p, ".auth-top .brand", "External login " + width);
+      assert(r.wrapper.left >= 0 && r.wrapper.right <= width);
+      if (width === 1440 || width === 390)
+        await p.screenshot({
+          path: "qa-mee-pay-external-login-" + width + ".png",
+        });
+    }
+    await p.locator("#authEmail").fill("brand.qa@example.com");
+    await p.locator('[data-action="login"]').click();
+    for (let i = 0; i < 6; i++)
+      await p.locator('[data-otp="' + i + '"]').fill("" + (i + 1));
+    await p.locator('[data-action="verify"]').click();
+    await p.waitForSelector(".header");
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await p.setViewportSize({ width, height: 1000 });
+      const r = await artwork(p, ".header .brand", "External header " + width);
+      assert(r.wrapper.left >= 0 && r.wrapper.right <= width);
+    }
+    checks.push(
+      "Backend login/sidebar and External login/header at 1440/1024/768/390/320: original artwork proportions, transparent alpha and CSS containers without white backgrounds, white backend wordmark, original dark External wordmark, unchanged colored symbol/fingerprint, expected asset hash and preserved side menu",
+    );
+    const tabPage = await browser.newPage();
+    try {
+      for (const [filename, title] of [
+        ["index.html", "Mee Pay · 後台管理 Demo"],
+        ["versions.html", "Mee Pay Demo 版本"],
+      ]) {
+        await tabPage.goto(root + "/" + filename);
+        await browserTab(tabPage, filename, title);
+      }
+    } finally {
+      await tabPage.close();
+    }
+    const offline = await browser.newContext({ offline: true });
+    try {
+      const standalone = await offline.newPage();
+      for (const [filename, title] of [
+        ["backoffice.html", "Mee Pay · 後台管理 Demo"],
+        ["external.html", "Mee Pay · 外部商戶申請 Demo"],
+      ]) {
+        await standalone.goto(
+          pathToFileURL(path.join(__dirname, filename)).href + "#/login",
+        );
+        await browserTab(standalone, filename, title);
+      }
+    } finally {
+      await offline.close();
+    }
+    checks.push(
+      "Current index, Backend, External and version chooser have exact Mee Pay tab titles and one decoded 64×64 PNG favicon with transparent corners and a visible colorful mark; standalone Backend and External favicons also decode from embedded PNG data while offline via file://",
+    );
+    assert.deepEqual(errors, []);
+    fs.writeFileSync(
+      "qa-brand-report.json",
+      JSON.stringify(
+        {
+          passed: true,
+          root,
+          date: new Date().toISOString(),
+          assetSha256: { original: originalSha, white: whiteSha },
+          checks,
+          errors,
+        },
+        null,
+        2,
+      ),
+    );
+    console.log("PASS Mee Pay brand:", checks.join("\n"));
+  } finally {
+    await browser.close();
   }
-  await p.locator('[data-action="pick-role"]').first().click();await p.locator('[data-action="bo-login"]').click();await p.waitForSelector('.metrics');
-  for(const width of [1440,1024,768,390,320]){
-   await p.setViewportSize({width,height:1000});if(await p.locator('.mobile-menu').isVisible()&&!await p.locator('.sidebar').evaluate(e=>e.classList.contains('open')))await p.locator('[data-action="mobile-menu"]').click();
-   await p.waitForFunction(()=>{const t=getComputedStyle(document.querySelector('.sidebar')).transform;return t==='none'||Math.abs(new DOMMatrixReadOnly(t).m41)<.01;});
-   const r=await artwork(p,'.sidebar .brand','Backend sidebar '+width,'white');assert(r.wrapper.left>=0&&r.wrapper.right<=width,JSON.stringify({width,rect:r.wrapper}));
-   for(const text of ['儀表板','商戶入網','新增商戶','商戶管理','內審控制台'])assert((await p.locator('.sidebar').innerText()).includes(text),'Side menu retains '+text);
-   if(width===1440||width===390)await p.locator('.sidebar').screenshot({path:'qa-mee-pay-sidebar-'+width+'.png'});
-  }
-  await p.setViewportSize({width:1440,height:1000});await p.goto(root+'/external.html#/login');
-  await browserTab(p,'external.html','Mee Pay · 外部商戶申請 Demo');
-  for(const width of [1440,1024,768,390,320]){
-   await p.setViewportSize({width,height:1000});const r=await artwork(p,'.auth-top .brand','External login '+width);assert(r.wrapper.left>=0&&r.wrapper.right<=width);
-   if(width===1440||width===390)await p.screenshot({path:'qa-mee-pay-external-login-'+width+'.png'});
-  }
-  await p.locator('#authEmail').fill('brand.qa@example.com');await p.locator('[data-action="login"]').click();for(let i=0;i<6;i++)await p.locator('[data-otp="'+i+'"]').fill(''+(i+1));await p.locator('[data-action="verify"]').click();await p.waitForSelector('.header');
-  for(const width of [1440,1024,768,390,320]){await p.setViewportSize({width,height:1000});const r=await artwork(p,'.header .brand','External header '+width);assert(r.wrapper.left>=0&&r.wrapper.right<=width);}
-  checks.push('Backend login/sidebar and External login/header at 1440/1024/768/390/320: original artwork proportions, transparent alpha and CSS containers without white backgrounds, white backend wordmark, original dark External wordmark, unchanged colored symbol/fingerprint, expected asset hash and preserved side menu');
-  const tabPage=await browser.newPage();
-  try{
-   for(const [filename,title] of [['index.html','Mee Pay · 後台管理 Demo'],['versions.html','Mee Pay Demo 版本']]){
-    await tabPage.goto(root+'/'+filename);await browserTab(tabPage,filename,title);
-   }
-  }finally{await tabPage.close();}
-  const offline=await browser.newContext({offline:true});
-  try{
-   const standalone=await offline.newPage();
-   for(const [filename,title] of [['backoffice.html','Mee Pay · 後台管理 Demo'],['external.html','Mee Pay · 外部商戶申請 Demo']]){
-    await standalone.goto(pathToFileURL(path.join(__dirname,filename)).href+'#/login');
-    await browserTab(standalone,filename,title);
-   }
-  }finally{await offline.close();}
-  checks.push('Current index, Backend, External and version chooser have exact Mee Pay tab titles and one decoded 64×64 PNG favicon with transparent corners and a visible colorful mark; standalone Backend and External favicons also decode from embedded PNG data while offline via file://');
-  assert.deepEqual(errors,[]);fs.writeFileSync('qa-brand-report.json',JSON.stringify({passed:true,root,date:new Date().toISOString(),assetSha256:{original:originalSha,white:whiteSha},checks,errors},null,2));console.log('PASS Mee Pay brand:',checks.join('\n'));
- }finally{await browser.close();}
-})().catch(e=>{console.error(e);process.exit(1)});
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

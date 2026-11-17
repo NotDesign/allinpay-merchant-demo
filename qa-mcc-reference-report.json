@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "date": "2026-11-17T03:57:46.568Z",
+  "root": "http://127.0.0.1:4397",
+  "source": {
+    "edition": "client-provided-2026-11-06",
+    "count": 292,
+    "sha256": "a902e524db6e6cabd9eb398bddfcf70fe4ab4c1e93afc0bb0ce5e3b1403497cf"
+  },
+  "checks": [
+    "backoffice: all 292 client-provided four-digit codes, numeric-only options, separate read-only names, leading zeroes, name search, persistent multiselect, saved drafts, explicit regional restrictions, unrated risk and unchanged known Demo scoring; 1600/1024/768/390/320 widths.",
+    "external: all 292 client-provided four-digit codes, numeric-only options, separate read-only names, leading zeroes, name search, persistent multiselect, saved drafts, explicit regional restrictions, unrated risk and unchanged known Demo scoring; 1600/1024/768/390/320 widths."
+  ],
+  "errors": []
+}

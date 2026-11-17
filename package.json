@@ -1,21 +1,21 @@
 {
-  "name": "allinpay-backoffice-demo",
+  "name": "meepay-developer-two-merchants",
   "version": "0.1.0",
   "private": true,
-  "description": "AllinPay International Application Agency System — Figma-based backoffice with local BR OCR",
+  "description": "Readable Mee Pay v1.12 developer edition with two synthetic merchants and full product/fee contracts",
   "scripts": {
     "setup": "node scripts/vendor.mjs",
-    "build": "node build-admin.cjs",
+    "build": "node build-readable.cjs",
     "build:external": "node build-external.cjs",
     "test:external": "node verify-external-registration.cjs && node verify-external-header.cjs",
-    "test": "node verify-admin.cjs",
+    "test": "npm run test:developer && npm run test:products && npm run test:bank && npm run test:selects && npm run test:mcc && npm run test:session",
     "test:onboarding": "node verify-onboarding-v2.cjs",
     "test:products": "node verify-products-catalog.cjs && node verify-products-contract.cjs",
     "test:risk": "node verify-application-status.cjs",
     "test:br": "node verify-br-parser.mjs && node verify-document-samples.mjs && node verify-br-integration.cjs",
     "test:feedback": "node verify-document-feedback.cjs && node verify-upload-workflow.cjs && node verify-document-owner.cjs",
     "serve": "node scripts/serve.mjs",
-    "build:pages": "npm run build && npm run build:external && node scripts/build-pages.mjs",
+    "build:pages": "npm run build",
     "test:extra": "node verify-admin-extra.cjs && node verify-merchant-state.cjs",
     "test:templates": "node verify-brand.cjs && node verify-copy-picker.cjs && node verify-template-model.cjs && node verify-merchant-templates.cjs && node verify-onboarding-usability.cjs && node verify-template-ui.cjs && node verify-onboarding-ux.cjs && node verify-customer-flow.cjs && node verify-merchant-workbook.cjs && node verify-relationship-table.cjs && node verify-merchant-start.cjs",
     "test:notifications": "node verify-notifications.cjs",
@@ -23,16 +23,23 @@
     "test:session": "node verify-session-timeout.cjs",
     "test:mcc": "node verify-mcc-reference.cjs",
     "test:bank": "node verify-bank-autofill.cjs",
-    "test:selects": "node verify-searchable-selects.cjs"
+    "test:selects": "node verify-searchable-selects.cjs",
+    "build:readable": "node build-readable.cjs",
+    "dev": "npm run build && npm run serve",
+    "format": "prettier --write . --ignore-path .prettierignore",
+    "test:developer": "node verify-developer-edition.cjs",
+    "test:legacy:admin": "node verify-admin.cjs",
+    "package:developer": "python3 scripts/package-readable.py"
   },
   "dependencies": {
-    "exceljs": "4.4.0",
     "@tesseract.js-data/chi_tra": "1.0.0",
     "@tesseract.js-data/eng": "1.0.0",
+    "exceljs": "4.4.0",
     "pdfjs-dist": "6.3.289",
     "tesseract.js": "7.0.0"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "playwright": "1.63.0",
+    "prettier": "3.6.2"
   }
 }

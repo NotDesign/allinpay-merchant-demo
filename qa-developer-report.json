@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "date": "2026-11-17T04:00:20.433Z",
+  "checks": [
+    "Backend starts with exactly two V2 applications, ignoring the full Demo storage.",
+    "Editing a seeded fee persists after reload; all three product sections remain visible.",
+    "Reset restores only the two development fixtures and leaves full Demo data untouched.",
+    "External starts with two records, saves edited fees and retains newly added applications after reload.",
+    "Both HTML entry files are below 6 KB with external CSS, scripts, images and reference catalogs."
+  ],
+  "errors": []
+}
