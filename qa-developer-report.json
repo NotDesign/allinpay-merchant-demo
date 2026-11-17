@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-11-17T04:00:20.433Z",
+  "date": "2026-11-17T04:07:29.471Z",
   "checks": [
     "Backend starts with exactly two V2 applications, ignoring the full Demo storage.",
     "Editing a seeded fee persists after reload; all three product sections remain visible.",

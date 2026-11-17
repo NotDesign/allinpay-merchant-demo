@@ -45,7 +45,7 @@ for (const [name, text] of Object.entries(parts))
     name + " must keep the original labels, identifiers and fee validation",
   );
 const root = (
-    process.env.DEMO_URL || "http://127.0.0.1:4340/backoffice.html"
+    process.env.DEMO_URL || "http://127.0.0.1:4321/backoffice.html"
   ).replace(/\/(backoffice|external|index)\.html.*$/, ""),
   errors = [],
   checks = [];

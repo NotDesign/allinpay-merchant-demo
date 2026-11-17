@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "date": "2026-11-17T03:57:51.044Z",
+  "date": "2026-11-17T04:07:57.213Z",
   "baseline": "fc53f54cb0459d78e9f66c091156e7d3538df486",
   "checks": [
     "Base editor reuses original fee fields, direct editing/search/category switch/save work, new default is applied without changing current merchant, 1600–320 layouts fit",
