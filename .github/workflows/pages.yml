@@ -34,6 +34,9 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4321/backoffice.html > /dev/null; then break; fi
             sleep 1
           done
+          npm run test:ui
+          npm run test:bridge
+          npm run test:sales-scope
           npm run test:client-review
           npm run test:notifications
           npm test
@@ -52,6 +55,11 @@ jobs:
           npm run test:templates
         env:
           DEMO_URL: http://127.0.0.1:4321/backoffice.html
+      - name: Preserve the previous developer download
+        run: |
+          mkdir -p _pages/downloads
+          curl --fail --location --retry 3 https://notdesign.github.io/allinpay-merchant-demo/downloads/allinpay-merchant-demo-20261109-v112.zip --output _pages/downloads/allinpay-merchant-demo-20261109-v112.zip
+          echo 'ee289e2bdf891ce5f14b48c4ebceb29e7cefffe0d26cdeebbed7690ffbc2f140  _pages/downloads/allinpay-merchant-demo-20261109-v112.zip' | sha256sum --check
       - name: Check out the immutable October 9 release
         uses: actions/checkout@v4
         with:

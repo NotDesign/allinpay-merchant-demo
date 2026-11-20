@@ -25,7 +25,7 @@ const sourceRows=table.c.slice(1).map(r=>{const row={};r.c.forEach((c,i)=>{const
 const rows=Array.from({length:120},(_,i)=>i<5?{...sourceRows[i]}:{...sourceRows[i%5],'客戶中文名稱':sourceRows[i%5]['客戶中文名稱']+'（示例 '+(i+1)+'）','公司 MID':'DEMO'+String(i+1).padStart(4,'0'),'DBA no.':'DEMO-'+(i+1)});
 const statusNames={Synced:'已同步至 All-In Pay',Approved:'通過審核',Draft:'草稿',Disabled:'停用',Enabled:'已啟用',Pending:'待審核'};
 const statusColors={Synced:'blue',Approved:'purple',Draft:'',Disabled:'red',Enabled:'green',Pending:'amber'};
-const btn=(text,action,cls='',extra='')=>`<button type="button" class="${cls}" data-action="${action}" ${extra}>${text}</button>`;
+const btn=(text,action,cls='',extra='')=>window.MeePayUI.button(text,action,cls,extra);
 const pill=(name,cls='')=>`<span class="pill ${cls}">${esc(name)}</span>`;
 function route(){const p=location.hash.slice(2).split('/');return {page:p[0]||'dashboard',step:Math.max(1,Math.min(6,Number(p[1])||1))}}
 function go(path){if(location.hash==='#/'+path)render();else location.hash='/'+path;window.scrollTo(0,0)}

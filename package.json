@@ -23,7 +23,10 @@
     "test:session": "node verify-session-timeout.cjs",
     "test:mcc": "node verify-mcc-reference.cjs",
     "test:bank": "node verify-bank-autofill.cjs",
-    "test:selects": "node verify-searchable-selects.cjs"
+    "test:selects": "node verify-searchable-selects.cjs",
+    "test:ui": "node verify-ui-components.cjs",
+    "test:bridge": "node verify-external-demo-bridge.cjs",
+    "test:sales-scope": "node verify-sales-scope.cjs"
   },
   "dependencies": {
     "exceljs": "4.4.0",

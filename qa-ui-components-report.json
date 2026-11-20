@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "date": "2026-11-20T04:01:48.128Z",
+  "checks": [
+    "Backend management pages and all six steps use the same 14px action buttons and 40px searchable select triggers.",
+    "External applications, all six steps and rerenders share the components; status text and actual filtering stay in sync.",
+    "Bell SVG and 40×40 hit area / 24×24 artwork match exactly; controls and searchable panels fit 1600–320px."
+  ],
+  "errors": []
+}

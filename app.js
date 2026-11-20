@@ -1,3 +1,34 @@
+// One shared action-button and notification renderer for backoffice and External.
+// Labels and extra attributes are trusted application markup, as in the original btn helper.
+(() => {
+  const bellIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
+  function button(label, action, classes = '', attributes = '') {
+    const variant = /(^|\s)text-button(\s|$)/.test(classes) ? ' ui-button--text'
+      : /(^|\s)eye(\s|$)/.test(classes) || ['‹','›','×','⋮','⋯'].includes(String(label).trim()) ? ' ui-button--icon' : '';
+    return `<button type="button" class="ui-button${variant} ${classes}" data-ui-component="button" data-action="${action}" ${attributes}>${label}</button>`;
+  }
+  function notification() {
+    return `<button type="button" class="nf-bell ui-notification" data-ui-component="notification" data-action="nf-open" aria-label="開啟通知中心" title="通知中心">${bellIcon}<span class="nf-badge" hidden></span></button>`;
+  }
+  function enhance(root) {
+    const controls = [...(root.matches?.('button[data-action]') ? [root] : []),
+      ...root.querySelectorAll('button[data-action]')];
+    for (const control of controls) {
+      if (control.dataset.uiComponent || control.matches('.metric,.step,.v2-status-extra,.ir-case,.ir-doc,.new-card,.mt-preview-button')) continue;
+      control.classList.add('ui-button');
+      if (control.classList.contains('eye')) control.classList.add('ui-button--icon');
+      if (control.dataset.action==='website') control.classList.add('ui-button--text');
+      control.dataset.uiComponent = 'button';
+    }
+  }
+  if (document.body) {
+    enhance(document.body);
+    new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)
+      if(node.nodeType===1)enhance(node);}).observe(document.body,{childList:true,subtree:true});
+  }
+  window.MeePayUI = Object.freeze({version:'2026.11.20-shared-controls-v1',button,notification,enhance});
+})();
+
 // Keep explicitly versioned bookmarks on the release they originally named.
 (()=>{
  const version=new URLSearchParams(location.search).get('v')||'';
@@ -35,7 +66,7 @@ const sourceRows=table.c.slice(1).map(r=>{const row={};r.c.forEach((c,i)=>{const
 const rows=Array.from({length:120},(_,i)=>i<5?{...sourceRows[i]}:{...sourceRows[i%5],'客戶中文名稱':sourceRows[i%5]['客戶中文名稱']+'（示例 '+(i+1)+'）','公司 MID':'DEMO'+String(i+1).padStart(4,'0'),'DBA no.':'DEMO-'+(i+1)});
 const statusNames={Synced:'已同步至 All-In Pay',Approved:'通過審核',Draft:'草稿',Disabled:'停用',Enabled:'已啟用',Pending:'待審核'};
 const statusColors={Synced:'blue',Approved:'purple',Draft:'',Disabled:'red',Enabled:'green',Pending:'amber'};
-const btn=(text,action,cls='',extra='')=>`<button type="button" class="${cls}" data-action="${action}" ${extra}>${text}</button>`;
+const btn=(text,action,cls='',extra='')=>window.MeePayUI.button(text,action,cls,extra);
 const pill=(name,cls='')=>`<span class="pill ${cls}">${esc(name)}</span>`;
 function route(){const p=location.hash.slice(2).split('/');return {page:p[0]||'dashboard',step:Math.max(1,Math.min(6,Number(p[1])||1))}}
 function go(path){if(location.hash==='#/'+path)render();else location.hash='/'+path;window.scrollTo(0,0)}
@@ -211,12 +242,12 @@ const scopedRows=()=>acScopedRows();
 const scopedDrafts=()=>acScopedDrafts();
 const accessibleRow=mid=>scopedRows().find(r=>rowKey(r)===mid);
 const cellValue=(r,h)=>h==='商戶狀態'?statusNames[r.status]:h==='公司 MID'?midInfo(r).label:String(r[h]??'');
-filteredRows=function(){const q=state.search.trim().toLowerCase();let list=scopedRows().filter(r=>(state.status==='全部狀態'||statusNames[r.status]===state.status)&&(!q||(state.searchScope==='全部欄位'?headers.map(h=>cellValue(r,h)).join(' '):cellValue(r,state.searchScope)).toLowerCase().includes(q))&&Object.entries(DEMO.columnFilters).every(([h,vals])=>vals.includes(cellValue(r,h))));if(BO.sort)list.sort((a,b)=>cellValue(a,BO.sort).localeCompare(cellValue(b,BO.sort),'zh-Hant',{numeric:true})*(BO.desc?-1:1));return list;};
+filteredRows=function(){const q=state.search.trim().toLowerCase();let list=scopedRows().filter(r=>(state.status==='全部狀態'||statusNames[r.status]===state.status)&&(!q||(state.searchScope==='全部欄位'?[headers.map(h=>cellValue(r,h)).join(' '),r.externalId||'',r.externalEmail||''].join(' '):cellValue(r,state.searchScope)).toLowerCase().includes(q))&&Object.entries(DEMO.columnFilters).every(([h,vals])=>vals.includes(cellValue(r,h))));if(BO.sort)list.sort((a,b)=>cellValue(a,BO.sort).localeCompare(cellValue(b,BO.sort),'zh-Hant',{numeric:true})*(BO.desc?-1:1));return list;};
 const pageButtons=(page,count,action='page')=>{const max=Math.max(1,count),start=Math.max(2,Math.min(page-1,max-3)),numbers=max<=5?Array.from({length:max},(_,i)=>i+1):[1,start,start+1,start+2,max];return `<div class="pagination">${btn('‹',action,'',`aria-label="上一頁" data-page="${page-1}" ${page<=1?'disabled':''}`)}${numbers.map(n=>btn(n,action,n===page?'primary':'',`data-page="${n}" aria-label="第 ${n} 頁" ${n===page?'aria-current="page"':''}`)).join('')}${btn('›',action,'',`aria-label="下一頁" data-page="${page+1}" ${page>=max?'disabled':''}`)}</div>`};
 function heading(title,description=''){return `<div class="page-heading"><h1>${title}</h1>${description?`<p>${description}</p>`:''}</div>`;}
 dashboard=function(){const list=scopedRows().filter(r=>DEMO.period==='30'||r.createdDay>=24),counts=['all','Pending','MoreInfo','SyncFailed'].map(s=>s==='all'?list.length:list.filter(r=>r.status===s).length);return `${heading('儀表板','營運總覽 · 優先處理風險、待辦及重點商戶。')}${demoBar()}<div class="toolbar"><select aria-label="統計日期範圍" id="demo-period"><option value="30">最近 30 天</option><option value="7" ${DEMO.period==='7'?'selected':''}>最近 7 天</option></select><span class="grow hint">資料範圍：${isAgencyAccount(BO.user)?'所屬代理商':'全部商戶'} · 即時 Demo 數據</span>${can(1)?btn('新增商戶','new','primary'):''}</div><div class="metrics">${['商戶總數','待審核','待補資料','同步失敗'].map((name,i)=>`<button class="metric" data-action="metric" data-index="${i}"><span>${name}</span><strong>${counts[i]}</strong><small>${['查看全部商戶 →','查看審核清單 →','查看補件清單 →','核對失敗原因 →'][i]}</small></button>`).join('')}</div><section class="card"><h2>優先待辦 <span class="muted">Priority Actions</span></h2><p class="hint">依處理急迫程度排序，點擊「處理」開啟商戶審核。</p>${[['緊急','同步失敗',counts[3]+' 間商戶等待重新同步，請確認銀行資料與驗證結果。'],['即將到期','證照提醒',list.filter(r=>r['BR 有效期']==='2026/10/05').length+' 間商戶的 BR 將於 30 日內到期。'],['待跟進','審核與補件',counts[1]+' 間待審核；'+counts[2]+' 間待補資料。'],['可續填','尚未提交草稿',scopedDrafts().length+' 份草稿尚未完成，可從草稿頁繼續填寫。']].map(([tag,title,copy])=>`<div class="priority-row"><span class="priority-label">${tag}</span><strong>${title}</strong><p>${copy}</p>${btn('處理','priority-review')}</div>`).join('')}</section><section class="card"><h2>VIP／重點商戶 <span class="muted">Key Accounts</span></h2><p class="hint">需要優先跟進的商戶與目前進度。</p>${list.filter(r=>r.vip).slice(0,4).map(r=>`<div class="priority-row"><strong>${esc(r['客戶中文名稱'])}</strong><span>負責人：${esc(r['主代理商'])}</span>${pill(statusNames[r.status],statusColors[r.status])}${btn('查看商戶','detail','',`data-mid="${rowKey(r)}"`)}</div>`).join('')||'<p class="hint">本區間沒有重點商戶。</p>'}</section><section class="card"><h2>最新動態 <span class="muted">Recent Activity</span></h2>${visibleAudit().slice(0,5).map(a=>`<p class="hint">${esc(a.time)}　${esc(a.user)} · ${esc(a.message)}</p>`).join('')}${can(11)?btn('查看全部記錄','activity'):''}</section>`;};
 function visibleAudit(){return BO.user?.role.includes('代理')?BO.audit.filter(a=>a.user===BO.user.name):BO.audit;}
-merchantCell=function(r,h){const id=esc(rowKey(r));if(h==='公司 MID')return `<td>${midDisplay(r)}</td>`;if(h==='操作')return `<td><div class="row-actions">${can(2)?btn('編輯','edit','',`data-mid="${id}"`):''}${btn('公司詳情','detail','',`data-mid="${id}"`)}${can(6)?btn('BR轉換','transfer','',`data-mid="${id}"`):''}${can(7)?btn('審核','review-merchant','review-button',`data-mid="${id}" ${!['Pending','MoreInfo'].includes(r.status)?'disabled':''}`):''}${can(8)?btn(['Syncing','AwaitingResponse'].includes(r.status)?'查詢同步結果':'同步至 All-In Pay',['Syncing','AwaitingResponse'].includes(r.status)?'mid-check':'sync','sync-button',`data-mid="${id}" ${!['Approved','SyncFailed','Syncing','AwaitingResponse'].includes(r.status)?'disabled':''}`):''}</div></td>`;if(h==='銀行帳號'&&!can(5))return `<td>${esc(r[h])}</td>`;if(h==='銀行帳號')return originalCell(r,h).replace('<td>','<td><div class="merchant-bank-account">').replace('</td>','</div></td>');if(h==='官網連結')return r[h]?`<td><button class="merchant-website" data-action="website" data-url="${esc(r[h])}" title="${esc(r[h])}" aria-label="開啟官網 ${esc(r[h])}"><span>${esc(r[h])}</span><span aria-hidden="true">↗</span></button></td>`:'<td>—</td>';return originalCell(r,h);};
+merchantCell=function(r,h){const id=esc(rowKey(r));if(h==='客戶中文名稱'&&r.source==='External')return `<td>${esc(r[h])}<small class="merchant-external-ref">External 申請：${esc(r.externalId)}</small></td>`;if(h==='公司 MID')return `<td>${midDisplay(r)}</td>`;if(h==='操作')return `<td><div class="row-actions">${can(2)?btn('編輯','edit','',`data-mid="${id}"`):''}${btn('公司詳情','detail','',`data-mid="${id}"`)}${can(6)?btn('BR轉換','transfer','',`data-mid="${id}"`):''}${can(7)?btn('審核','review-merchant','review-button',`data-mid="${id}" ${!['Pending','MoreInfo'].includes(r.status)?'disabled':''}`):''}${can(8)?btn(['Syncing','AwaitingResponse'].includes(r.status)?'查詢同步結果':'同步至 All-In Pay',['Syncing','AwaitingResponse'].includes(r.status)?'mid-check':'sync','sync-button',`data-mid="${id}" ${!['Approved','SyncFailed','Syncing','AwaitingResponse'].includes(r.status)?'disabled':''}`):''}</div></td>`;if(h==='銀行帳號'&&!can(5))return `<td>${esc(r[h])}</td>`;if(h==='銀行帳號')return originalCell(r,h).replace('<td>','<td><div class="merchant-bank-account">').replace('</td>','</div></td>');if(h==='官網連結')return r[h]?`<td><button class="merchant-website" data-action="website" data-url="${esc(r[h])}" title="${esc(r[h])}" aria-label="開啟官網 ${esc(r[h])}"><span>${esc(r[h])}</span><span aria-hidden="true">↗</span></button></td>`:'<td>—</td>';return originalCell(r,h);};
 // Stable content-sized columns across pages; long prose wraps, identifiers stay readable.
 function merchantColumnWidths(cols){
  const ctx=document.createElement('canvas').getContext('2d');
@@ -951,7 +982,7 @@ function v2RiskOverview(){
  return `<section class="v2-status-overview" aria-label="申請即時狀態">
  <article class="v2-status-card" data-risk-tier="${tier}"><h2>風控評分（系統參考）</h2><div class="v2-status-score"><strong data-risk-score>${s.total}</strong><span>／100</span><div class="v2-status-tier"><b>${d.recommended.label}</b><small>系統建議</small></div></div><meter min="0" max="100" value="${s.total}" aria-label="風控評分"></meter><div class="v2-status-ticks"><span>0</span><span>20 低</span><span>45 中</span><span>70 高</span><span>100</span></div><p>採用風控級別：<b>${d.policy.label}</b>（${v2Model().manualRisk?'人工設定':'跟隨系統建議'}）</p>${details('risk','評分明細與處置',`<h3>評分明細</h3>${s.reject?row(esc(s.reject),'阻擋','danger'):''}${s.items.map(i=>row(esc(i.label),'+'+i.n)).join('')||'<p class="hint">暫無加分項</p>'}<h3>按風控級別處置 · 系統參考</h3><dl>${[['風控級別',s.reject?'—':v2Raw('riskLevel')],['結算週期',d.policy.cycle],['保證金',d.policy.deposit],['限額',d.policy.limit],['審批路徑',d.policy.path],['目標時效',d.policy.sla]].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><small class="hint">此為原型的系統參考，不代表實際審核結果；不會覆寫已填費率或結算設定。</small>`)}</article>
  <article class="v2-status-card"><h2>資料核對與缺件</h2>${row('資料不一致',d.checks.filter(c=>!c.same).length+' 項')}${row('差異待人工確認',d.checks.filter(c=>!c.same&&!c.confirmed).length+' 項')}${row('缺件／需重新提供',`<span data-risk-missing>${d.missing.length}</span> 項`,d.missing.length?'danger':'')}${row('補件通知',d.missing.length?'未發送':'無需','muted')}<div class="v2-status-links">${btn('查看核對明細 →','v2-status-checks','text-button')}${btn('查看缺件 →','step','text-button','data-step="1"')}</div></article>
- <article class="v2-status-card"><h2>提交完整度</h2><progress max="100" value="${d.percent}" aria-label="必填項目完成度"></progress><p class="v2-status-fill"><span><b data-risk-completed>${d.completed}</b>／${d.required} 必填項已填寫</span><strong>${d.percent}%</strong></p><small class="hint">填寫率不等於驗證通過；格式、文件與費率仍須核對。</small><div class="v2-status-blockers">${d.blocks.slice(0,2).map(b=>`<button data-action="step" data-step="${b.step}"><span>${esc(b.label)}</span><strong>阻擋</strong></button>`).join('')||'<p class="v2-status-ok">目前無阻擋項</p>'}</div>${d.blocks.length>2?details('blocks','另有 '+(d.blocks.length-2)+' 項待處理',d.blocks.slice(2).map(b=>`<button class="v2-status-extra" data-action="step" data-step="${b.step}">${esc(b.label)} →</button>`).join('')):''}</article></section>`;
+ <article class="v2-status-card"><h2>提交完整度</h2><progress max="100" value="${d.percent}" aria-label="必填項目完成度"></progress><p class="v2-status-fill"><span><b data-risk-completed>${d.completed}</b>／${d.required} 必填項已填寫</span><strong>${d.percent}%</strong></p><small class="hint">填寫率不等於驗證通過；格式、文件與費率仍須核對。</small><div class="v2-status-blockers">${d.blocks.slice(0,2).map(b=>btn(`<span>${esc(b.label)}</span><strong>阻擋</strong>`,'step','ui-button--list',`data-step="${b.step}"`)).join('')||'<p class="v2-status-ok">目前無阻擋項</p>'}</div>${d.blocks.length>2?details('blocks','另有 '+(d.blocks.length-2)+' 項待處理',d.blocks.slice(2).map(b=>btn(esc(b.label)+' →','step','text-button v2-status-extra',`data-step="${b.step}"`)).join('')):''}</article></section>`;
 }
 const v2ApplicationWithoutStatus=application;
 application=function(step){const html=v2ApplicationWithoutStatus(step),marker='<div class="v2-version">OATS V2 · 六步申請流程</div>',split=html.indexOf(marker)+marker.length;return html.slice(0,split)+'<div class="v2-application-columns"><div class="v2-application-main">'+html.slice(split,-6)+'</div><aside id="v2-application-status" aria-label="申請狀態側欄">'+v2RiskOverview()+'</aside></div></div>';};
@@ -2017,7 +2048,7 @@ function nfPaint(){
  const node=nfPanel(),all=nfFeed(),unread=all.filter(n=>n.unread).length,todo=all.filter(n=>n.needsAction).length,list=all.filter(n=>nfTab==='unread'?n.unread:nfTab==='todo'?n.needsAction:true);
  node.innerHTML=`<header class="nf-head"><div><h2 id="nf-title">通知中心</h2><p>${unread} 則未讀 · ${todo} 項待處理</p></div>${btn('×','nf-close','nf-close','aria-label="關閉通知中心"')}</header><nav class="nf-tabs" aria-label="通知分類">${[['all','全部',all.length],['unread','未讀',unread],['todo','待處理',todo]].map(([key,label,count])=>btn(label+' <span>'+count+'</span>','nf-tab',nfTab===key?'active':'',`data-tab="${key}" aria-pressed="${nfTab===key}"`)).join('')}</nav><div class="nf-tools"><span>已讀不會清除待辦</span>${btn('全部標為已讀','nf-read-all','',unread?'':'disabled')}</div><div class="nf-list">${list.map(n=>`<article class="nf-item ${n.unread?'unread':''}" data-nf-item="${esc(n.id)}"><div class="nf-item-meta"><span class="nf-category ${esc(n.severity||'info')}">${nfTypeName(n.type)}</span><span>${n.current?'目前待辦':esc(new Date(n.time).toLocaleString('zh-TW',{hour12:false}))}</span>${n.unread?'<b class="nf-dot" aria-label="未讀"></b>':''}</div><h3>${esc(n.title)}</h3><p>${esc(n.description||'')}</p><div class="nf-item-foot"><span class="${n.needsAction?'nf-pending':'nf-done'}">${n.needsAction?'待處理':'作業記錄'}</span><div>${n.unread?btn('標為已讀','nf-read','',`data-nf-id="${esc(n.id)}"`):''}${btn(n.needsAction?'前往處理':'查看詳情','nf-view','primary',`data-nf-id="${esc(n.id)}"`)}</div></div></article>`).join('')||'<div class="nf-empty"><strong>'+ (nfTab==='unread'?'目前沒有未讀通知':nfTab==='todo'?'目前沒有待處理事項':'目前沒有通知')+'</strong><p>申請、審核、同步及批量作業的結果會集中顯示於此。</p></div>'}</div><footer class="nf-foot">Demo 站內通知 · 僅記錄此瀏覽器的模擬作業</footer>`;
 }
-const nfBell=()=>`<button type="button" class="nf-bell" data-action="nf-open" aria-label="開啟通知中心" title="通知中心"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="nf-badge" hidden></span></button>`;
+const nfBell=()=>window.MeePayUI.notification();
 function nfRefresh(){if(!mtOwner())return;const count=nfFeed().filter(n=>n.unread).length;for(const bell of $$('.nf-bell')){bell.setAttribute('aria-label','通知中心，'+count+' 則未讀');const badge=bell.querySelector('.nf-badge');badge.hidden=!count;badge.textContent=count>99?'99+':count;}if($('#nf-center')?.open)nfPaint();}
 function nfMount(){
  const owner=mtOwner();if(!owner){$('#nf-center')?.close();nfActiveOwner='';return;}if(nfActiveOwner!==owner){$('#nf-center')?.close();nfTab='all';nfActiveOwner=owner;}
@@ -2525,6 +2556,131 @@ Object.assign(AllinPayDemo,{getBankDirectory:()=>({banks:bankDirectory.size,bran
  }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','selected','label','value','hidden']});
  const style=document.createElement('style');style.textContent=`.sdd-popover{position:fixed;inset:auto;margin:0!important;padding:0;border:1px solid #cbd7e6;border-radius:8px;background:#fff;color:#263247;box-shadow:0 8px 28px #14254f26;z-index:100010;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.sdd-search{padding:12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #e2e8f0;flex:none}.sdd-search input{box-sizing:border-box;width:100%;min-width:0;flex:1;margin:0;padding:9px 12px;border:1px solid #afc4dc;border-radius:6px;font:inherit;color:#263247;background:#fff;min-height:40px;height:40px;outline:none}.sdd-search input:focus{border-color:#168fc7;box-shadow:0 0 0 2px #168fc722}.sdd-search button{flex:none;margin:0;padding:6px 8px;font:inherit;font-size:12px;min-width:0;min-height:32px;border:1px solid #d4deeb;border-radius:5px;background:#fff;color:#52657d}.sdd-options{overflow:auto;overscroll-behavior:contain;min-height:48px;flex:1;padding:4px}.sdd-options button{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:40px;height:auto;padding:10px 12px;margin:0;border:1px solid transparent;border-radius:4px;background:#fff;color:#263247;font:inherit;text-align:left;white-space:normal;cursor:pointer;line-height:1.5}.sdd-options button:hover,.sdd-options button.highlighted{background:#eff7fc;border-color:#98c9e4}.sdd-options button[aria-selected="true"]{background:#e4f3fc;color:#126b9c}.sdd-options button:disabled{opacity:.5;cursor:not-allowed}.sdd-option-text{display:block;min-width:0;overflow-wrap:anywhere}.sdd-option-text>span{display:block}.sdd-option-text small{display:block;font-size:11px;line-height:1.5;color:#6b7c92;margin-top:3px;overflow-wrap:anywhere}.sdd-check{flex:none;width:18px;color:#168fc7;text-align:center}.sdd-group{padding:9px 12px 5px;font-size:12px;font-weight:600;color:#6a7a91}.sdd-count{padding:8px 14px;border-top:1px solid #e2e8f0;font-size:12px;color:#6b7c92;flex:none}.sdd-empty{padding:18px 12px;color:#6b7c92;line-height:1.6}.sdd-options .sdd-other{color:#126b9c}`;document.head.append(style);
  Object.assign(window.AllinPayDemo||{}, {getSearchableSelectState:()=>({eligible:Array.from(document.querySelectorAll('select')).filter(eligible).length,open:!!active,sourceId:active?.select.id||'',query:active?.input.value||'',results:active?.filtered.length||0})});
+})();
+
+// Same-origin, browser-local Demo handoff. No server/API or cross-device sync is implied.
+(() => {
+  const external = typeof MT_EXTERNAL !== 'undefined' && MT_EXTERNAL;
+  const externalKey = 'allinpay-external-v2';
+  let lastError = '';
+  if (external) {
+    const previousPersist = persist;
+    persist = function(record) {
+      const stored = state.records.find(r=>r.id===record.id);
+      // Keep the original Sales attribution when an existing application is reopened.
+      const invitation = stored?.values?.__externalInvitation || stored?.demoInvitation
+        || record.values?.__externalInvitation || record.demoInvitation
+        || (typeof erInvited!=='undefined' && erInvited ? erInvitation : {});
+      return previousPersist({...record,
+        values:{...record.values,__externalInvitation:structuredClone(invitation)},
+        demoUpdatedAt:new Date().toISOString(),demoInvitation:structuredClone(invitation)});
+    };
+    return;
+  }
+  function fingerprint(record) {
+    // Change detection only, never an authentication or integrity boundary.
+    const text = JSON.stringify(record); let hash = 2166136261;
+    for (let i=0;i<text.length;i++) hash = Math.imul(hash ^ text.charCodeAt(i),16777619);
+    return text.length + '-' + (hash >>> 0).toString(16);
+  }
+  function toMerchant(record, previous, accountList = accounts) {
+    const v = structuredClone(record.values || {});
+    for (const [from,to] of Object.entries({companyZh:'merchantName',companyEn:'merchantEnglishName',
+      br:'registerCertNo',brExpiry:'registerCertPeriod',address:'addrStreet',email:'contactEmail',
+      mobile:'contactPhone',bankName:'cardName',bankAccount:'cardNo',website:'webUrl'}))
+      if (!v[to] && v[from]) v[to] = v[from];
+    const invitation = v.__externalInvitation || record.demoInvitation || {};
+    const inviter = accountList.find(a=>a.id===invitation.inviter)
+      || accountList.find(a=>a.agencyCode && a.agencyCode===invitation.agency)
+      || accountList.find(a=>a.id===v.referrer || a.agencyCode && a.agencyCode===v.referrer);
+    const owner = (previous && accountList.find(a=>a.id===previous.owner))
+      || inviter || accountList.find(a=>a.role===roles[0]);
+    const main = inviter && acAncestor(inviter,roles[2],accountList);
+    const sub = inviter && acAncestor(inviter,roles[3],accountList);
+    const mcc = Array.isArray(v.mccCodes) ? v.mccCodes.join('、') : String(v.mcc || '');
+    const bank = String(v.cardNo || '');
+    const files = structuredClone(record.files || {});
+    for (const meta of Object.values(files)) if (meta && !Array.isArray(meta) && !meta.demo) meta.needsReselect = true;
+    const id = previous?.id || 'EXTERNAL-' + record.id;
+    const status = {'草稿':'Draft','審核中':'Pending','已完成':'Approved'}[record.status] || 'Pending';
+    const application = {...structuredClone(record), id, owner:owner?.id || '',
+      values:v,files,checks:structuredClone(record.checks || {}),
+      people:record.people && !Array.isArray(record.people) ? structuredClone(record.people)
+        : {directors:Math.max(1,record.directors?.length || 1),authSigners:0,shareHolders:0},
+      savedAt:record.updated || record.created || '',emailVerified:!!record.emailVerified};
+    return {...previous, id, source:'External', externalId:record.id,externalEmail:record.email,
+      externalFingerprint:fingerprint(record),owner:owner?.id || '',status,application,
+      '客戶中文名稱':v.merchantName || '', '客戶英文名稱':v.merchantEnglishName || '',
+      '公司 MID':previous?.['公司 MID'] || '', BR:v.registerCertNo || '',
+      'BR 有效期':String(v.registerCertPeriod || '').replaceAll('-','/'),
+      'CR 有效期':v.nar1Period || '', 'DBA no.':v.dbaNo || record.id,
+      '地區':v.addrProvinceCode || '香港', '客戶類型':v.merchantType==='GROUP'?'集團':'普通',
+      '主代理商':main?.name || '', '主代理商代碼':main?.agencyCode || '',
+      '次代理商':sub?.name || '', '次代理商代碼':sub?.agencyCode || '',
+      '客戶聯繫人':v.contactName || '', '聯絡人電話':v.contactPhone || '',
+      '聯絡人電郵':v.contactEmail || record.email || '', 'MCC 行業代碼':mcc,
+      '行業類型':mcc.split('、').filter(Boolean).map(code=>V2.catalog.MCCS.find(m=>m.c===code)?.n || code).join('、'),
+      '銀行名稱':v.cardBankName || '', '銀行代碼':v.cardBankCode || '', '分行代碼':v.cardBranchCode || '',
+      '銀行帳號':bank ? bank.slice(0,4)+' **** '+bank.slice(-4) : '',bank,
+      '單筆最高交易金額':v.maxAmount || '', '官網連結':v.webUrl || '',
+      '最後更新':record.updated || record.created || '',createdDay:new Date().getDate(),
+      missing:[],vip:false};
+  }
+  const previousScopedRows = acScopedRows;
+  acScopedRows = function() {
+    const visible = previousScopedRows();
+    if (!BO.user) return [];
+    const owned = acDescendants(BO.user.id);owned.add(BO.user.id);
+    return visible.filter(row=>row.source!=='External' || owned.has(row.owner));
+  };
+  function syncExternalRecords() {
+    let list;
+    try {
+      list = JSON.parse(localStorage.getItem(externalKey) || '[]');
+      if (!Array.isArray(list)) throw Error('Invalid External records');
+    } catch {lastError='無法讀取 External 本機申請資料；後台資料已保留。';return false;}
+    // Start from the latest persisted account/draft/merchant state so a background
+    // External save cannot overwrite changes made in another backoffice tab.
+    let base;
+    try {
+      base = JSON.parse(localStorage.getItem(DBKEY) || 'null');
+      if (base && (base.version!==1 || !Array.isArray(base.rows)
+          || !Array.isArray(base.accounts) || !Array.isArray(base.drafts))) throw Error('Invalid backend state');
+    } catch {lastError='無法讀取後台本機資料；原資料已保留。';return false;}
+    base ||= {version:1,rows:rows.slice(),accounts,drafts:state.drafts,
+      audit:BO.audit,noticeCount:state.noticeCount,rolePolicies:BO.rolePolicies || {}};
+    const nextRows = base.rows.slice();let changed = 0;
+    for (const record of list) {
+      if (!record || typeof record!=='object' || !/^[\w-]{1,100}$/.test(record.id || '')
+          || !record.values || typeof record.values!=='object' || Array.isArray(record.values)) continue;
+      const existing = nextRows.find(r=>r.externalId===record.id && r.source==='External');
+      if (existing?.externalFingerprint===fingerprint(record)) continue;
+      const next = toMerchant(record,existing,base.accounts);
+      if (existing) nextRows[nextRows.indexOf(existing)] = next;else nextRows.unshift(next);
+      changed++;
+    }
+    if (!changed) {lastError='';return false;}
+    const nextAudit = [{time:new Date().toLocaleString('zh-HK',{hour12:false}),user:'External Demo',
+      message:'同步 External 商戶申請 · '+changed+' 筆（本機）'},...(base.audit || [])].slice(0,300);
+    const noticeCount = (base.noticeCount || 0) + changed;
+    try {
+      localStorage.setItem(DBKEY,JSON.stringify({...base,rows:nextRows,audit:nextAudit,noticeCount}));
+    } catch {lastError='後台本機儲存失敗，External 原紀錄及後台資料已保留。';return false;}
+    rows.splice(0,rows.length,...nextRows);accounts=base.accounts;state.drafts=base.drafts;
+    BO.audit=nextAudit;state.noticeCount=noticeCount;BO.rolePolicies=base.rolePolicies || {};
+    acMigrate();lastError='';return true;
+  }
+
+  const syncAndRefresh = () => {
+    if (!syncExternalRecords() || !BO.user) return;
+    if (['dashboard','merchants','internal-review','drafts'].includes(route().page)
+        && !document.querySelector('#modal[open]')) render();
+  };
+  syncExternalRecords();
+  window.addEventListener('storage',e=>{if(e.key===externalKey || e.key===null)syncAndRefresh();});
+  window.addEventListener('focus',syncAndRefresh);
+  Object.assign(window.AllinPayDemo,{syncExternalRecords,getExternalBridgeState:()=>({
+    imported:rows.filter(r=>r.source==='External').length,error:lastError})});
 })();
 
 render();
