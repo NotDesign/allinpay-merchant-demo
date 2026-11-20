@@ -5,6 +5,7 @@
   --ui-control-font-size: 14px;
   --ui-control-line-height: 20px;
   --ui-control-height: 40px;
+  --ui-control-padding-inline: 16px;
   --ui-control-radius: 6px;
   --ui-control-border: #c8d2e1;
   --ui-control-ink: #263349;
@@ -18,7 +19,7 @@
   font-size:var(--ui-control-font-size)!important; font-weight:600!important;
   line-height:var(--ui-control-line-height)!important;
   min-height:var(--ui-control-height)!important; height:var(--ui-control-height)!important;
-  padding:9px 16px!important; border-radius:var(--ui-control-radius)!important;
+  padding:9px var(--ui-control-padding-inline)!important; border-radius:var(--ui-control-radius)!important;
   text-align:center; white-space:nowrap;
 }
 .ui-button.ui-button--text {
@@ -86,3 +87,15 @@ select:disabled {background-color:#f3f6fa;color:#68768a;cursor:not-allowed;}
 }
 .ui-button--list>span {min-width:0;flex:1;overflow-wrap:anywhere;}
 .ui-button--list>strong {flex:none;}
+
+/* A constrained menu scrolls its values; its action footer stays reachable. */
+.column-popover {display:flex;flex-direction:column;}
+.column-popover>:not(#column-results) {flex:none;}
+.column-popover #column-results {flex:1 1 auto;min-height:0;overflow:auto;}
+@media(max-width:700px) {
+  .header-actions {grid-template-columns:40px minmax(116px,1fr) auto auto;}
+}
+@media(max-width:360px) {
+  .header-actions {grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  .header-actions>.nf-bell {justify-self:start;}
+}
