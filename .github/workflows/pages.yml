@@ -9,7 +9,8 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: false
+  # Only the newest verified source should reach Pages.
+  cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest

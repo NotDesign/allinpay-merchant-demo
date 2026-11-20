@@ -4,17 +4,31 @@
   const externalKey = 'allinpay-external-v2';
   let lastError = '';
   if (external) {
-    const previousPersist = persist;
-    persist = function(record) {
-      const stored = state.records.find(r=>r.id===record.id);
-      // Keep the original Sales attribution when an existing application is reopened.
-      const invitation = stored?.values?.__externalInvitation || stored?.demoInvitation
-        || record.values?.__externalInvitation || record.demoInvitation
-        || (typeof erInvited!=='undefined' && erInvited ? erInvitation : {});
-      return previousPersist({...record,
-        values:{...record.values,__externalInvitation:structuredClone(invitation)},
-        demoUpdatedAt:new Date().toISOString(),demoInvitation:structuredClone(invitation)});
-    };
+    // All External writes (form save, import, template/batch update) share this store.
+    function storeExternalRecords(records) {
+      const previous = JSON.parse(localStorage.getItem(KEY) || '[]');
+      if (!Array.isArray(records) || !Array.isArray(previous)) throw Error('Invalid External records');
+      const saved = new Map(previous.filter(r=>r && typeof r==='object').map(r=>[r.id,r]));
+      const baseline = new Map(state.records.map(r=>[r.id,r]));
+      const contextInvitation = typeof erInvited!=='undefined' && erInvited ? erInvitation : {};
+      const comparable = record=>{const {demoUpdatedAt,...rest}=record;return JSON.stringify(rest);};
+      const next = records.map(candidate=>{
+        const old = saved.get(candidate.id);
+        // Unchanged records carried through a batch must not overwrite newer edits
+        // saved by another tab, or reset a backend review with a fresh timestamp.
+        if (old && candidate===baseline.get(candidate.id)) return old;
+        const invitation = old?.values?.__externalInvitation || old?.demoInvitation
+          || candidate.values?.__externalInvitation || candidate.demoInvitation || contextInvitation;
+        const record = {...candidate,
+          values:{...candidate.values,__externalInvitation:structuredClone(invitation)},
+          demoInvitation:structuredClone(invitation)};
+        record.demoUpdatedAt = old && comparable(record)===comparable(old)
+          ? old.demoUpdatedAt : new Date().toISOString();
+        return record;
+      });
+      localStorage.setItem(KEY,JSON.stringify(next));
+    }
+    window.MeePayDemoBridge = Object.freeze({storeExternalRecords});
     return;
   }
   function fingerprint(record) {

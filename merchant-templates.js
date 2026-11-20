@@ -119,7 +119,7 @@ function mtDeleteCustomerPreview(){
 function mtUpdateCustomerReferences(id,relation){
  if(mtFailureActive())throw Error('模擬儲存失敗，所有公司與客戶分組保持原值。請關閉失敗模擬後重試。');
  const patch=record=>record.values?.__customer?.id===id?{...record,values:mtSyncRelationship({...record.values,__relationshipLinked:true,__customer:relation(record.values.__customer)})}:record;
- if(MT_EXTERNAL){const next=state.records.map(r=>r.email===state.email?patch(r):r);localStorage.setItem(KEY,JSON.stringify(next));state.records=next;return;}
+ if(MT_EXTERNAL){const next=state.records.map(r=>r.email===state.email?patch(r):r);window.MeePayDemoBridge.storeExternalRecords(next);state.records=next;return;}
  const beforeDrafts=state.drafts,beforeRows=[...rows],beforeAudit=BO.audit,draftIds=new Set(scopedDrafts().map(d=>d.id)),rowIds=new Set(scopedRows().map(rowKey));
  try{state.drafts=state.drafts.map(d=>draftIds.has(d.id)?patch(d):d);rows.splice(0,rows.length,...rows.map(row=>{if(!rowIds.has(rowKey(row)))return row;const app=row.application?patch(row.application):row.application;return {...row,application:app,...(row.application?.values?.__customer?.id===id?{'所屬集團':app.values.groupId||''}:{}),customer:row.customer?.id===id?relation(row.customer):row.customer};}));BO.audit=[{time:mtNow(),user:BO.user.name,message:'更新客戶／集團分組關聯'},...BO.audit];if(!persistDemo())throw Error('瀏覽器儲存失敗，所有公司分組仍保留原值');}
  catch(e){state.drafts=beforeDrafts;rows.splice(0,rows.length,...beforeRows);BO.audit=beforeAudit;throw e;}
@@ -202,7 +202,7 @@ function mtApplyModal(){
 }
 function mtWriteTargets(plans,message){
  const time=mtNow();if(state.fail||state.failSave)throw Error('模擬儲存失敗：所有商戶設定仍保留原值');
- if(MT_EXTERNAL){const before=state.records,next=before.map(r=>{const plan=plans.find(p=>p.kind==='record'&&p.id===r.id);if(!plan)return r;if(r.email!==state.email||r.status!=='草稿')throw Error('商戶權限或狀態已變更，請重新選擇');return {...r,...plan.snapshot,updated:time};});localStorage.setItem(KEY,JSON.stringify(next));state.records=next;}
+ if(MT_EXTERNAL){const before=state.records,next=before.map(r=>{const plan=plans.find(p=>p.kind==='record'&&p.id===r.id);if(!plan)return r;if(r.email!==state.email||r.status!=='草稿')throw Error('商戶權限或狀態已變更，請重新選擇');return {...r,...plan.snapshot,updated:time};});window.MeePayDemoBridge.storeExternalRecords(next);state.records=next;}
  else{
  const beforeDrafts=state.drafts,beforeRows=[...rows],beforeAudit=BO.audit,beforeCount=state.noticeCount;
   const available=new Set(mtTargets().map(t=>t.key));if(plans.some(p=>!available.has(p.key)))throw Error('商戶權限或狀態已變更，請重新選擇');
@@ -244,7 +244,7 @@ function mtCommitImport(){
   const ids=Object.fromEntries(b.companies.map(c=>[c.key,'DRAFT-'+crypto.randomUUID()])),time=mtNow();
   const additions=b.companies.map(c=>{const snap=mtImportedSnapshot(c,ids);return MT_EXTERNAL?{...snap,id:ids[c.key],email:state.email,status:'草稿',schema:2,step:1,created:time,updated:time,directors:[],shops:[],methods:[],scenes:[],sales:[],signature:'',values:{...snap.values,companyZh:snap.values.merchantName,companyEn:snap.values.merchantEnglishName}}:{...snap,id:ids[c.key],owner:BO.user.id,step:1,savedAt:time};});
   if(incoming.length)mtSaveTemplates(merged);
-  try{if(MT_EXTERNAL){const next=[...additions,...state.records];localStorage.setItem(KEY,JSON.stringify(next));state.records=next;}else{const before=state.drafts;state.drafts=[...additions,...before];if(!persistDemo()){state.drafts=before;throw Error('儲存空間不足，沒有建立任何公司草稿');}}}catch(e){if(incoming.length)mtSaveTemplates(oldTemplates);throw e;}
+  try{if(MT_EXTERNAL){const next=[...additions,...state.records];window.MeePayDemoBridge.storeExternalRecords(next);state.records=next;}else{const before=state.drafts;state.drafts=[...additions,...before];if(!persistDemo()){state.drafts=before;throw Error('儲存空間不足，沒有建立任何公司草稿');}}}catch(e){if(incoming.length)mtSaveTemplates(oldTemplates);throw e;}
   mtClose();render();mtDialog('資料匯入完成',`<div class="notice">已建立 ${additions.length} 家公司草稿，並匯入 ${incoming.length} 份模板。</div><p>母／子公司關係、各自的 MCC、產品與費率均已保留。接下來可複選所有新商戶一次套用同一份參數設定。</p>`,btn('查看全部草稿','mt-open-drafts')+btn('批量套用參數模板','mt-batch-open','primary'));
  }catch(e){mtError(e.message);}
 }
