@@ -1,0 +1,55 @@
+name: Package Mee Pay developer handoff v1.13
+on:
+  push:
+    branches: [codex/developer-delivery-20261120]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the pinned offline handoff
+        run: python3 handoff/package.py --output artifacts
+      - name: Verify archive and independently rebuild both entry points
+        run: |
+          set -eu
+          archive=artifacts/MeePay-Developer-Handoff-v1.13-20261120.zip
+          unzip -q "$archive" -d checked
+          root="$PWD"
+          cd checked/MeePay-Developer-Handoff-v1.13-20261120
+          sha256sum --check "$root/handoff/manifest.sha256"
+          sha256sum --check --quiet SHA256SUMS.txt
+          cd source
+          npm run build
+          npm run build:external
+          cmp app.js ../demo/app.js
+          cmp backoffice.html ../demo/backoffice.html
+          cmp external.html ../demo/external.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-handoff
+          path: artifacts/
+          compression-level: 0
+          retention-days: 3
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-handoff
+          path: artifacts
+      - name: Publish the verified ZIP and its checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create dev-handoff-v1.13-20261120 artifacts/* \
+            --target "$GITHUB_SHA" --latest=false \
+            --title 'Mee Pay v1.13 · 開發交接包' \
+            --notes '下載 MeePay-Developer-Handoff-v1.13-20261120.zip，解壓後先讀 START_HERE.md。內含線上版 0909fae 的完整原始碼、後台與 External 離線 Demo、品牌素材、合成測試資料、驗證結果，以及獨立的 v1.12 兩商戶可讀版。'

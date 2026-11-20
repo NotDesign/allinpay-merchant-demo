@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "date": "2026-11-20T03:51:56.727Z",
+  "root": "http://127.0.0.1:4450",
+  "checks": [
+    "Parent-first form filters roles, required markers are red stars, password mismatch/weak values are rejected, credentials are stored without plaintext and remain pending until activation",
+    "Activated account signs in with its initial password, custom current-password confirmation works, hierarchy and crafted reset actions cannot manage a superior",
+    "Management password reset accepts new credentials, rejects old credentials after success, preserves account status and rolls back completely on storage failure",
+    "Highest-only global role matrix is separate from individual-account editing; inherited accounts update together, explicit exceptions remain isolated, failure is atomic and defaults survive reload",
+    "Forgot-password Demo code is required, reset persists and invalidates the old password, and resetting a disabled account never activates it"
+  ],
+  "errors": []
+}

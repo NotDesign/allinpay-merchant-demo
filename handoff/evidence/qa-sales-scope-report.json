@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-11-20T04:18:13.036Z",
+  "checks": [
+    "An actual registration and draft save through Sales A’s invitation binds the new merchant to Sales A.",
+    "Sales A and each actual ancestor can search and edit the merchant; a same-parent Sales peer cannot see it or bypass the scope with a direct detail action.",
+    "Opening Sales B’s later invitation and resaving the existing application does not transfer Sales A’s original ownership.",
+    "Excel-imported companies inherit the same Sales invitation through the common External store."
+  ],
+  "errors": []
+}

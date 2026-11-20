@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "date": "2026-11-20T03:49:27.693Z",
+  "checks": [
+    "Backend: account-scoped unread persistence, read differs from resolved; actionable status links, sync failure/success updates, import and batch summaries, native top-layer and 1600/768/390/320 bounds",
+    "External: bell, draft reminder and persistent read state; no cross-email notification visibility; drawer/header fit mobile"
+  ],
+  "errors": []
+}

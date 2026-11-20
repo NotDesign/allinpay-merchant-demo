@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "commit": "0909faed1ca96d930dff9804fe3260013c28b5ac",
+  "workflow": "https://github.com/NotDesign/allinpay-merchant-demo/actions/runs/44673649463",
+  "conclusion": "success",
+  "version": "2026.11.20-shared-controls-sales-scope-v1.13",
+  "liveChecks": [
+    "shared UI on backend management pages and six steps / External pages",
+    "identical 24px notification artwork and 40px hit areas",
+    "existing records, new drafts, updates, submission and exact fees searchable in backend",
+    "Sales owner and actual ancestors allowed; peer denied, including direct detail action",
+    "ownership preserved through a later invitation and Excel imports"
+  ],
+  "browserLocalOnly": true
+}

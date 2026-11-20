@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-11-20T04:10:28.243Z",
+  "root": "http://127.0.0.1:4450",
+  "checks": [
+    "backoffice: group/default parent/company parent fields auto-fill read-only; switching, ungrouping, group rename/replacement, save/reload and Excel import stay consistent; legacy ungrouped manual data preserved",
+    "external: group/default parent/company parent fields auto-fill read-only; switching, ungrouping, group rename/replacement, save/reload and Excel import stay consistent; legacy ungrouped manual data preserved",
+    "Merchant table: row/checkbox selections persist across horizontal scroll and frozen cells; 5 number buttons stay fixed; page-size text fits; website and account icons stay in cells; sort/hide apply immediately, filter/clear/freeze operate"
+  ],
+  "errors": []
+}

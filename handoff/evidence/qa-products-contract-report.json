@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-11-20T04:01:52.638Z",
+  "baseline": "fc53f54cb0459d78e9f66c091156e7d3538df486",
+  "checks": [
+    "Base editor reuses original fee fields, direct editing/search/category switch/save work, new default is applied without changing current merchant, 1600–320 layouts fit",
+    "backoffice: three complete product sections stay visible before/after category selection; all 117 product definitions, fee identifiers, choices, original 24 parameters and entered rates are preserved",
+    "external: three complete product sections stay visible before/after category selection; all 117 product definitions, fee identifiers, choices, original 24 parameters and entered rates are preserved"
+  ],
+  "errors": []
+}

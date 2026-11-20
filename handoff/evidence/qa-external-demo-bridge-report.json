@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "date": "2026-11-20T04:17:16.621Z",
+  "checks": [
+    "Existing External records migrate by original ID, preserve inviter ownership, map legacy fields and remain searchable without invented MID.",
+    "An actual External draft save appears in an already open backend tab; later saves update the same merchant and retain fee values.",
+    "Submitting changes the same backend row to Pending, survives reload and opens the exact saved fee/form snapshot; pre-existing backend merchants are unchanged.",
+    "Reloading does not overwrite backend review changes with an unchanged External snapshot."
+  ],
+  "errors": []
+}

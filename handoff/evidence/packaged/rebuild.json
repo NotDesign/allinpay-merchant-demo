@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "upstreamCommit": "0909faed1ca96d930dff9804fe3260013c28b5ac",
+  "rebuiltFromExtractedSource": {
+    "app.js": "b4a7991e42e2878f7a433a9117ccb8a142eef3b3656e1829c0675412c95c751b",
+    "backoffice.html": "e1ffcceb1c077e672002bb58f87fe1613217a4590c3c0917895658bb547e757a",
+    "external.html": "7a2a5768645095b5d68124c6c29e2fa14eab162ff76244a418edd538e933e88b"
+  },
+  "offlineDependencyFilesVerified": 247,
+  "examplesInitialMerchantsVerified": 2
+}
